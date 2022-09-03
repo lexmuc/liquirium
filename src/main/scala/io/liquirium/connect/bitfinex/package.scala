@@ -1,0 +1,137 @@
+package io.liquirium.connect
+
+import akka.NotUsed
+import akka.stream.scaladsl.Source
+import io.liquirium.connect.bitfinex.BitfinexRestApi.BitfinexApiRequest
+import io.liquirium.core._
+import io.liquirium.util.akka._
+import io.liquirium.util.{ApiCredentials, MillisecondNonceGenerator, SystemClock}
+
+import java.time.Duration
+import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
+
+package object bitfinex {
+
+  val exchangeId: ExchangeId = ExchangeId("BITFINEX")
+
+  type AsyncBitfinexApi = AsyncApi[BitfinexApiRequest[_]]
+
+  private val jsonConverter = new BitfinexJsonConverter()
+
+  private val modelConverter = new BitfinexModelConverter(exchangeId)
+
+  private val apiLogger = io.liquirium.util.Logger("bitfinex-api")
+  private val nonceGenerator = new MillisecondNonceGenerator(SystemClock)
+
+  private def authenticator(credentials: ApiCredentials) =
+    BitfinexAuthenticator(credentials.apiKey, credentials.secret)
+
+  def bitfinexHttpService(
+    concurrencyContext: ConcurrencyContext,
+    authenticator: BitfinexAuthenticator,
+  ): BitfinexHttpService =
+    new BitfinexHttpService(
+      concurrencyContext.asyncHttpService,
+      authenticator,
+      nonceGenerator,
+      BitfinexResponseTransformer,
+      apiLogger
+    )(
+      concurrencyContext.executionContext
+    )
+
+  def asyncWrappedRestApi(
+    concurrencyContext: ConcurrencyContext,
+    credentials: ApiCredentials,
+  ): Future[AsyncBitfinexApi] = {
+    implicit val ec: ExecutionContext = concurrencyContext.executionContext
+    val spawner = concurrencyContext.spawner
+    val extendedHttpService = bitfinexHttpService(concurrencyContext, authenticator(credentials))
+    val coreApi = new BitfinexRestApi(extendedHttpService, jsonConverter, apiLogger)
+    for {
+      coreActor <- spawner.spawnAsync(
+        AsyncApiAdapter.actorBasedApi(coreApi),
+        "bitfinex-core-api",
+      )
+      throttler <- spawner.spawnAsync(
+        AsyncRequestThrottler.behavior(coreActor, 200.millis),
+        "bitfinex-request-throttler",
+      )
+      sequencer <- spawner.spawnAsync(
+        AsyncRequestSequencer.forActor(throttler),
+        "bitfinex-request-sequencer",
+      )
+    } yield AsyncApiAdapter.futureBasedApi(sequencer)(concurrencyContext.actorSystem)
+  }
+
+  def api(concurrencyContext: ConcurrencyContext, credentials: ApiCredentials): Future[GenericExchangeApi] = {
+    implicit val ec: ExecutionContext = concurrencyContext.executionContext
+    for {
+      restApi <- asyncWrappedRestApi(concurrencyContext, credentials)
+    } yield new BitfinexApiAdapter(
+      restApi,
+      modelConverter,
+      maxCandleBatchSize = 5000,
+      maxTradeBatchSize = 1000,
+      maxOrderHistoryBatchSize = 1000,
+    )
+  }
+
+  def connector(concurrencyContext: ConcurrencyContext, credentials: ApiCredentials): Future[ExchangeConnector] = {
+    implicit val ec: ExecutionContext = concurrencyContext.executionContext
+    api(concurrencyContext, credentials).map {
+      bitfinexApi => makeConnector(bitfinexApi, concurrencyContext)
+    }
+  }
+
+  private def makeConnector(
+    bitfinexApi: GenericExchangeApi,
+    concurrencyContext: ConcurrencyContext,
+  )(implicit ec: ExecutionContext) =
+    new ExchangeConnector {
+
+      private def makeCandleHistoryStream(tradingPair: TradingPair, candleLength: Duration) = {
+        val segmentLoader = new CandleHistorySegmentLoader(
+          batchLoader = start => bitfinexApi.getCandleBatch(tradingPair, candleLength, start)
+        )
+        new PollingCandleHistoryStream(
+          segmentLoader = segmentLoader.loadFrom,
+          interval = FiniteDuration(candleLength.getSeconds / 2, "seconds"),
+          retryInterval = FiniteDuration(10, "seconds"),
+          updateOverlapStrategy = chs => chs.end.minusMillis(2 * candleLength.toMillis),
+          sourceQueueFactory = concurrencyContext.sourceQueueFactory,
+        )
+      }
+
+      override def candleHistoryStream(
+        tradingPair: TradingPair,
+        initialSegment: CandleHistorySegment,
+      ): Source[CandleHistorySegment, NotUsed] =
+        makeCandleHistoryStream(tradingPair, initialSegment.candleLength).source(initialSegment)
+
+      private def makeTradeHistoryStream(tradingPair: TradingPair) = {
+        val segmentLoader = new TradeHistorySegmentLoader(start => bitfinexApi.getTradeBatch(tradingPair, start))
+        new PollingTradeHistoryStream(
+          segmentLoader = segmentLoader.loadFrom,
+          interval = FiniteDuration(30, "seconds"),
+          retryInterval = FiniteDuration(10, "seconds"),
+          updateOverlapStrategy = TradeUpdateOverlapStrategy.fixedOverlap(Duration.ofMinutes(5)),
+          sourceQueueFactory = concurrencyContext.sourceQueueFactory,
+        )
+      }
+
+      def tradeHistoryStream(
+        tradingPair: TradingPair,
+        initialSegment: TradeHistorySegment,
+      ): Source[TradeHistorySegment, NotUsed] =
+        makeTradeHistoryStream(tradingPair).source(initialSegment)
+
+      override def submitRequest[TR <: OperationRequest](request: TR): Future[OperationRequestSuccessResponse[TR]] =
+        bitfinexApi.sendTradeRequest(request)
+
+      override def openOrdersStream(tradingPair: TradingPair): Source[Set[Order], NotUsed] = ???
+
+    }
+
+}

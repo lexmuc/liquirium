@@ -1,0 +1,122 @@
+package io.liquirium.util.store
+
+import io.liquirium.core.Candle
+import io.liquirium.core.helpers.CandleHelpers.{candle, ohlc, ohlcCandle}
+import io.liquirium.core.helpers.CoreHelpers.{sec, secs}
+import io.liquirium.core.helpers.async.AsyncTestWithControlledTime
+import org.scalatest.Assertion
+
+import java.sql.{Connection, DriverManager}
+import java.time.{Duration, Instant}
+import scala.concurrent.Await
+import scala.concurrent.duration._
+
+class H2CandleStoreTest extends AsyncTestWithControlledTime {
+
+  val url = "jdbc:h2:mem:"
+  val connection: Connection = DriverManager.getConnection(url)
+  var candleLength: Duration = Duration.ofSeconds(1)
+
+  def store = new H2CandleStore(connection, candleLength)
+
+  val defaultLength: Duration = secs(1)
+
+  def c(start: Long, length: Duration = defaultLength): Candle = candle(sec(start), length)
+
+  def c(start: Long, n: Int): Candle = ohlcCandle(sec(start), candleLength, ohlc(n))
+
+  def candleWithDifferentFieldValues(
+    startTime: Instant,
+    length: Duration,
+    baseValue: Option[BigDecimal] = None,
+  ): Candle = {
+    val d = baseValue getOrElse BigDecimal(startTime.getEpochSecond)
+    Candle(
+      startTime = startTime,
+      length = length,
+      open = d - 0.1,
+      close = d + 0.1,
+      high = d + 0.2,
+      low = d - 0.2,
+      quoteVolume = d * 2
+    )
+  }
+
+  private def add(candles: Candle*): Unit = store.add(candles)
+
+  private def deleteFrom(start: Instant): Unit = store.deleteFrom(start)
+
+  private def retrieve(
+    start: Option[Instant] = None,
+    end: Option[Instant] = None
+  ): Iterable[Candle] = {
+    Await.result(store.get(start, end), 3.seconds)
+  }
+
+  def clear(): Unit = store.clear()
+
+  def assertCount(table: String, count: Int): Assertion = {
+    val query = s"SELECT COUNT(*) FROM $table"
+    val rs = connection.createStatement().executeQuery(query)
+    rs.next()
+    rs.getInt(1) shouldEqual count
+  }
+
+  test("candles are stored in a table 'CANDLES'") {
+    add(c(1), c(2))
+    assertCount("CANDLES", 2)
+  }
+
+  test("candles are stored and can be retrieved with all fields and the given length") {
+    candleLength = secs(123)
+    add(c(1, secs(123)), c(2, secs(123)))
+    retrieve().toSet shouldEqual Set(c(1, secs(123)), c(2, secs(123)))
+  }
+
+  test("candles are returned in ascending order") {
+    add(c(3), c(1), c(2))
+    retrieve() shouldEqual Seq(c(1), c(2), c(3))
+  }
+
+  test("candles can be filtered by start time") {
+    add(c(1), c(2), c(3))
+    retrieve(start = Some(sec(2))) shouldEqual Seq(c(2), c(3))
+  }
+
+  test("candles can be filtered by end time where candles starting at the end second are excluded") {
+    add(c(1), c(2), c(3))
+    retrieve(end = Some(sec(3))) shouldEqual Seq(c(1), c(2))
+  }
+
+  test("candles can be updated simply by adding new candles for the same time") {
+    add(c(1, 11), c(2, 22))
+    add(c(1, 123))
+    retrieve() shouldEqual Seq(c(1, 123), c(2, 22))
+  }
+
+  test("candles can be cleared") {
+    add(c(1))
+    clear()
+    retrieve() shouldEqual Seq()
+  }
+
+  test("test candles can be deleted from a specific start") {
+    add(c(1), c(2), c(3))
+    deleteFrom(sec(2))
+    retrieve() shouldEqual Seq(c(1))
+  }
+
+  test("candles starting before the given start are not deleted") {
+    candleLength = secs(10)
+    add(c(10, secs(10)), c(20, secs(10)), c(30, secs(10)))
+    deleteFrom(sec(21))
+    retrieve() shouldEqual Seq(c(10, secs(10)), c(20, secs(10)))
+  }
+
+  test("a new store based on the same db reuses an existing table") {
+    add(c(1))
+    val f = new H2CandleStore(connection, candleLength).get()
+    Await.result(f, 3.seconds) shouldEqual Seq(c(1))
+  }
+
+}
