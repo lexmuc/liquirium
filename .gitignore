@@ -1,2 +1,12 @@
+# general
 *.class
 *.log
+
+#sbt
+project/project/
+project/target/
+target/
+
+#IDE
+.bsp
+.idea
