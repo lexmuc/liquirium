@@ -4,9 +4,9 @@ import java.time.{Duration, Instant}
 
 object Candle {
 
-  def reverse(candles: Seq[Candle]) = candles.reverse.map(_.reverse)
+  def reverse(candles: Seq[Candle]): Seq[Candle] = candles.reverseMap(_.reverse)
 
-  def empty(start: Instant, length: Duration) = Candle(
+  def empty(start: Instant, length: Duration): Candle = Candle(
     startTime = start,
     length = length,
     open = BigDecimal(0),
@@ -40,10 +40,10 @@ object Candle {
     aggregate(candles).copy(startTime = start, length = length)
 
   private def earliest(candles: Iterable[Candle]) =
-    (candles.head /: candles.tail) { (m, x) => if (x.startTime.isBefore(m.startTime)) x else m }
+    candles.tail.foldLeft (candles.head) { (m, x) => if (x.startTime.isBefore(m.startTime)) x else m }
 
   private def latest(candles: Iterable[Candle]) =
-    (candles.head /: candles.tail) { (m, x) => if (x.endTime.isAfter(m.endTime)) x else m }
+    candles.tail.foldLeft(candles.head) { (m, x) => if (x.endTime.isAfter(m.endTime)) x else m }
 
 }
 
