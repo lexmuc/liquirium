@@ -38,6 +38,11 @@ object BinanceCandleResolution {
     oneWeek,
   )
 
+  def forDuration(d: Duration): BinanceCandleResolution = all.find(_.candleLength == d) match {
+    case Some(r) => r
+    case None => throw new RuntimeException(s"Unsupported candle resolution: $d")
+  }
+
 }
 
 case class BinanceCandleResolution(code: String, candleLength: Duration)
