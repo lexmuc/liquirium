@@ -1,5 +1,6 @@
 package io.liquirium.core
 
+import io.liquirium.core.helper.CandleHelpers.{c10, c5, candleHistorySegment => segment}
 import io.liquirium.core.helper.CoreHelpers.{sec, secs}
 
 class CandleHistorySegmentTest_ExtendWith extends CandleHistorySegmentTest {

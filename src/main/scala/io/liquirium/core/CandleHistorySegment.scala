@@ -50,27 +50,37 @@ object CandleHistorySegment {
     start: Instant,
     resolution: Duration,
     candles: Iterable[Candle],
+    end: Option[Instant] = None,
   ): CandleHistorySegment =
     CandleHistorySegment(
       start = start,
       resolution = resolution,
-      reverseCandles = fillGapsAndReverse(candles, start, resolution),
+      reverseCandles = fillGapsAndReverse(candles, start, resolution, end),
     )
 
   private def fillGapsAndReverse(
     candles: Iterable[Candle],
     start: Instant,
     resolution: Duration,
+    end: Option[Instant],
   ): List[Candle] = {
     @tailrec
     def fillUntil(t: Instant, cc: List[Candle], nextSlotStart: Instant): List[Candle] =
       if (t == nextSlotStart) cc
       else fillUntil(t, Candle.empty(nextSlotStart, resolution) :: cc, nextSlotStart plus resolution)
 
-    candles.foldLeft((List[Candle](), start)) { case ((cc, nextStart), c) =>
+    val reverseCandlesWithoutGaps = candles.foldLeft((List[Candle](), start)) { case ((cc, nextStart), c) =>
       checkCandle(c, nextStart, resolution)
       (c :: fillUntil(c.startTime, cc, nextStart), c.endTime)
     }._1
+
+    end match {
+      case None => reverseCandlesWithoutGaps
+      case Some(e) =>
+        val nextStart = reverseCandlesWithoutGaps.headOption.map(_.endTime) getOrElse start
+        checkEnd(e, nextStart, resolution)
+        fillUntil(e, reverseCandlesWithoutGaps, nextStart)
+    }
   }
 
   private def checkCandle(c: Candle, nextExpectedStart: Instant, resolution: Duration): Unit = {
@@ -78,8 +88,17 @@ object CandleHistorySegment {
       throw new RuntimeException("Candles are apparently not properly ordered")
     if (c.length != resolution)
       throw new RuntimeException("A candle with deviating length was encountered")
-    if ((c.startTime.toEpochMilli - nextExpectedStart.toEpochMilli) % resolution.toMillis != 0)  {
+    if ((c.startTime.toEpochMilli - nextExpectedStart.toEpochMilli) % resolution.toMillis != 0) {
       throw new RuntimeException("Candle start is not aligned with candle history segment resolution")
+    }
+  }
+
+  private def checkEnd(end: Instant, nextExpectedStart: Instant, resolution: Duration): Unit = {
+    if (end.isBefore(nextExpectedStart)) {
+      throw new RuntimeException(s"Given end $end is earlier than start or last candle end $nextExpectedStart")
+    }
+    if ((end.toEpochMilli - nextExpectedStart.toEpochMilli) % resolution.toMillis != 0) {
+      throw new RuntimeException("Given end is not aligned with candle history segment resolution")
     }
   }
 

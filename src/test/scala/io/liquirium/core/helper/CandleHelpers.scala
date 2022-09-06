@@ -1,5 +1,6 @@
 package io.liquirium.core.helper
 
+import io.liquirium.connect.ForwardCandleBatch
 import io.liquirium.core.helper.CoreHelpers._
 import io.liquirium.core.{Candle, CandleHistorySegment}
 
@@ -62,9 +63,42 @@ object CandleHelpers {
   def candleHistorySegment(start: Instant, resolution: Duration)(candleData: Int*): CandleHistorySegment = {
     val emptySegment = CandleHistorySegment.empty(start, resolution)
     candleData.foldLeft(emptySegment) { (s, n) =>
-      val nextCandle = ohlcCandle(s.end, s.resolution, ohlc(n))
+      val nextCandle = if (n == 0) emptyCandle(s.end, s.resolution) else ohlcCandle(s.end, s.resolution, ohlc(n))
       s.append(nextCandle)
     }
   }
+
+  def candleHistorySegment(c0: Candle, cc: Candle*): CandleHistorySegment =
+    CandleHistorySegment.fromForwardCandles(c0.startTime, c0.length, c0 :: cc.toList)
+
+  def forwardCandleBatch(
+    start: Instant,
+    resolution: Duration,
+    candles: Iterable[Candle],
+    nextBatchStart: Option[Instant] = None,
+  ): ForwardCandleBatch = ForwardCandleBatch(
+    start = start,
+    resolution = resolution,
+    candles = candles,
+    nextBatchStart = nextBatchStart,
+  )
+
+  def c5(start: Instant, n: Int): Candle = CandleHelpers.ohlcCandle(
+    start = start,
+    length = secs(5),
+    ohlc = CandleHelpers.ohlc(n),
+    quoteVolume = dec(1),
+  )
+
+  def c10(start: Instant, n: Int): Candle = CandleHelpers.ohlcCandle(
+    start = start,
+    length = secs(10),
+    ohlc = CandleHelpers.ohlc(n),
+    quoteVolume = dec(1),
+  )
+
+  def e5(start: Instant): Candle = CandleHelpers.emptyCandle(start, length = secs(5))
+
+  def e10(start: Instant): Candle = CandleHelpers.emptyCandle(start, length = secs(10))
 
 }
