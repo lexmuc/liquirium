@@ -70,12 +70,15 @@ package object binance {
     credentials: ApiCredentials,
   ): Future[ExchangeConnector] = {
     implicit val ec: ExecutionContext = concurrencyContext.executionContext
-    for {
-      binanceApi <- api(concurrencyContext, credentials)
-    } yield makeConnector(binanceApi)
+    api(concurrencyContext, credentials).map {
+      binanceApi => makeConnector(binanceApi, concurrencyContext)
+    }
   }
 
-  private def makeConnector(binanceApi: GenericExchangeApi)(implicit ec: ExecutionContext) =
+  private def makeConnector(
+    binanceApi: GenericExchangeApi,
+    concurrencyContext: ConcurrencyContext,
+  )(implicit ec: ExecutionContext) =
     new ExchangeConnector {
 
       private def makeCandleHistoryStream(tradingPair: TradingPair, resolution: Duration) = {
@@ -87,7 +90,7 @@ package object binance {
           interval = FiniteDuration(resolution.getSeconds / 2, "seconds"),
           retryInterval = FiniteDuration(10, "seconds"),
           updateStartProvider = chs => chs.end.minusMillis(resolution.toMillis),
-          sourceQueueFactory = null,
+          sourceQueueFactory = concurrencyContext.sourceQueueFactory,
         )
       }
 
