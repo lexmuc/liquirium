@@ -1,13 +1,15 @@
 package io.liquirium.connect.binance
 
+import io.liquirium.connect.binance.BinanceRestApi.BinanceApiRequest
 import io.liquirium.connect.{ForwardCandleBatch, GenericExchangeApi}
 import io.liquirium.core.{Candle, TradingPair}
+import io.liquirium.util.akka.AsyncApi
 
 import java.time.{Duration, Instant}
 import scala.concurrent.{ExecutionContext, Future}
 
 class BinanceApiAdapter(
-  restApi: BinanceRestApi,
+  restApi: AsyncApi[BinanceApiRequest[_]],
   modelConverter: BinanceModelConverter,
   maxCandleBatchSize: Int = 1000, // should be the maximum allowed by the api
 )(
