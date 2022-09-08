@@ -17,7 +17,7 @@ class TradeHistorySegmentTest_FromForwardTrades extends TradeHistorySegmentTest 
     )
   }
 
-  test("it exposes start too when created from a forward trade iterable") {
+  test("it exposes the start too when created from a forward trade iterable") {
     val ths = fromForwardTrades(start = sec(0))(
       trade(1, sec(1)),
       trade(2, sec(2)),

@@ -6,13 +6,9 @@ import java.time.Instant
 
 class TradeHistorySegmentTest extends BasicTest {
 
-  protected def fromForwardTrades(
-                                   start: Instant,
-                                 )(
-                                   tt: Trade*
-                                 ): TradeHistorySegment =
+  protected def fromForwardTrades(start: Instant)(tt: Trade*): TradeHistorySegment =
     TradeHistorySegment.fromForwardTrades(start, tt)
 
-  protected def empty(start: Instant): TradeHistorySegment =
-    TradeHistorySegment.empty(start)
+  protected def empty(start: Instant): TradeHistorySegment = TradeHistorySegment.empty(start)
+
 }

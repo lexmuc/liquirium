@@ -21,7 +21,7 @@ object TradeHelpers {
     price: BigDecimal = BigDecimal("1.0"),
     fees: Fees = Seq(),
     market: Market = m(0),
-    time: Instant = Instant.ofEpochSecond(0)
+    time: Instant = Instant.ofEpochSecond(0),
   ): Trade = core.Trade(
       id = id,
       market = market,
@@ -29,7 +29,7 @@ object TradeHelpers {
       quantity = quantity,
       price = price,
       fees = fees,
-      time = time
+      time = time,
     )
 
   def tradeHistorySegment(start: Instant, tt: Trade*): TradeHistorySegment =

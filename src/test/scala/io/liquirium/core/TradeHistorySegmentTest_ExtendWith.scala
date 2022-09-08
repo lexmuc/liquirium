@@ -5,24 +5,24 @@ import io.liquirium.core.helper.TradeHelpers.{trade, tradeHistorySegment => segm
 
 class TradeHistorySegmentTest_ExtendWith extends TradeHistorySegmentTest {
 
-    test("one segment can be extended with another one starting on or before end") {
+    test("one segment can be extended with another one starting at or before the last trade") {
       val s1 = segment(
         sec(0),
         trade(1, sec(1)),
-        trade(2, sec(2))
+        trade(2, sec(2)),
       )
       val s2 = segment(
         sec(2),
         trade(2, sec(2)),
         trade(3, sec(3)),
-        trade(4, sec(4))
+        trade(4, sec(4)),
       )
       s1.extendWith(s2) shouldEqual segment(
         sec(0),
         trade(1, sec(1)),
         trade(2, sec(2)),
         trade(3, sec(3)),
-        trade(4, sec(4))
+        trade(4, sec(4)),
       )
 
       val s3 = segment(
