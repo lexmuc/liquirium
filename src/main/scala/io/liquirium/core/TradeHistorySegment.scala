@@ -1,6 +1,36 @@
 package io.liquirium.core
 
+import io.liquirium.core.TradeHistorySegment.append
+
 import java.time.Instant
+
+
+object TradeHistorySegment {
+
+  def empty(start: Instant): TradeHistorySegment = TradeHistorySegment(start, List())
+
+  def fromForwardTrades(start: Instant, trades: Iterable[Trade]): TradeHistorySegment = {
+
+    trades.foldLeft(empty(start)) { (ths, trade) =>
+      append(ths, trade)
+    }
+  }
+
+  private def append(ths: TradeHistorySegment, trade: Trade): TradeHistorySegment = {
+    val lastTime = ths.reverseTrades.headOption match {
+      case None => ths.start
+      case Some(trade) => trade.time
+    }
+
+    if (trade.time isBefore lastTime)
+      throw new RuntimeException("Trades must be in chronological order")
+
+    if (ths.reverseTrades.map(_.id).contains(trade.id))
+      throw new RuntimeException("Trade ids must be unique")
+
+    ths.copy(reverseTrades = trade :: ths.reverseTrades)
+  }
+}
 
 case class TradeHistorySegment(start: Instant, reverseTrades: List[Trade]) {
 
@@ -14,7 +44,11 @@ case class TradeHistorySegment(start: Instant, reverseTrades: List[Trade]) {
     assertExtensionIsPossible(other)
     val thisTrades = reverseTrades.dropWhile(!_.time.isBefore(other.start))
     val otherTrades = other.reverseTrades.takeWhile(!_.time.isBefore(start))
-    copy(reverseTrades = otherTrades ++ thisTrades)
+    val mergedTrades = otherTrades ++ thisTrades
+
+    mergedTrades.foldRight(copy(reverseTrades = List[Trade]())) { (trade, ths) =>
+      append(ths, trade)
+    }
   }
 
   private def assertExtensionIsPossible(other: TradeHistorySegment): Unit = {
@@ -26,33 +60,4 @@ case class TradeHistorySegment(start: Instant, reverseTrades: List[Trade]) {
 
 }
 
-object TradeHistorySegment {
 
-  def empty(start: Instant): TradeHistorySegment = TradeHistorySegment(start, List())
-
-  def fromForwardTrades(start: Instant, trades: Iterable[Trade]): TradeHistorySegment =
-    TradeHistorySegment(start = start, reverse(trades, start))
-
-  private def reverse(trades: Iterable[Trade], start: Instant): List[Trade] = {
-
-    assertIdsAreUnique(trades)
-
-    trades.foldLeft((List[Trade](), start)) {
-      case ((tt, previousTime), t) =>
-        checkTrade(t, previousTime)
-        (t :: tt, t.time)
-    }._1
-  }
-
-  private def checkTrade(trade: Trade, nextTime: Instant): Unit = {
-    if (trade.time.isBefore(nextTime))
-      throw new RuntimeException("Trades are apparently not properly ordered")
-  }
-
-  private def assertIdsAreUnique(trades: Iterable[Trade]): Unit = {
-    val idSet = trades.map(_.id).toSet
-    if (idSet.size != trades.size)
-      throw new RuntimeException("Trade ids must be unique")
-  }
-
-}

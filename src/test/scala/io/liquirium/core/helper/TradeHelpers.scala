@@ -10,7 +10,7 @@ import java.time.Instant
 object TradeHelpers {
 
   def trade(n: Int): Trade = trade(id = n.toString, price = BigDecimal(n))
-  def trade(n: Int, t: Instant): Trade = trade(id = n.toString, price = BigDecimal(n), time = t)
+  def trade(t: Instant, id: String): Trade = trade(id = id, time = t)
 
   def trades(n: Int): Seq[Trade] = Seq(trade(n), trade(n + 1))
 
