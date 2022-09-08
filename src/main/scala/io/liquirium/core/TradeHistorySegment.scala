@@ -42,9 +42,18 @@ case class TradeHistorySegment(start: Instant, reverseTrades: List[Trade]) {
 
   def extendWith(other: TradeHistorySegment): TradeHistorySegment = {
     assertExtensionIsPossible(other)
-    val thisTrades = reverseTrades.dropWhile(!_.time.isBefore(other.start))
-    val otherTrades = other.reverseTrades.takeWhile(!_.time.isBefore(start))
-    val mergedTrades = otherTrades ++ thisTrades
+
+    val oldForwardOverlap = reverseTrades.takeWhile(!_.time.isBefore(other.start)).reverse
+    val otherForwardTrades = other.reverseTrades.reverse.dropWhile(_.time isBefore start)
+
+    val matchSize = oldForwardOverlap.zip(otherForwardTrades).takeWhile {
+      case (a, b) => a == b
+    }.size
+
+    val changedSize = oldForwardOverlap.size - matchSize
+    val newReverseTrades = otherForwardTrades.drop(matchSize).reverse
+    val oldReverseTrades = reverseTrades.drop(changedSize)
+    val mergedTrades = newReverseTrades ++ oldReverseTrades
 
     mergedTrades.foldRight(copy(reverseTrades = List[Trade]())) { (trade, ths) =>
       append(ths, trade)
