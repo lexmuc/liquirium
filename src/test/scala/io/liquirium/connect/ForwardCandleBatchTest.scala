@@ -2,7 +2,7 @@ package io.liquirium.connect
 
 import io.liquirium.core.CandleHistorySegment
 import io.liquirium.core.helper.BasicTest
-import io.liquirium.core.helper.CandleHelpers.{c10, c5, forwardCandleBatch}
+import io.liquirium.core.helper.CandleHelpers.{c10, c5, candleHistorySegment, e5, forwardCandleBatch}
 import io.liquirium.core.helper.CoreHelpers.{sec, secs}
 
 class ForwardCandleBatchTest extends BasicTest {
@@ -21,18 +21,23 @@ class ForwardCandleBatchTest extends BasicTest {
     )
   }
 
-  test("when there is a next batch start this will become the end of the history segment") {
-    val batchCandles = List(c5(sec(15), 1), c5(sec(25), 1))
+  test("when there is a next batch start the history segment padded until this start") {
+    val batchCandles = List(
+      c5(sec(15), 1),
+      c5(sec(25), 1),
+    )
     forwardCandleBatch(
       start = sec(10),
       resolution = secs(5),
       candles = batchCandles,
       nextBatchStart = Some(sec(40)),
-    ).toHistorySegment shouldEqual CandleHistorySegment.fromForwardCandles(
-      start = sec(10),
-      resolution = secs(5),
-      candles = batchCandles,
-      end = Some(sec(40)),
+    ).toHistorySegment shouldEqual candleHistorySegment(
+      e5(sec(10)),
+      c5(sec(15), 1),
+      e5(sec(20)),
+      c5(sec(25), 1),
+      e5(sec(30)),
+      e5(sec(35)),
     )
   }
 
