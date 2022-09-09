@@ -38,34 +38,35 @@ object CandleHistorySegment {
     reverseCandles: List[Candle],
   ) extends CandleHistorySegment {
 
-    override def append(candle: Candle): CandleHistorySegment = {
+    override def append(candle: Candle): Impl = {
       if (candle.startTime != end)
-        throw new RuntimeException("Candles may only be appended at the end of a segment")
+        throw new RuntimeException("Appended candles must start at the end of the segment.")
       if (candle.length != resolution)
-        throw new RuntimeException("Candles may only be appended to segments with the same resolution")
+        throw new RuntimeException("Appended candles must match the segment resolution.")
       copy(reverseCandles = candle :: reverseCandles)
     }
 
-    override def extendWith(other: CandleHistorySegment): CandleHistorySegment = {
-      assertExtensionIsPossible(other)
-      val oldForwardOverlap = reverseCandles.takeWhile(!_.startTime.isBefore(other.start)).reverse
-      val otherForwardCandles = other.reverseCandles.reverse.dropWhile(_.startTime isBefore start)
-      val matchSize = oldForwardOverlap.zip(otherForwardCandles).takeWhile {
-        case (a, b) => a == b
-      }.size
-      val changedSize = oldForwardOverlap.size - matchSize
-      val updatedAndNew = otherForwardCandles.drop(matchSize).reverse
-      copy(reverseCandles = updatedAndNew ++ reverseCandles.drop(changedSize))
+    override def extendWith(other: CandleHistorySegment): Impl = {
+      assertExtensionCompatibility(other)
+      val newCandles = other
+        .reverseCandles.reverse
+        .dropWhile(_.startTime isBefore start)
+        .dropWhile(c => reverseCandles.contains(c))
+
+      val unchangedPart = cutOff(newCandles.headOption.map(_.startTime) getOrElse this.end)
+      newCandles.foldLeft(unchangedPart) { (chs, c) => chs.append(c) }.cutOff(other.end)
     }
 
-    private def assertExtensionIsPossible(other: CandleHistorySegment): Unit = {
+    private def cutOff(time: Instant): Impl =
+      copy(reverseCandles = reverseCandles.dropWhile(_.endTime isAfter time))
+
+    private def assertExtensionCompatibility(other: CandleHistorySegment): Unit = {
       if (other.start.isAfter(end))
-        throw new RuntimeException("Cannot extend a candle history segment with another segment starting after the " +
-          "one being extended ends.")
+        throw new RuntimeException("Extension segment is not consecutive or overlapping.")
       if (other.resolution != resolution)
-        throw new RuntimeException("Tried to extend a segment with another one having a different resolution")
+        throw new RuntimeException("Extension segment has different resolution.")
       if (offsetMillis(other.start) != offsetMillis(start))
-        throw new RuntimeException("Tried to extend a candle segment with another one having unaligned start")
+        throw new RuntimeException("Extension segment start is not properly aligned.")
     }
 
     private def offsetMillis(ts: Instant) = ts.toEpochMilli % resolution.toMillis

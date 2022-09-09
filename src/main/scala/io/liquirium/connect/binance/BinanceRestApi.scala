@@ -24,8 +24,8 @@ object BinanceRestApi {
     limit: Option[Int],
     from: Option[Instant],
     until: Option[Instant]
-  )
-    extends BinanceApiRequest[AscendingHistoryBatch[BinanceCandle]] {
+  ) extends BinanceApiRequest[AscendingHistoryBatch[BinanceCandle]] {
+
     override def httpRequest: BinanceHttpRequest = {
       val params = mandatoryParams ++ limit.map(l => ("limit", l.toString)).toSeq ++ timeParams
       BinanceHttpRequest.PublicGet("/api/v3/klines", params)
