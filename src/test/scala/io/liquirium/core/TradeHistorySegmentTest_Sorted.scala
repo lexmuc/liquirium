@@ -5,7 +5,7 @@ import io.liquirium.core.helper.TradeHelpers.trade
 
 class TradeHistorySegmentTest_Sorted extends TradeHistorySegmentTest {
 
-  test("trades should be first sorted by time, then by id") {
+  test("trades should be first sorted by time, then by id (string)") {
     val trades = List(
       trade(sec(10), "f"),
       trade(sec(5), "d"),
@@ -26,7 +26,7 @@ class TradeHistorySegmentTest_Sorted extends TradeHistorySegmentTest {
     )
   }
 
-  test("correct sorting of both id strings and numbers ?") {
-    
+  test("trades should be first sorted by time, then by id (number)") {
+
   }
 }

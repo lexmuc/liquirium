@@ -1,6 +1,6 @@
 package io.liquirium.core
 
-import io.liquirium.core.helper.CoreHelpers.sec
+import io.liquirium.core.helper.CoreHelpers.{milli, sec}
 import io.liquirium.core.helper.TradeHelpers.{trade, tradeHistorySegment => segment}
 
 class TradeHistorySegmentTest_ExtendWith extends TradeHistorySegmentTest {
@@ -49,8 +49,8 @@ class TradeHistorySegmentTest_ExtendWith extends TradeHistorySegmentTest {
   }
 
   test("an exception is thrown when trying to extend with a segment starting later than the first ends") {
-    val s1 = segment(sec(0), trade(sec(0), "1"))
-    val s2 = segment(sec(2), trade(sec(2), "2"))
+    val s1 = segment(sec(0), trade(milli(1), "1"))
+    val s2 = segment(milli(2), trade(sec(2), "2"))
     an[Exception] shouldBe thrownBy {
       s1.extendWith(s2)
     }
