@@ -50,7 +50,20 @@ class TradeHistorySegmentTest_Append extends TradeHistorySegmentTest {
     }
   }
 
-  test("an exception is thrown when trying to append a trade whose id already exists") {
+  test("an exception is thrown when trying to append a trade (on end) whose id already exists") {
+    val ths = segment(
+      sec(0),
+      trade(sec(1), "a"),
+      trade(sec(2), "b")
+    )
+    val t = trade(sec(2), "b")
+
+    an[Exception] shouldBe thrownBy {
+      ths.append(t)
+    }
+  }
+
+  test("an exception is thrown when trying to append a trade (after end) whose id already exists") {
     val ths = segment(
       sec(0),
       trade(sec(1), "a"),
@@ -62,6 +75,5 @@ class TradeHistorySegmentTest_Append extends TradeHistorySegmentTest {
       ths.append(t)
     }
   }
+
 }
-
-
