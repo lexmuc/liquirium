@@ -120,4 +120,21 @@ class TradeHistorySegmentTest_ExtendWith extends TradeHistorySegmentTest {
     )
   }
 
+  test("the internal list is not changed more than necessary (unchanged part remains the same)") {
+    val s1 = segment(
+      sec(0),
+      trade(sec(1), "a"),
+      trade(sec(2), "b"),
+      trade(sec(3), "c"),
+    )
+    val s2 = segment(
+      sec(3),
+      trade(sec(3), "d"),
+      trade(sec(4), "e"),
+    )
+
+    println(s1.extendWith(s2).reverseTrades.drop(2).map(_.time.toEpochMilli), s1.extendWith(s2).reverseTrades.drop(2).map(_.id))
+    println(s1.reverseTrades.tail.map(_.time.toEpochMilli), s1.reverseTrades.tail.map(_.id))
+    (s1.extendWith(s2).reverseTrades.drop(2) eq s1.reverseTrades.tail) shouldBe true
+  }
 }

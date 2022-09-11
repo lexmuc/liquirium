@@ -6,8 +6,10 @@ trait TradeHistorySegment {
   val start: Instant
   val reverseTrades: List[Trade]
 
-  def extendWith(other: TradeHistorySegment) :TradeHistorySegment
+  def extendWith(other: TradeHistorySegment): TradeHistorySegment
+
   def append(trade: Trade): TradeHistorySegment
+
   def end: Instant
 }
 
@@ -24,13 +26,18 @@ object TradeHistorySegment {
       val oldForwardOverlap = reverseTrades.takeWhile(!_.time.isBefore(other.start)).reverse
       val otherForwardTrades = other.reverseTrades.reverse.dropWhile(_.time isBefore start)
 
-      val matchSize = oldForwardOverlap.zip(otherForwardTrades).takeWhile {
+      val identicalTrades = oldForwardOverlap.zip(otherForwardTrades).takeWhile {
         case (a, b) => a == b
-      }.size
+      }
 
-      val changedSize = oldForwardOverlap.size - matchSize
-      val newReverseTrades = otherForwardTrades.drop(matchSize).reverse
-      val oldReverseTrades = reverseTrades.drop(changedSize)
+      val newReverseTrades = otherForwardTrades.drop(identicalTrades.size).reverse
+      val oldReverseTrades = identicalTrades match {
+        case Nil => reverseTrades.drop(oldForwardOverlap.size)
+        case list =>
+          val lastIdenticalTrade = list.reverse.head._1
+          reverseTrades.dropWhile(t => t != lastIdenticalTrade)
+      }
+
       val mergedTrades = newReverseTrades ++ oldReverseTrades
 
       mergedTrades.foldRight(copy(reverseTrades = List[Trade]())) { (trade, ths) =>
