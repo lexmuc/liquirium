@@ -30,17 +30,15 @@ object TradeHistorySegment {
         case (a, b) => a == b
       }
 
-      val newReverseTrades = otherForwardTrades.drop(identicalTrades.size).reverse
       val oldReverseTrades = identicalTrades match {
         case Nil => reverseTrades.drop(oldForwardOverlap.size)
         case list =>
           val lastIdenticalTrade = list.reverse.head._1
           reverseTrades.dropWhile(t => t != lastIdenticalTrade)
       }
+      val newReverseTrades = otherForwardTrades.drop(identicalTrades.size).reverse
 
-      val mergedTrades = newReverseTrades ++ oldReverseTrades
-
-      mergedTrades.foldRight(copy(reverseTrades = List[Trade]())) { (trade, ths) =>
+      newReverseTrades.foldRight(copy(reverseTrades = oldReverseTrades)) { (trade, ths) =>
         ths.append(trade)
       }
     }

@@ -133,8 +133,7 @@ class TradeHistorySegmentTest_ExtendWith extends TradeHistorySegmentTest {
       trade(sec(4), "e"),
     )
 
-    println(s1.extendWith(s2).reverseTrades.drop(2).map(_.time.toEpochMilli), s1.extendWith(s2).reverseTrades.drop(2).map(_.id))
-    println(s1.reverseTrades.tail.map(_.time.toEpochMilli), s1.reverseTrades.tail.map(_.id))
     (s1.extendWith(s2).reverseTrades.drop(2) eq s1.reverseTrades.tail) shouldBe true
   }
+
 }
