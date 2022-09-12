@@ -1,0 +1,71 @@
+[33mcommit da672dc89a089cd4efc808bbb7465abe8e4f05f0[m[33m ([m[1;36mHEAD -> [m[1;32mtrade[m[33m, [m[1;31morigin/trade[m[33m)[m
+Author: Corrl <github@corinnasteinhoff.de>
+Date:   Thu Sep 8 19:24:40 2022 +0200
+
+    extendWith optimized
+
+[33mcommit 9c804b70a2ea72f0009e3c0a271e4cc82090c019[m
+Author: Corrl <github@corinnasteinhoff.de>
+Date:   Thu Sep 8 16:33:54 2022 +0200
+
+    Trade.sorted
+
+[33mcommit 91f9d53d576ea1fc98c193ea2be4a6e2a090a96f[m
+Author: Corrl <github@corinnasteinhoff.de>
+Date:   Thu Sep 8 13:17:08 2022 +0200
+
+    modified trade helper and private append function and more tests
+
+[33mcommit 63fd1f1804dcacef83891e051cf602385873da04[m[33m ([m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmaster[m[33m)[m
+Author: Alexander Steinhoff <lex82@gmx.net>
+Date:   Thu Sep 8 08:13:08 2022 +0200
+
+    mostly wording and formatting changes
+
+[33mcommit 3d6a5d43c59f4a53014baf0b5f1b1b3f83a7d691[m
+Author: Corrl <github@corinnasteinhoff.de>
+Date:   Wed Sep 7 21:11:28 2022 +0200
+
+    TradeHistorySegment
+
+[33mcommit 8b739470f40c284e7e3120f9d40a973fe24f35d9[m
+Author: Alexander Steinhoff <lex82@gmx.net>
+Date:   Wed Sep 7 16:22:48 2022 +0200
+
+    bugfix in binance connector
+
+[33mcommit ad6e0e624839b075161d1267bc8428f202d40b85[m
+Author: Alexander Steinhoff <lex82@gmx.net>
+Date:   Wed Sep 7 15:57:10 2022 +0200
+
+    moved enough from binance api to liquirium to make candle stream work
+
+[33mcommit 8047acee8e3d0b73a5c9b7bcbff11567d2cad37b[m
+Author: Alexander Steinhoff <lex82@gmx.net>
+Date:   Tue Sep 6 16:11:06 2022 +0200
+
+    BinanceApiAdapter with candles
+
+[33mcommit 6bd8689249c2717338af701a11488b551329c70c[m
+Author: Alexander Steinhoff <lex82@gmx.net>
+Date:   Tue Sep 6 09:38:30 2022 +0200
+
+    ForwardCandleBatch und CandleHistorySegmentLoader
+
+[33mcommit 8dcac95ff3232c9a41df5a282cb4446f66c09ba1[m
+Author: Alexander Steinhoff <lex82@gmx.net>
+Date:   Sun Sep 4 16:45:04 2022 +0200
+
+    moved most of the binance connector to liquirium
+
+[33mcommit e883dde045d7eca2b51516128886c6466bea3511[m
+Author: Alexander Steinhoff <lex82@gmx.net>
+Date:   Sat Sep 3 18:54:48 2022 +0200
+
+    added most of the core entities and some code for streaming candle updates
+
+[33mcommit 28e340f7bf1d2502c8d790f0ffb1e1a850d6376c[m
+Author: lexmuc <lex82@gmx.net>
+Date:   Sat Sep 3 17:46:00 2022 +0200
+
+    Initial commit

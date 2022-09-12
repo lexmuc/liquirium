@@ -41,11 +41,13 @@ case class ForwardCandleBatch(
     }
   }
 
-  def toHistorySegment: CandleHistorySegment = CandleHistorySegment.fromForwardCandles(
-    start = start,
-    resolution = resolution,
-    candles = candles,
-    end = nextBatchStart,
-  )
+  def toHistorySegment: CandleHistorySegment = {
+    val chs = CandleHistorySegment.fromForwardCandles(
+      start = start,
+      resolution = resolution,
+      candles = candles,
+    )
+    chs.padUntil(nextBatchStart getOrElse chs.end)
+  }
 
 }
