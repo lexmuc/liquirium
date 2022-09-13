@@ -102,7 +102,7 @@ class CandleHistorySegmentTest_ExtendWith extends CandleHistorySegmentTest {
       c5(sec(20), 2),
       c5(sec(25), 2),
     )
-    (s1.extendWith(s2).reverseCandles.drop(2) eq s1.reverseCandles.tail) shouldBe true
+    s1.extendWith(s2).dropRight(2) should be theSameInstanceAs  s1.dropRight(1)
   }
 
   test("it throws an exception when the starts are not aligned with regard to the resolution") {
