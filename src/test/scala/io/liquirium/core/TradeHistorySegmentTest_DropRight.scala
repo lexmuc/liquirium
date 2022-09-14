@@ -4,6 +4,7 @@ import io.liquirium.core.helper.CoreHelpers.sec
 import io.liquirium.core.helper.TradeHelpers.trade
 
 class TradeHistorySegmentTest_DropRight extends TradeHistorySegmentTest {
+
   test("dropping elements from the right yields exactly the predecessor segment objects") {
     val s0 = empty(sec(0))
     val s1 = s0.append(trade(sec(1), "1"))
@@ -13,9 +14,10 @@ class TradeHistorySegmentTest_DropRight extends TradeHistorySegmentTest {
     s1.dropRight(1) should be theSameInstanceAs s0
   }
 
-  test("dropping more elements from the right than the segment contains yields the emtpy segment") {
+  test("dropping more elements from the right than the segment contains yields the empty segment") {
     val s0 = empty(sec(0))
     val s1 = s0.append(trade(sec(1), "1"))
     s1.dropRight(2) should be theSameInstanceAs s0
   }
+
 }

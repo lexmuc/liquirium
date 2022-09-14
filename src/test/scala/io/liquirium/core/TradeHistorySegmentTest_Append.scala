@@ -5,35 +5,28 @@ import io.liquirium.core.helper.TradeHelpers.{trade, tradeHistorySegment => segm
 
 class TradeHistorySegmentTest_Append extends TradeHistorySegmentTest {
 
-  test("a trade in chronological order (on end) can be appended") {
+  test("it is possible to append a trade with the same time as the last trade when the id is higher") {
     val ths = segment(
       sec(0),
       trade(sec(1), "a"),
-      trade(sec(2), "b")
     )
-    val t = trade(sec(2), "c")
-
-    ths.append(t) shouldEqual segment(
+    ths.append(trade(sec(1), "b")) shouldEqual segment(
       sec(0),
       trade(sec(1), "a"),
-      trade(sec(2), "b"),
-      trade(sec(2), "c")
+      trade(sec(1), "b")
     )
   }
   
-  test("a trade in chronological order (later than end) can be appended") {
+  test("it is possible to append a trade with a later time regardless of the id") {
     val ths = segment(
       sec(0),
-      trade(sec(1), "a"),
-      trade(sec(2), "b")
+      trade(sec(1), "b"),
     )
-    val t = trade(sec(3), "c")
 
-    ths.append(t) shouldEqual segment(
+    ths.append(trade(sec(2), "a")) shouldEqual segment(
       sec(0),
-      trade(sec(1), "a"),
-      trade(sec(2), "b"),
-      trade(sec(3), "c")
+      trade(sec(1), "b"),
+      trade(sec(2), "a"),
     )
   }
   
@@ -43,36 +36,29 @@ class TradeHistorySegmentTest_Append extends TradeHistorySegmentTest {
       trade(sec(1), "a"),
       trade(sec(2), "b")
     )
-    val t = trade(sec(1), "c")
-
     an[Exception] shouldBe thrownBy {
-      ths.append(t)
+      ths.append(trade(sec(1), "c"))
     }
   }
 
-  test("an exception is thrown when trying to append a trade (on end) whose id already exists") {
+  test("an exception is thrown when trying to append a trade at the same time as the last but with lower id") {
+    val ths = segment(
+      sec(0),
+      trade(sec(1), "b")
+    )
+    an[Exception] shouldBe thrownBy {
+      ths.append(trade(sec(1), "a"))
+    }
+  }
+
+  test("an exception is thrown when trying to append a trade with an already known id") {
     val ths = segment(
       sec(0),
       trade(sec(1), "a"),
       trade(sec(2), "b")
     )
-    val t = trade(sec(2), "b")
-
     an[Exception] shouldBe thrownBy {
-      ths.append(t)
-    }
-  }
-
-  test("an exception is thrown when trying to append a trade (after end) whose id already exists") {
-    val ths = segment(
-      sec(0),
-      trade(sec(1), "a"),
-      trade(sec(2), "b")
-    )
-    val t = trade(sec(3), "b")
-
-    an[Exception] shouldBe thrownBy {
-      ths.append(t)
+      ths.append(trade(sec(3), "b"))
     }
   }
 

@@ -36,7 +36,7 @@ class TradeHistorySegmentTest_Basics extends TradeHistorySegmentTest {
     s1.init should be theSameInstanceAs s0
   }
 
-  test("calling init on the empty segment yields and UnsopportedOperationException") {
+  test("calling init on the empty segment yields and UnsupportedOperationException") {
     an[UnsupportedOperationException] shouldBe thrownBy(empty(sec(0)).init)
   }
 
@@ -47,7 +47,7 @@ class TradeHistorySegmentTest_Basics extends TradeHistorySegmentTest {
     s1.lastOption shouldEqual Some(trade(sec(1), "1"))
   }
 
-  test("an exception is thrown when accessing an index out of bound") {
+  test("an exception is thrown when accessing an index out of bounds") {
     val s0 = empty(sec(0))
     an[IndexOutOfBoundsException] shouldBe thrownBy(s0(1))
   }

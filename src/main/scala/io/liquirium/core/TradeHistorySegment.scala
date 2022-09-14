@@ -45,37 +45,14 @@ trait TradeHistorySegment extends Seq[Trade] with SeqLike[Trade, Seq[Trade]] {
   def extendWith(other: TradeHistorySegment): TradeHistorySegment = {
     assertExtensionCompatibility(other)
 
-    val thisTradesOverlap = trades.dropWhile(_.time isBefore other.start)
-    val otherTradesOverlap = other.trades.takeWhile(!_.time.isAfter(end))
+    // #TODO OPTIMIZE: dropWhile may drop many many trades (rather take from right)
+    val ownOverlappingTrades = trades.dropWhile(_.time isBefore other.start)
+    val relevantOtherTrades = other.trades.dropWhile(_.time.isBefore(start))
 
-    val identicalTrades = thisTradesOverlap.zip(otherTradesOverlap).takeWhile {
-      case (a, b) => a == b
-    }.toList
-
-    val thisUnchangedPart = identicalTrades match {
-      case Nil => cutBefore(other.start)
-      case _ => cutAfter(identicalTrades.reverse.head._1)
-    }
-
-    val newTrades: IndexedSeq[Trade] = identicalTrades match {
-      case Nil => other.trades
-      case _ => other.trades.reverse.takeWhile(_ != identicalTrades.reverse.head._1).reverse
-    }
-
-    newTrades.foldLeft(thisUnchangedPart) { (ths, trade) => ths.append(trade) }.cutAfter(other.last)
-  }
-
-
-  @tailrec
-  private def cutBefore(time: Instant): TradeHistorySegment = this match {
-    case Empty(_) => this
-    case s: Increment => if (s.last.time.toEpochMilli >= time.toEpochMilli) s.init.cutBefore(time) else s
-  }
-
-  @tailrec
-  private def cutAfter(trade: Trade): TradeHistorySegment = this match {
-    case Empty(_) => this
-    case s: Increment => if (s.last != trade) s.init.cutAfter(trade) else s
+    val identicalTrades = ownOverlappingTrades.zip(relevantOtherTrades).takeWhile { case (a, b) => a == b }
+    val unchangedPart = this.dropRight(ownOverlappingTrades.size - identicalTrades.size)
+    val newTrades = relevantOtherTrades.drop(identicalTrades.size)
+    newTrades.foldLeft(unchangedPart) { (ths, trade) => ths.append(trade) }
   }
 
   private def assertExtensionCompatibility(other: TradeHistorySegment): Unit = {
@@ -98,8 +75,8 @@ object TradeHistorySegment {
   }
 
   private case class Empty(
-                            start: Instant,
-                          ) extends TradeHistorySegment {
+    start: Instant,
+  ) extends TradeHistorySegment {
     override def end: Instant = start
 
     override def length: Int = 0
@@ -111,10 +88,11 @@ object TradeHistorySegment {
     override protected def trades: IndexedSeq[Trade] = IndexedSeq[Trade]()
   }
 
-  private case class Increment(
-                                override val init: TradeHistorySegment,
-                                override val last: Trade,
-                              ) extends TradeHistorySegment {
+  private case class Increment
+  (
+    override val init: TradeHistorySegment,
+    override val last: Trade,
+  ) extends TradeHistorySegment {
 
     override def end: Instant = last.time
 

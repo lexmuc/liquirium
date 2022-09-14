@@ -2,6 +2,7 @@ package io.liquirium.core.helper
 
 import io.liquirium.core
 import io.liquirium.core.Trade.Fees
+import io.liquirium.core.helper.CoreHelpers.dec
 import io.liquirium.core.helper.MarketHelpers.m
 import io.liquirium.core.{Market, Trade, TradeHistorySegment}
 
@@ -10,6 +11,7 @@ import java.time.Instant
 object TradeHelpers {
 
   def trade(n: Int): Trade = trade(id = n.toString, price = BigDecimal(n))
+
   def trade(t: Instant, id: String): Trade = trade(id = id, time = t)
 
   def trades(n: Int): Seq[Trade] = Seq(trade(n), trade(n + 1))
