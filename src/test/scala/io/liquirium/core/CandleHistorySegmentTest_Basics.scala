@@ -55,7 +55,6 @@ class CandleHistorySegmentTest_Basics extends CandleHistorySegmentTest {
     val s0 = empty(sec(10), secs(5))
     val s1 = s0.append(c5(sec(10), 1))
     val s2 = s1.append(c5(sec(15), 1))
-    s2.init
     s2.dropRight(1) should be theSameInstanceAs s1
     s2.dropRight(2) should be theSameInstanceAs s0
     s1.dropRight(1) should be theSameInstanceAs s0
@@ -86,4 +85,8 @@ class CandleHistorySegmentTest_Basics extends CandleHistorySegmentTest {
     s1.lastOption shouldEqual Some(c5(sec(10), 1))
   }
 
+  test("an exception is thrown when accessing an index out of bound") {
+    val s0 = empty(sec(10), secs(5))
+    an[IndexOutOfBoundsException] shouldBe thrownBy(s0(1))
+  }
 }

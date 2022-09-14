@@ -6,14 +6,14 @@ import io.liquirium.core.helper.TradeHelpers.trade
 
 class TradeHistorySegmentTest_FromForwardTrades extends TradeHistorySegmentTest {
 
-  test("it can be created from a forward trade iterable and exposes trades in reverse order") {
+  test("it can be created from a forward trade iterable and exposes trades in the same order") {
     val ths = fromForwardTrades(start = sec(0))(
       trade(sec(1), "1"),
       trade(sec(2), "2"),
     )
-    ths.reverseTrades shouldEqual List(
-      trade(sec(2), "2"),
+    ths shouldEqual List(
       trade(sec(1), "1"),
+      trade(sec(2), "2"),
     )
   }
 

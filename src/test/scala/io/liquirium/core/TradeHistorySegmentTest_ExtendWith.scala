@@ -39,6 +39,7 @@ class TradeHistorySegmentTest_ExtendWith extends TradeHistorySegmentTest {
       trade(sec(3), "3"),
       trade(sec(4), "4"),
     )
+
     s1.extendWith(s2) shouldEqual segment(
       sec(0),
       trade(sec(1), "1"),
@@ -47,6 +48,50 @@ class TradeHistorySegmentTest_ExtendWith extends TradeHistorySegmentTest {
       trade(sec(4), "4"),
     )
   }
+
+  test("when extending with a segment starting earlier than the own ends overlapping candles are overwritten") {
+    val s1 = segment(
+      sec(0),
+      trade(sec(1), "a"),
+      trade(sec(2), "b"),
+      trade(sec(3), "c"),
+    )
+    val s2 = segment(
+      sec(2),
+      trade(sec(2), "2"),
+      trade(sec(3), "3"),
+      trade(sec(4), "4"),
+    )
+
+    s1.extendWith(s2) shouldEqual segment(
+      sec(0),
+      trade(sec(1), "a"),
+      trade(sec(2), "2"),
+      trade(sec(3), "3"),
+      trade(sec(4), "4"),
+    )
+  }
+
+  test("extending a segment with another one starting earlier overwrites it up to the start") {
+
+    val s1 = segment(
+      sec(5),
+      trade(sec(5), "a"),
+      trade(sec(6), "b"),
+    )
+    val s2 = segment(
+      sec(2),
+      trade(sec(2), "c"),
+    )
+
+//        s1.extendWith(s2)
+    // Hier 'Trades must be in chronological order' Error
+    // Das sollte aber möglich sein? Mit welchem Ergebnis? Empty segment mit start von s1?
+
+    //    val e = empty(sec(5), secs(5))
+    //    s1.extendWith(e) shouldEqual empty(sec(10), secs(5))
+  }
+
 
   test("an exception is thrown when trying to extend with a segment starting later than the first ends") {
     val s1 = segment(sec(0), trade(milli(1), "1"))
@@ -133,7 +178,7 @@ class TradeHistorySegmentTest_ExtendWith extends TradeHistorySegmentTest {
       trade(sec(4), "e"),
     )
 
-    (s1.extendWith(s2).reverseTrades.drop(2) eq s1.reverseTrades.tail) shouldBe true
+    s1.extendWith(s2).dropRight(2) should be theSameInstanceAs s1.dropRight(1)
   }
 
 }

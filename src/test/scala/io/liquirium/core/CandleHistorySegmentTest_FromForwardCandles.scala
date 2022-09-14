@@ -5,7 +5,7 @@ import io.liquirium.core.helper.CoreHelpers.{sec, secs}
 
 class CandleHistorySegmentTest_FromForwardCandles extends CandleHistorySegmentTest {
 
-  test("it can be created from a forward candle iterable and exposes candles in reverse order") {
+  test("it can be created from a forward candle iterable and exposes candles in the same order") {
     val chs = fromForwardCandles(start = sec(10), resolution = secs(5))(
       c5(sec(10), 1),
       c5(sec(15), 2),
