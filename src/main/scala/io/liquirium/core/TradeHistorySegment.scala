@@ -16,13 +16,12 @@ trait TradeHistorySegment extends Seq[Trade] with SeqLike[Trade, Seq[Trade]] {
 
   def append(trade: Trade): TradeHistorySegment = {
 
-    val lastTime = lastOption match {
-      case None => start
-      case Some(trade) => trade.time
+    lastOption match {
+      case None =>
+      case Some(last) =>
+        if (trade < last)
+          throw new RuntimeException("Trades must be in chronological order")
     }
-
-    if (trade.time isBefore lastTime)
-      throw new RuntimeException("Trades must be in chronological order")
 
     if (trades.map(_.id).contains(trade.id))
       throw new RuntimeException("Trade ids must be unique")

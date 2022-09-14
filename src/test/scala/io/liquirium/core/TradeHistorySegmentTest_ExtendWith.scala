@@ -125,6 +125,26 @@ class TradeHistorySegmentTest_ExtendWith extends TradeHistorySegmentTest {
     )
   }
 
+  test("extending a segement with another one ending earlier will shorten it") {
+    val s1 = segment(
+      sec(0),
+      trade(sec(1), "a"),
+      trade(sec(2), "b"),
+      trade(sec(3), "c").copy(price = dec(1)),
+      trade(sec(4), "d"),
+    )
+    val s2 = segment(
+      sec(3),
+      trade(sec(3), "c").copy(price = dec(2)),
+    )
+    s1.extendWith(s2) shouldEqual segment(
+      sec(0),
+      trade(sec(1), "a"),
+      trade(sec(2), "b"),
+      trade(sec(3), "c").copy(price = dec(2)),
+    )
+  }
+
   test("an exception is thrown when trying to extend with a segment starting later than the first ends") {
     val s1 = segment(sec(0), trade(milli(1), "1"))
     val s2 = segment(milli(2), trade(sec(2), "2"))
