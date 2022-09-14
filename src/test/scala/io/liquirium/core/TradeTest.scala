@@ -59,4 +59,9 @@ class TradeTest extends BasicTest {
     trade(quantity = dec("-2")).isSell shouldBe true
   }
 
+  test("trades are compared by timestamp or by id if timestamp is equal") {
+    trade(sec(1), "B") shouldBe < (trade(sec(2), "A"))(Ordering.fromLessThan(_ < _))
+    trade(sec(1), "B") shouldBe > (trade(sec(1), "A"))(Ordering.fromLessThan(_ < _))
+  }
+
 }

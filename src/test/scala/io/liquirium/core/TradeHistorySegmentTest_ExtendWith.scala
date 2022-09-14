@@ -130,18 +130,18 @@ class TradeHistorySegmentTest_ExtendWith extends TradeHistorySegmentTest {
       sec(0),
       trade(sec(1), "a"),
       trade(sec(2), "b"),
-      trade(sec(3), "c").copy(price = dec(1)),
+      trade(sec(3), "c"),
       trade(sec(4), "d"),
     )
     val s2 = segment(
       sec(3),
-      trade(sec(3), "c").copy(price = dec(2)),
+      trade(sec(3), "c"),
     )
     s1.extendWith(s2) shouldEqual segment(
       sec(0),
       trade(sec(1), "a"),
       trade(sec(2), "b"),
-      trade(sec(3), "c").copy(price = dec(2)),
+      trade(sec(3), "c"),
     )
   }
 

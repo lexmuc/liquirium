@@ -5,6 +5,11 @@ import io.liquirium.core.helper.TradeHelpers.{trade, tradeHistorySegment => segm
 
 class TradeHistorySegmentTest_Append extends TradeHistorySegmentTest {
 
+  test("an exception is thrown when trying to append a trade earlier than the segment start") {
+    val ths = TradeHistorySegment.empty(sec(10))
+    an[Exception] shouldBe thrownBy(ths.append(trade(sec(9), "a")))
+  }
+
   test("it is possible to append a trade with the same time as the last trade when the id is higher") {
     val ths = segment(
       sec(0),

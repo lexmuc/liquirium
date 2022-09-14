@@ -15,13 +15,11 @@ trait TradeHistorySegment extends Seq[Trade] with SeqLike[Trade, Seq[Trade]] {
   protected def trades: IndexedSeq[Trade]
 
   def append(trade: Trade): TradeHistorySegment = {
+    if (trade.time isBefore start)
+      throw new RuntimeException("Appended trades must not be earlier than the segment start")
 
-    lastOption match {
-      case None =>
-      case Some(last) =>
-        if (trade < last)
-          throw new RuntimeException("Trades must be in chronological order")
-    }
+    if (lastOption.exists(_ > trade))
+        throw new RuntimeException("Trades must be in ascending order")
 
     if (trades.map(_.id).contains(trade.id))
       throw new RuntimeException("Trade ids must be unique")

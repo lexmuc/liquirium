@@ -9,10 +9,6 @@ object Trade {
   type TradeId = Either[String, Int]
   type Fees = Seq[(LedgerRef, BigDecimal)]
 
-  implicit val sorted: Ordering[Trade] = {
-    Ordering.by(t => (t.time, t.id))
-  }
-
 }
 
 final case class Trade
