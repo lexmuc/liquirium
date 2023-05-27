@@ -33,8 +33,8 @@ object CandleBasedPriceTicker extends App {
   } {
     // run an Akka Source that provides regular updates for the specified candle history segment.
     // Internally, Liquirium will poll the exchange API with a frequency higher than the frequency implied by
-    // the candle length so we should get new candles one by one as they appear. Incomplete candles, i.e. candles that
-    // have not ended yet, are returned -- and eventually updated -- when the exchange API returns incomplete candles.
+    // the candle length so we should get new candles one by one. Incomplete candles, i.e. candles that have not
+    // ended yet, are returned -- and later updated -- if the exchange API returns incomplete candles.
     connector.candleHistoryStream(tradingPair, initialHistorySegment).runForeach {
       candleHistorySegment => candleHistorySegment.lastOption match {
         case None => () // No candles after the given start so far. Should not happen when start is in the past.

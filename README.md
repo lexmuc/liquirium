@@ -58,5 +58,5 @@ Please note that intentionally only a small part of the operations provided by t
 
 ## Getting help
 
-Documentation is currently minimal. However, some examples of how Liquirium Bot and Liquirium Connect can be used
-will be added shortly.
+Documentation is currently minimal. However, more examples of how Liquirium Bot and Liquirium Connect can be used
+will be added shortly in the 'examples' folder.
