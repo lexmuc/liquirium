@@ -4,6 +4,7 @@ import java.time.Duration
 
 object BinanceCandleLength {
 
+  val oneSecond: BinanceCandleLength = BinanceCandleLength("1s", Duration.ofSeconds(1))
   val oneMinute: BinanceCandleLength = BinanceCandleLength("1m", Duration.ofMinutes(1))
   val threeMinutes: BinanceCandleLength = BinanceCandleLength("3m", Duration.ofMinutes(3))
   val fiveMinutes: BinanceCandleLength = BinanceCandleLength("5m", Duration.ofMinutes(5))
@@ -21,7 +22,8 @@ object BinanceCandleLength {
   // not used because one month is not a fix length
   //val oneMonth = BinanceCandleLength("1M")
 
-  val all = Set(
+  val all: Set[BinanceCandleLength] = Set(
+    oneSecond,
     oneMinute,
     threeMinutes,
     fiveMinutes,
