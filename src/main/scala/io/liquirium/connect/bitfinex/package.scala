@@ -78,7 +78,10 @@ package object bitfinex {
     )
   }
 
-  def connector(concurrencyContext: ConcurrencyContext, credentials: ApiCredentials): Future[ExchangeConnector] = {
+  def getConnector(
+    concurrencyContext: ConcurrencyContext = DefaultConcurrencyContext,
+    credentials: ApiCredentials = ApiCredentials("", ""),
+  ): Future[ExchangeConnector] = {
     implicit val ec: ExecutionContext = concurrencyContext.executionContext
     api(concurrencyContext, credentials).map {
       bitfinexApi => makeConnector(bitfinexApi, concurrencyContext)

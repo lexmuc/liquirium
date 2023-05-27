@@ -37,7 +37,7 @@ case object DefaultConcurrencyContext extends ConcurrencyContext {
   """)
 
   override implicit lazy val actorSystem: akka.actor.typed.ActorSystem[SpawnProtocol.Command] =
-    akka.actor.typed.ActorSystem(guardianBehavior(), "cointrade", config)
+    akka.actor.typed.ActorSystem(guardianBehavior(), "liquirium", config)
 
   implicit val executionContext: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 

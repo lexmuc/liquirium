@@ -65,9 +65,9 @@ package object binance {
     } yield new BinanceApiAdapter(restApi, modelConverter)
   }
 
-  def connector(
-    concurrencyContext: ConcurrencyContext,
-    credentials: ApiCredentials,
+  def getConnector(
+    concurrencyContext: ConcurrencyContext = DefaultConcurrencyContext,
+    credentials: ApiCredentials = ApiCredentials("", ""),
   ): Future[ExchangeConnector] = {
     implicit val ec: ExecutionContext = concurrencyContext.executionContext
     api(concurrencyContext, credentials).map {
