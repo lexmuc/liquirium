@@ -1,6 +1,6 @@
 package io.liquirium.eval
 
-import io.liquirium.eval.IncrementalFoldHelpers.IncrementalMapMetric
+import io.liquirium.eval.IncrementalFoldHelpers.IncrementalMapEval
 import io.liquirium.eval.helpers.EvalTest
 
 class IncrementalFoldHelpersTest_FilterValues extends EvalTest {

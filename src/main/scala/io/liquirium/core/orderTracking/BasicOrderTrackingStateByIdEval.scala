@@ -1,14 +1,14 @@
 package io.liquirium.core.orderTracking
 
-import io.liquirium.core.Trade
+import io.liquirium.core.TradeHistorySegment
 import io.liquirium.core.orderTracking.OrderTrackingEvent.NewTrade
-import io.liquirium.eval.IncrementalFoldHelpers.{IncrementalMetric, IncrementalSeqMetric}
+import io.liquirium.eval.IncrementalFoldHelpers.{IncrementalEval, IncrementalSeqEval}
 import io.liquirium.eval.{Eval, IncrementalMap, IncrementalSeq}
 
 object BasicOrderTrackingStateByIdEval {
 
   def apply(
-    trades: Eval[IncrementalSeq[Trade]],
+    trades: Eval[TradeHistorySegment],
     openOrdersHistory: Eval[OpenOrdersHistory],
     successfulOperations: Eval[IncrementalSeq[OrderTrackingEvent.OperationEvent]],
   ): Eval[IncrementalMap[String, BasicOrderTrackingState]] = {
@@ -17,10 +17,10 @@ object BasicOrderTrackingStateByIdEval {
       .mapIncremental(NewTrade.apply)
       .groupByIncremental(_.t.orderId.get)
     val operationsById = successfulOperations.groupByIncremental(_.orderId)
-    val allIdsMetric = allIds(tradeEventsById, openOrdersHistory.map(_.definedHistoriesById), operationsById)
+    val allIdsEval = allIds(tradeEventsById, openOrdersHistory.map(_.definedHistoriesById), operationsById)
     allStates(
-      operationsWithOrdersMetric(
-        orderHistoriesById = allOrderHistories(allIdsMetric, openOrdersHistory),
+      operationsWithOrdersEval(
+        orderHistoriesById = allOrderHistories(allIdsEval, openOrdersHistory),
         operationsById = operationsById
       ),
       tradeEventsById,
@@ -64,7 +64,7 @@ object BasicOrderTrackingStateByIdEval {
       }
     }
 
-  private def operationsWithOrdersMetric(
+  private def operationsWithOrdersEval(
     orderHistoriesById: Eval[IncrementalMap[String, SingleOrderObservationHistory]],
     operationsById: Eval[IncrementalMap[String, IncrementalSeq[OrderTrackingEvent.OperationEvent]]],
   ): Eval[IncrementalMap[String, BasicOrderTrackingState]] =

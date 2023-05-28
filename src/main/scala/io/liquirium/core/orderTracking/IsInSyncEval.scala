@@ -1,7 +1,7 @@
 package io.liquirium.core.orderTracking
 
 import io.liquirium.core.orderTracking.BasicOrderTrackingState.SyncReason._
-import io.liquirium.eval.IncrementalFoldHelpers.IncrementalMapMetric
+import io.liquirium.eval.IncrementalFoldHelpers.IncrementalMapEval
 import io.liquirium.eval.{Eval, IncrementalMap}
 
 import java.time.{Duration, Instant}

@@ -2,7 +2,7 @@ package io.liquirium.eval
 
 object IncrementalFoldHelpers {
 
-  implicit class IncrementalMetric[E, IV <: IncrementalValue[E, IV]](m: Eval[IncrementalValue[E, IV]]) {
+  implicit class IncrementalEval[E, IV <: IncrementalValue[E, IV]](m: Eval[IncrementalValue[E, IV]]) {
 
     def foldIncremental[F](startValue: IV => F)(step: (F, E) => F): Eval[F] =
       IncrementalFoldEval[E, IV, F](
@@ -43,7 +43,7 @@ object IncrementalFoldHelpers {
 
   }
 
-  implicit class IncrementalSeqMetric[E](m: Eval[IncrementalSeq[E]]) {
+  implicit class IncrementalSeqEval[E](m: Eval[IncrementalSeq[E]]) {
 
     def groupByIncremental[K](getKey: E => K): Eval[IncrementalMap[K, IncrementalSeq[E]]] =
       IncrementalFoldEval[E, IncrementalSeq[E], IncrementalMap[K, IncrementalSeq[E]]](
@@ -59,7 +59,7 @@ object IncrementalFoldHelpers {
 
   }
 
-  implicit class IncrementalMapMetric[K, V](m: Eval[IncrementalMap[K, V]]) {
+  implicit class IncrementalMapEval[K, V](m: Eval[IncrementalMap[K, V]]) {
 
     def filterValuesIncremental(predicate: V => Boolean): Eval[IncrementalMap[K, V]] =
       IncrementalFoldEval[(K, Option[V]), IncrementalMap[K, V], IncrementalMap[K, V]](

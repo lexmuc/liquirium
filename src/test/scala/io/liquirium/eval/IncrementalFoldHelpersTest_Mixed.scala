@@ -1,6 +1,6 @@
 package io.liquirium.eval
 
-import io.liquirium.eval.IncrementalFoldHelpers.{IncrementalMetric, IncrementalSeqMetric}
+import io.liquirium.eval.IncrementalFoldHelpers.{IncrementalEval, IncrementalSeqEval}
 import io.liquirium.eval.helpers.EvalHelpers.inputEval
 import io.liquirium.eval.helpers.{EvalTest, IncrementalIntListWithRootValue}
 

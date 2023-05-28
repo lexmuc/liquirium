@@ -3,7 +3,7 @@ package io.liquirium.bot
 import io.liquirium.bot.BotInput.{BotOutputHistory, CandleHistoryInput}
 import io.liquirium.core.OperationIntent.OrderIntent
 import io.liquirium.core.{BotId, CandleHistorySegment, Market, OrderConstraints, OperationIntentConverter, OperationRequest}
-import io.liquirium.eval.IncrementalFoldHelpers.IncrementalMetric
+import io.liquirium.eval.IncrementalFoldHelpers.IncrementalEval
 import io.liquirium.eval.{Constant, Eval, IncrementalSeq, InputEval}
 
 import java.time.{Duration, Instant}

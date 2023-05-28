@@ -3,7 +3,7 @@ package io.liquirium.core.orderTracking
 import io.liquirium.core.helpers.CoreHelpers.{dec, sec}
 import io.liquirium.core.helpers.{OrderHelpers, TradeHelpers}
 import io.liquirium.core.orderTracking.helpers.OrderTrackingHelpers._
-import io.liquirium.core.{Order, Trade}
+import io.liquirium.core.{Order, Trade, TradeHistorySegment}
 import io.liquirium.eval._
 import io.liquirium.eval.helpers.EvalTestWithIncrementalContext
 import io.liquirium.util.AbsoluteQuantity
@@ -14,10 +14,10 @@ class BasicOrderTrackingStateByIdEvalTest
   extends EvalTestWithIncrementalContext[IncrementalMap[String, BasicOrderTrackingState]] {
 
   private var openOrdersHistory: Option[OpenOrdersHistory] = None
-  private var trades = IncrementalSeq[Trade]()
+  private var trades = TradeHistorySegment.empty(Instant.ofEpochSecond(0))
   private var operations = IncrementalSeq[OrderTrackingEvent.OperationEvent]()
 
-  private val tradesEval = fakeInputEval[IncrementalSeq[Trade]]
+  private val tradesEval = fakeInputEval[TradeHistorySegment]
   private val openOrdersHistoryEval = fakeInputEval[OpenOrdersHistory]
   private val operationsEval = fakeInputEval[IncrementalSeq[OrderTrackingEvent.OperationEvent]]
 
@@ -43,7 +43,7 @@ class BasicOrderTrackingStateByIdEvalTest
   }
 
   private def fakeEmptyTrades(): Unit = {
-    updateInput(tradesEval, IncrementalSeq.empty[Trade])
+    updateInput(tradesEval, TradeHistorySegment.empty(Instant.ofEpochSecond(0)))
   }
 
   private def fakeNewOperation(o: OrderTrackingEvent.OperationEvent): Unit = {

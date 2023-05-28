@@ -2,7 +2,7 @@ package io.liquirium.bot
 
 import io.liquirium.bot.BotInput.CompletedOperationRequest
 import io.liquirium.core.TradeRequestId
-import io.liquirium.eval.IncrementalFoldHelpers.{IncrementalMapMetric, IncrementalMetric}
+import io.liquirium.eval.IncrementalFoldHelpers.{IncrementalMapEval, IncrementalEval}
 import io.liquirium.eval.{Eval, IncrementalMap, IncrementalSeq}
 
 object OpenOperationRequestsEval {
