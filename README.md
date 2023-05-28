@@ -55,8 +55,12 @@ Please note that intentionally only a small part of the operations provided by t
 - websocket support for all supported exchanges
 - simple bot abstractions for single or multi-market bots
 - more convenient simulation and backtesting
+- examples of how to use Liquirium from Java
 
-## Getting help
+## Getting help / Contact
 
 Documentation is currently minimal. However, more examples of how Liquirium Bot and Liquirium Connect can be used
 will be added shortly in the 'examples' folder.
+
+In case you need help or if you want to give us feedback, don't hesitate to write an email to 
+[hello@liquirium.io](mailto:hello@liquirium.io).
