@@ -33,6 +33,7 @@ final case class Order(
 object Order {
 
   trait BasicOrderData {
+
     def id: String
 
     def openQuantity: BigDecimal
@@ -42,6 +43,7 @@ object Order {
     def isBuy: Boolean = openQuantity.signum > 0
 
     def isSell: Boolean = !isBuy
+
   }
 
 }

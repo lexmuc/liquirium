@@ -1,10 +1,10 @@
 package io.liquirium.bot
 
-import io.liquirium.bot.BotInput.{BotOutputHistory, CandleHistoryInput}
+import io.liquirium.bot.BotInput.{CandleHistoryInput, TradeHistoryInput}
 import io.liquirium.core.OperationIntent.OrderIntent
-import io.liquirium.core.{BotId, CandleHistorySegment, Market, OrderConstraints, OperationIntentConverter, OperationRequest}
+import io.liquirium.core.{CandleHistorySegment, Market}
 import io.liquirium.eval.IncrementalFoldHelpers.IncrementalEval
-import io.liquirium.eval.{Constant, Eval, IncrementalSeq, InputEval}
+import io.liquirium.eval.{Eval, InputEval}
 
 import java.time.{Duration, Instant}
 
@@ -23,60 +23,80 @@ object SingleMarketBot {
 @deprecated("not complete yet")
 abstract class SingleMarketBot extends EvalBot {
 
-  def market: Market
+  protected def market: Market
 
-  def orderConstraints: OrderConstraints
+  //  protected def orderConstraints: OrderConstraints
 
-  def startTime: Instant
+  protected def startTime: Instant
 
-  def initialBaseBalance: BigDecimal
+  protected def initialBaseBalance: BigDecimal
 
-  def initialQuoteBalance: BigDecimal
+  protected def initialQuoteBalance: BigDecimal
 
-  def candleLength: Duration
+  protected def candleLength: Duration
 
-  def minimumCandleHistoryLength: Duration
+  protected def minimumCandleHistoryLength: Duration
 
-  private def candleHistoryInput: CandleHistoryInput =
+  protected def getOrderIntentConveyor: (Market, Eval[Seq[OrderIntent]]) => Eval[Iterable[BotOutput]]
+
+  private val candleHistoryInput: CandleHistoryInput =
     CandleHistoryInput(
       market = market,
       start = startTime minus minimumCandleHistoryLength,
       candleLength = candleLength,
     )
 
-  private val operationIntentConverter = OperationIntentConverter(market, Set())
-
-  private val stateEval: Eval[SingleMarketBot.State] = Constant(
-    SingleMarketBot.State(
-      time = Instant.ofEpochSecond(0),
-      baseBalance = BigDecimal(0),
-      quoteBalance = BigDecimal(0),
-      candleHistory = CandleHistorySegment.empty(Instant.ofEpochSecond(0), Duration.ofSeconds(0)),
+  private val tradeHistoryInput: TradeHistoryInput =
+    TradeHistoryInput(
+      market = market,
+      start = startTime,
     )
-  )
 
-  private val orderIntentEval = stateEval.map(s => getOrderIntents(s))
-
-  private val newOperationRequestsEval: Eval[Seq[OperationRequest]] = {
-//    val syncer = SimpleOrderIntentSyncer(OrderMatcher.ExactMatcher)
-
-    for {
-      intents <- orderIntentEval
-//      openOrders <- inferredOpenOrdersEval
-    } yield {
-//      val operationIntents = syncer.apply(intents, openOrders.asInstanceOf[Set[Order.BasicOrderData]])
-      operationIntentConverter.apply(intents)
-    }
+  private val baseBalanceEval = InputEval(tradeHistoryInput).foldIncremental(_ => initialBaseBalance) {
+    (bb, t) => bb + t.effects.filter(_.ledger == market.baseLedger).map(_.change).sum
   }
 
-  private val newOperationRequestMessages: Eval[Seq[OperationRequestMessage]] =
-    NumberedOperationRequestMessagesEval(
-      botIdEval = Constant(BotId("")),
-      pastMessagesEval = InputEval(BotOutputHistory).collectIncremental { case orm: OperationRequestMessage => orm },
-      newRequestsEval = newOperationRequestsEval,
-    )
+  private val quoteBalanceEval = InputEval(tradeHistoryInput).foldIncremental(_ => initialQuoteBalance) {
+    (qb, t) => qb + t.effects.filter(_.ledger == market.quoteLedger).map(_.change).sum
+  }
 
-  override def eval: Eval[Iterable[BotOutput]] = newOperationRequestMessages
+  private val stateEval: Eval[SingleMarketBot.State] =
+    for {
+      baseBalance <- baseBalanceEval
+      quoteBalance <- quoteBalanceEval
+      candleHistorySegment <- InputEval(candleHistoryInput)
+    } yield {
+      SingleMarketBot.State(
+        time = candleHistorySegment.end,
+        baseBalance = baseBalance,
+        quoteBalance = quoteBalance,
+        candleHistory = candleHistorySegment,
+      )
+    }
+
+  //  private val operationIntentConverter = OperationIntentConverter(market, Set())
+
+  //  private val newOperationRequestsEval: Eval[Seq[OperationRequest]] = {
+  ////    val syncer = SimpleOrderIntentSyncer(OrderMatcher.ExactMatcher)
+  //
+  //    for {
+  //      intents <- orderIntentEval
+  ////      openOrders <- inferredOpenOrdersEval
+  //    } yield {
+  ////      val operationIntents = syncer.apply(intents, openOrders.asInstanceOf[Set[Order.BasicOrderData]])
+  //      operationIntentConverter.apply(intents)
+  //    }
+  //  }
+
+  //  private val newOperationRequestMessages: Eval[Seq[OperationRequestMessage]] =
+  //    NumberedOperationRequestMessagesEval(
+  //      botIdEval = Constant(BotId("")),
+  //      pastMessagesEval = InputEval(BotOutputHistory).collectIncremental { case orm: OperationRequestMessage => orm },
+  //      newRequestsEval = newOperationRequestsEval,
+  //    )
+
+  override def eval: Eval[Iterable[BotOutput]] =
+    getOrderIntentConveyor(market, stateEval.map(s => getOrderIntents(s)))
 
   protected def getOrderIntents(state: SingleMarketBot.State): Seq[OrderIntent]
 

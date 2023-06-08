@@ -1,38 +1,36 @@
 package io.liquirium.bot
 
-import io.liquirium.bot.BotInput.BotOutputHistory
-import io.liquirium.bot.helpers.OperationRequestHelpers.{cancelRequestMessage, orderRequestMessage}
+import io.liquirium.bot.BotInput.{CandleHistoryInput, TradeHistoryInput}
+import io.liquirium.bot.helpers.BotHelpers.botOutput
 import io.liquirium.core.OperationIntent.OrderIntent
-import io.liquirium.core.helpers.CoreHelpers.dec
+import io.liquirium.core.helpers.CandleHelpers.{c10, c5, candleHistorySegment}
+import io.liquirium.core.helpers.CoreHelpers.{dec, sec, secs}
 import io.liquirium.core.helpers.OperationIntentHelpers.orderIntent
-import io.liquirium.core.{BotId, CompoundTradeRequestId, Market, OrderConstraints, OperationIntent, OrderQuantityPrecision, PricePrecision}
+import io.liquirium.core.helpers.TradeHelpers.{trade, tradeHistorySegment}
 import io.liquirium.core.helpers.{BasicTest, MarketHelpers}
-import io.liquirium.eval.{IncrementalContext, IncrementalSeq, InputUpdate, UpdatableContext}
+import io.liquirium.core.{CandleHistorySegment, Market, OperationIntent, Trade}
+import io.liquirium.eval.helpers.ContextHelpers.inputUpdate
+import io.liquirium.eval.{Eval, IncrementalContext, UpdatableContext}
+import org.scalatest.Matchers
 
 import java.time.{Duration, Instant}
 
-class SingleMarketBotTest extends BasicTest {
+class SingleMarketBotTest extends BasicTest with Matchers {
 
-  private var startTime: Instant = _
-  private var market: Market = MarketHelpers.market(1)
-  private var orderConstraints: OrderConstraints =
-    OrderConstraints(
-      pricePrecision = PricePrecision.Infinite,
-      orderQuantityPrecision = OrderQuantityPrecision.Infinite,
-    )
+  private var startTime: Instant = Instant.ofEpochSecond(0)
+  private val market: Market = MarketHelpers.market(1)
   private var initialBaseBalance: BigDecimal = BigDecimal(0)
   private var initialQuoteBalance: BigDecimal = BigDecimal(0)
   private var candleLength: Duration = Duration.ofSeconds(1)
   private var minimumCandleHistoryLength = Duration.ofSeconds(0)
   private var getOrderIntents: SingleMarketBot.State => Seq[OrderIntent] = (_) => Seq()
+  private var outputsByOrderIntents: Map[Seq[OrderIntent], Seq[BotOutput]] = Map(Seq() -> Seq())
 
   private var context: UpdatableContext = IncrementalContext()
 
   def makeBot(): SingleMarketBot = new SingleMarketBot {
 
     override def market: Market = SingleMarketBotTest.this.market
-
-    override def orderConstraints: OrderConstraints = SingleMarketBotTest.this.orderConstraints
 
     override def startTime: Instant = SingleMarketBotTest.this.startTime
 
@@ -47,13 +45,37 @@ class SingleMarketBotTest extends BasicTest {
     override protected def getOrderIntents(state: SingleMarketBot.State): Seq[OperationIntent.OrderIntent] =
       SingleMarketBotTest.this.getOrderIntents(state)
 
+    override protected val getOrderIntentConveyor: (Market, Eval[Seq[OrderIntent]]) => Eval[Seq[BotOutput]] =
+      (m: Market, orderIntentEval: Eval[Seq[OrderIntent]]) => {
+        if (m != market) fail(s"Unexpected market ${market}")
+        orderIntentEval.map { intents => outputsByOrderIntents(intents) }
+      }
+
   }
 
-  private def fakePreviousOutputs(oo: BotOutput*): Unit = {
-    context = context.update(InputUpdate(Map(BotOutputHistory -> IncrementalSeq.from(oo))))
+  private def fakeOrderIntentConversion(intents: OrderIntent*)(outputs: BotOutput*): Unit = {
+    outputsByOrderIntents = outputsByOrderIntents.updated(intents, outputs)
   }
 
-  private def requestId(n: Int) = CompoundTradeRequestId(BotId(""), n)
+  private def fakeCandleHistory(input: CandleHistoryInput, chs: CandleHistorySegment): Unit = {
+    context = context.update(inputUpdate(input -> chs))
+  }
+
+  private def fakeTradeHistory(start: Instant)(trades: Trade*): Unit = {
+    val input = TradeHistoryInput(market, start)
+    context = context.update(inputUpdate(input -> tradeHistorySegment(start)(trades: _*)))
+  }
+
+  private def fakeDefaultTradeHistory(): Unit = {
+    val input = TradeHistoryInput(market, startTime)
+    context = context.update(inputUpdate(input -> tradeHistorySegment(startTime)()))
+  }
+
+  private def fakeDefaultCandleHistory(): Unit =
+    fakeCandleHistory(
+      CandleHistoryInput(market, candleLength, startTime),
+      candleHistorySegment(startTime, candleLength)(),
+    )
 
   def evaluate(): Seq[BotOutput] = {
     val (output, newContext) = context.evaluate(makeBot().eval)
@@ -61,27 +83,83 @@ class SingleMarketBotTest extends BasicTest {
     output.get.toSeq
   }
 
-  test("order intents without present orders are converted to trade request messages") {
-    fakePreviousOutputs()
-    getOrderIntents = _ => Seq(
-      orderIntent("3", at = "5"),
-      orderIntent("-2", at = "6"),
-    )
-    evaluate() shouldEqual Seq(
-      orderRequestMessage(requestId(1), market, dec(3), price = dec(5)),
-      orderRequestMessage(requestId(2), market, dec(-2), price = dec(6)),
-    )
+  private def assertState(p: SingleMarketBot.State => Boolean, getMessage: SingleMarketBot.State => String): Unit = {
+    var state: SingleMarketBot.State = null
+    fakeOrderIntentConversion(orderIntent(1))(botOutput(1))
+    getOrderIntents = s => {
+      state = s
+      if (p(s)) Seq(orderIntent(1)) else Seq()
+    }
+    if (evaluate() != Seq(botOutput(1))) fail(getMessage(state))
   }
 
-  test("old outputs are taken into account for request numbering") {
-    fakePreviousOutputs(
-      cancelRequestMessage(requestId(1), market, orderId = "some_order_id"),
+  test("the order intents are passed to the conveyor in order to obtain bot outputs") {
+    fakeDefaultCandleHistory()
+    fakeDefaultTradeHistory()
+    fakeOrderIntentConversion(
+      orderIntent(1),
+      orderIntent(2),
+    )(
+      botOutput(1),
+      botOutput(2),
     )
-    getOrderIntents = _ => Seq(
-      orderIntent("-2", at = "6"),
+    getOrderIntents = _ => Seq(orderIntent(1), orderIntent(2))
+    evaluate() shouldEqual Seq(botOutput(1), botOutput(2))
+  }
+
+  test("the candle history is provided according to the market, candleLength and minimum length") {
+    candleLength = secs(5)
+    minimumCandleHistoryLength = secs(10)
+    startTime = sec(100)
+    fakeDefaultTradeHistory()
+    val chs = candleHistorySegment(
+      c5(sec(90), 1),
+      c5(sec(95), 2),
+      c5(sec(100), 3),
     )
-    evaluate() shouldEqual Seq(
-      orderRequestMessage(requestId(2), market, dec(-2), price = dec(6)),
+    fakeCandleHistory(CandleHistoryInput(market, candleLength = secs(5), start = sec(90)), chs)
+    assertState(_.candleHistory == chs, _ => "candle history was not as expected")
+  }
+
+  test("the time passed to the bot is the latest candle end time") {
+    candleLength = secs(10)
+    minimumCandleHistoryLength = secs(10)
+    startTime = sec(10)
+    fakeDefaultTradeHistory()
+    val chs = candleHistorySegment(c10(sec(0), 1), c10(sec(10), 1), c10(sec(20), 1))
+    fakeCandleHistory(CandleHistoryInput(market, candleLength = secs(10), start = sec(0)), chs)
+    assertState(_.time == sec(30), s => s"time should be 30s but was ${s.time}")
+  }
+
+  test("the balances reflect the start balances plus the sum of all trade effects") {
+    initialBaseBalance = dec(1)
+    initialQuoteBalance = dec(10)
+    startTime = sec(10)
+    fakeDefaultCandleHistory()
+    fakeTradeHistory(sec(10))(
+      trade(
+        id = "t1",
+        market = market,
+        time = sec(11),
+        quantity = dec(2),
+        price = dec(2),
+        fees = Seq(market.quoteLedger -> dec(1))
+      ),
+      trade(
+        id = "t2",
+        market = market,
+        time = sec(12),
+        quantity = dec(-1),
+        price = dec(5),
+        fees = Seq(market.quoteLedger -> dec(1))),
+    )
+    assertState(
+      s => s.baseBalance == dec(2),
+      s => s"base balance was ${s.baseBalance} but was expected to be 2",
+    )
+    assertState(
+      s => s.quoteBalance == dec(9),
+      s => s"quote balance was ${s.quoteBalance} but was expected to be 9",
     )
   }
 
