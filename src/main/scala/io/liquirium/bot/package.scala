@@ -17,8 +17,8 @@ package object bot {
     orderConstraints: OrderConstraints,
     simulationMode: Boolean,
     start: Instant,
-    timeInput: TimeInput,
-  ) = {
+    timeInputForSync: TimeInput,
+  ): Eval[Iterable[BotOutput]] = {
     val botId = BotId("")
 
     // #TODO make separate, tested eval
@@ -41,7 +41,7 @@ package object bot {
     val isInSyncEval: Eval[Boolean] = IsInSyncEval(
       statesByIdEval = orderStatesByIdEval,
       maxSyncDurationEval = Constant(Duration.ofSeconds(60)),
-      currentTimeEval = InputEval(timeInput),
+      currentTimeEval = InputEval(timeInputForSync),
     )
 
     val hasOpenRequestsEval: Eval[Boolean] = OpenOperationRequestsEval(

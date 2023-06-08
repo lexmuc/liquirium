@@ -1,6 +1,7 @@
 package io.liquirium.bot
 
 import io.liquirium.bot.BotInput.{CandleHistoryInput, TradeHistoryInput}
+import io.liquirium.bot.SingleMarketBot.Strategy
 import io.liquirium.core.OperationIntent.OrderIntent
 import io.liquirium.core.{CandleHistorySegment, Market}
 import io.liquirium.eval.IncrementalFoldHelpers.IncrementalEval
@@ -18,6 +19,14 @@ object SingleMarketBot {
     candleHistory: CandleHistorySegment,
   )
 
+  trait Strategy extends (SingleMarketBot.State => Seq[OrderIntent]) {
+
+    def candleLength: Duration
+
+    def minimumCandleHistoryLength: Duration
+
+  }
+
 }
 
 abstract class SingleMarketBot extends EvalBot {
@@ -30,23 +39,23 @@ abstract class SingleMarketBot extends EvalBot {
 
   protected def initialQuoteBalance: BigDecimal
 
-  protected def candleLength: Duration
-
-  protected def minimumCandleHistoryLength: Duration
-
   protected def getOrderIntentConveyor: (Market, Eval[Seq[OrderIntent]]) => Eval[Iterable[BotOutput]]
+
+  protected def strategy: Strategy
+
+  protected def isSimulation: Boolean
 
   private val candleHistoryInput: CandleHistoryInput =
     CandleHistoryInput(
       market = market,
-      start = startTime minus minimumCandleHistoryLength,
-      candleLength = candleLength,
+      start = startTime minus strategy.minimumCandleHistoryLength,
+      candleLength = strategy.candleLength,
     )
 
   private val tradeHistoryInput: TradeHistoryInput =
     TradeHistoryInput(
       market = market,
-      start = startTime,
+      start = if (isSimulation) Instant.ofEpochSecond(0) else startTime,
     )
 
   private val baseBalanceEval = InputEval(tradeHistoryInput).foldIncremental(_ => initialBaseBalance) {
@@ -62,18 +71,14 @@ abstract class SingleMarketBot extends EvalBot {
       baseBalance <- baseBalanceEval
       quoteBalance <- quoteBalanceEval
       candleHistorySegment <- InputEval(candleHistoryInput)
-    } yield {
+    } yield
       SingleMarketBot.State(
         time = candleHistorySegment.end,
         baseBalance = baseBalance,
         quoteBalance = quoteBalance,
         candleHistory = candleHistorySegment,
       )
-    }
 
-  override def eval: Eval[Iterable[BotOutput]] =
-    getOrderIntentConveyor(market, stateEval.map(s => getOrderIntents(s)))
-
-  protected def getOrderIntents(state: SingleMarketBot.State): Seq[OrderIntent]
+  override def eval: Eval[Iterable[BotOutput]] = getOrderIntentConveyor(market, stateEval.map(s => strategy(s)))
 
 }

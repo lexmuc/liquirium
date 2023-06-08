@@ -8,7 +8,7 @@ import io.liquirium.core.helpers.CoreHelpers.{dec, sec, secs}
 import io.liquirium.core.helpers.OperationIntentHelpers.orderIntent
 import io.liquirium.core.helpers.TradeHelpers.{trade, tradeHistorySegment}
 import io.liquirium.core.helpers.{BasicTest, MarketHelpers}
-import io.liquirium.core.{CandleHistorySegment, Market, OperationIntent, Trade}
+import io.liquirium.core.{CandleHistorySegment, Market, Trade}
 import io.liquirium.eval.helpers.ContextHelpers.inputUpdate
 import io.liquirium.eval.{Eval, IncrementalContext, UpdatableContext}
 import org.scalatest.Matchers
@@ -22,8 +22,9 @@ class SingleMarketBotTest extends BasicTest with Matchers {
   private var initialBaseBalance: BigDecimal = BigDecimal(0)
   private var initialQuoteBalance: BigDecimal = BigDecimal(0)
   private var candleLength: Duration = Duration.ofSeconds(1)
+  private var isSimulation: Boolean = false
   private var minimumCandleHistoryLength = Duration.ofSeconds(0)
-  private var getOrderIntents: SingleMarketBot.State => Seq[OrderIntent] = (_) => Seq()
+  private var strategyFunction: SingleMarketBot.State => Seq[OrderIntent] = (_: SingleMarketBot.State) => Seq()
   private var outputsByOrderIntents: Map[Seq[OrderIntent], Seq[BotOutput]] = Map(Seq() -> Seq())
 
   private var context: UpdatableContext = IncrementalContext()
@@ -38,12 +39,18 @@ class SingleMarketBotTest extends BasicTest with Matchers {
 
     override def initialQuoteBalance: BigDecimal = SingleMarketBotTest.this.initialQuoteBalance
 
-    override def candleLength: Duration = SingleMarketBotTest.this.candleLength
+    override def isSimulation: Boolean = SingleMarketBotTest.this.isSimulation
 
-    override def minimumCandleHistoryLength: Duration = SingleMarketBotTest.this.minimumCandleHistoryLength
+    override def strategy: SingleMarketBot.Strategy = new SingleMarketBot.Strategy {
 
-    override protected def getOrderIntents(state: SingleMarketBot.State): Seq[OperationIntent.OrderIntent] =
-      SingleMarketBotTest.this.getOrderIntents(state)
+      override def apply(state: SingleMarketBot.State): Seq[OrderIntent] =
+        SingleMarketBotTest.this.strategyFunction(state)
+
+      override def minimumCandleHistoryLength: Duration = SingleMarketBotTest.this.minimumCandleHistoryLength
+
+      override def candleLength: Duration = SingleMarketBotTest.this.candleLength
+
+    }
 
     override protected val getOrderIntentConveyor: (Market, Eval[Seq[OrderIntent]]) => Eval[Seq[BotOutput]] =
       (m: Market, orderIntentEval: Eval[Seq[OrderIntent]]) => {
@@ -86,7 +93,7 @@ class SingleMarketBotTest extends BasicTest with Matchers {
   private def assertState(p: SingleMarketBot.State => Boolean, getMessage: SingleMarketBot.State => String): Unit = {
     var state: SingleMarketBot.State = null
     fakeOrderIntentConversion(orderIntent(1))(botOutput(1))
-    getOrderIntents = s => {
+    strategyFunction = s => {
       state = s
       if (p(s)) Seq(orderIntent(1)) else Seq()
     }
@@ -103,7 +110,7 @@ class SingleMarketBotTest extends BasicTest with Matchers {
       botOutput(1),
       botOutput(2),
     )
-    getOrderIntents = _ => Seq(orderIntent(1), orderIntent(2))
+    strategyFunction = _ => Seq(orderIntent(1), orderIntent(2))
     evaluate() shouldEqual Seq(botOutput(1), botOutput(2))
   }
 
@@ -151,7 +158,8 @@ class SingleMarketBotTest extends BasicTest with Matchers {
         time = sec(12),
         quantity = dec(-1),
         price = dec(5),
-        fees = Seq(market.quoteLedger -> dec(1))),
+        fees = Seq(market.quoteLedger -> dec(1))
+      ),
     )
     assertState(
       s => s.baseBalance == dec(2),
@@ -160,6 +168,30 @@ class SingleMarketBotTest extends BasicTest with Matchers {
     assertState(
       s => s.quoteBalance == dec(9),
       s => s"quote balance was ${s.quoteBalance} but was expected to be 9",
+    )
+  }
+
+  test("in simulation mode the balances are based on the trade history from second 0") {
+    initialBaseBalance = dec(1)
+    initialQuoteBalance = dec(10)
+    startTime = sec(10)
+    isSimulation = true
+    fakeDefaultCandleHistory()
+    fakeTradeHistory(sec(0))(
+      trade(
+        market = market,
+        time = sec(11),
+        quantity = dec(2),
+        price = dec(2),
+      ),
+    )
+    assertState(
+      s => s.baseBalance == dec(3),
+      s => s"base balance was ${s.baseBalance} but was expected to be 3",
+    )
+    assertState(
+      s => s.quoteBalance == dec(6),
+      s => s"quote balance was ${s.quoteBalance} but was expected to be 6",
     )
   }
 
