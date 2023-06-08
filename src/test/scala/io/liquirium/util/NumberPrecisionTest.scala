@@ -1,4 +1,4 @@
-package io.liquirium.core
+package io.liquirium.util
 
 import io.liquirium.core.helpers.BasicTest
 import io.liquirium.core.helpers.CoreHelpers.dec

@@ -2,6 +2,7 @@ package io.liquirium.connect.bitfinex
 
 import io.liquirium.core
 import io.liquirium.core._
+import io.liquirium.util.NumberPrecision
 
 import java.time.Duration
 

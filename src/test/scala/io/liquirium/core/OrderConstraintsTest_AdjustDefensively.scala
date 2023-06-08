@@ -4,6 +4,7 @@ import io.liquirium.core.OperationIntent.OrderIntent
 import io.liquirium.core.helpers.BasicTest
 import io.liquirium.core.helpers.CoreHelpers.dec
 import io.liquirium.core.helpers.OperationIntentHelpers.orderIntent
+import io.liquirium.util.NumberPrecision
 
 class OrderConstraintsTest_AdjustDefensively extends BasicTest {
 

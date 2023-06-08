@@ -1,6 +1,7 @@
 package io.liquirium.core
 
 import io.liquirium.core.OperationIntent.OrderIntent
+import io.liquirium.util.NumberPrecision
 
 case class OrderConstraints(
   pricePrecision: NumberPrecision,

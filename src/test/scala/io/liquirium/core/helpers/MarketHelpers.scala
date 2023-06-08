@@ -3,6 +3,7 @@ package io.liquirium.core.helpers
 import io.liquirium.core
 import io.liquirium.core.helpers.CoreHelpers.{asset, dec}
 import io.liquirium.core._
+import io.liquirium.util.NumberPrecision
 
 object MarketHelpers {
 

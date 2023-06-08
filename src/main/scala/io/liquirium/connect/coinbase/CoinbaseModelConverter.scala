@@ -1,6 +1,7 @@
 package io.liquirium.connect.coinbase
 
 import io.liquirium.core._
+import io.liquirium.util.NumberPrecision
 
 import java.time.Duration
 

@@ -1,4 +1,4 @@
-package io.liquirium.core
+package io.liquirium.util
 
 import java.math.{MathContext, RoundingMode => JavaRoundingMode}
 import scala.math.BigDecimal.RoundingMode

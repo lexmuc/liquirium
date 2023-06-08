@@ -10,6 +10,7 @@ import io.liquirium.core._
 import io.liquirium.core.helpers.CoreHelpers.dec
 import io.liquirium.eval.Value
 import io.liquirium.eval.helpers.EvalTest
+import io.liquirium.util.NumberPrecision
 
 
 class OrderIntentConveyorTest extends EvalTest with TestWithMocks {

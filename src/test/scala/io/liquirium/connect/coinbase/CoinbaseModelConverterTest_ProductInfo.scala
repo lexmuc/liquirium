@@ -2,7 +2,8 @@ package io.liquirium.connect.coinbase
 
 import io.liquirium.connect.coinbase.helpers.CoinbaseTestHelpers.productInfo
 import io.liquirium.core.helpers.CoreHelpers.dec
-import io.liquirium.core.{OrderConstraints, NumberPrecision}
+import io.liquirium.core.OrderConstraints
+import io.liquirium.util.NumberPrecision
 
 class CoinbaseModelConverterTest_ProductInfo extends CoinbaseModelConverterTest {
 

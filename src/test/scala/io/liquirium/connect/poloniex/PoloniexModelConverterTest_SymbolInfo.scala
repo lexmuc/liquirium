@@ -1,7 +1,7 @@
 package io.liquirium.connect.poloniex
 
 import io.liquirium.connect.poloniex.helpers.PoloniexTestHelpers.symbolInfo
-import io.liquirium.core.NumberPrecision
+import io.liquirium.util.NumberPrecision
 
 class PoloniexModelConverterTest_SymbolInfo extends PoloniexModelConverterTest {
 

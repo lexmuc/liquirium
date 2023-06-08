@@ -1,7 +1,7 @@
 package io.liquirium.connect.bitfinex
 
 import io.liquirium.connect.bitfinex.helpers.BitfinexTestHelpers.pairInfo
-import io.liquirium.core.NumberPrecision
+import io.liquirium.util.NumberPrecision
 
 class BitfinexModelConverterTest_PairInfo extends BitfinexModelConverterTest {
 

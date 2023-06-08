@@ -1,6 +1,7 @@
 package io.liquirium.connect.poloniex
 
 import io.liquirium.core._
+import io.liquirium.util.NumberPrecision
 
 class PoloniexModelConverter(exchangeId: ExchangeId) {
 

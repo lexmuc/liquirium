@@ -2,7 +2,7 @@ package io.liquirium.connect.binance
 
 import io.liquirium.connect.binance.helpers.BinanceTestHelpers.symbolInfo
 import io.liquirium.core.helpers.CoreHelpers.dec
-import io.liquirium.core.NumberPrecision
+import io.liquirium.util.NumberPrecision
 
 class BinanceModelConverterTest_SymbolInfo extends BinanceModelConverterTest {
 
