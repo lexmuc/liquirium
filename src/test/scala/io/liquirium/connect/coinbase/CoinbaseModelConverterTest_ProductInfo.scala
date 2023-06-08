@@ -15,7 +15,7 @@ class CoinbaseModelConverterTest_ProductInfo extends CoinbaseModelConverterTest 
   }
 
   test("the base increment is set as the order quantity precision") {
-    convert(productInfo(baseIncrement = dec("0.0001"))).orderQuantityPrecision shouldEqual
+    convert(productInfo(baseIncrement = dec("0.0001"))).quantityPrecision shouldEqual
       NumberPrecision.multipleOf(dec("0.0001"))
   }
 

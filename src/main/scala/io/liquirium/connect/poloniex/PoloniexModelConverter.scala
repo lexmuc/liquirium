@@ -46,7 +46,7 @@ class PoloniexModelConverter(exchangeId: ExchangeId) {
   def convertSymbolInfo(psi: PoloniexSymbolInfo): OrderConstraints =
     OrderConstraints(
       pricePrecision = NumberPrecision.digitsAfterSeparator(psi.priceScale),
-      orderQuantityPrecision = NumberPrecision.digitsAfterSeparator(psi.quantityScale),
+      quantityPrecision = NumberPrecision.digitsAfterSeparator(psi.quantityScale),
     )
 
 }

@@ -8,7 +8,7 @@ import io.liquirium.core.helpers.CoreHelpers.{dec, sec, secs}
 import io.liquirium.core.helpers.OperationIntentHelpers.orderIntent
 import io.liquirium.core.helpers.TradeHelpers.{trade, tradeHistorySegment}
 import io.liquirium.core.helpers.{BasicTest, MarketHelpers}
-import io.liquirium.core.{CandleHistorySegment, Market, Trade}
+import io.liquirium.core.{CandleHistorySegment, ExactResources, Market, Trade}
 import io.liquirium.eval.helpers.ContextHelpers.inputUpdate
 import io.liquirium.eval.{Eval, IncrementalContext, UpdatableContext}
 import org.scalatest.Matchers
@@ -35,9 +35,11 @@ class SingleMarketBotTest extends BasicTest with Matchers {
 
     override def startTime: Instant = SingleMarketBotTest.this.startTime
 
-    override def initialBaseBalance: BigDecimal = SingleMarketBotTest.this.initialBaseBalance
-
-    override def initialQuoteBalance: BigDecimal = SingleMarketBotTest.this.initialQuoteBalance
+    override protected def initialResources: ExactResources =
+      ExactResources(
+        baseBalance = SingleMarketBotTest.this.initialBaseBalance,
+        quoteBalance = SingleMarketBotTest.this.initialQuoteBalance,
+      )
 
     override def isSimulation: Boolean = SingleMarketBotTest.this.isSimulation
 
@@ -128,7 +130,7 @@ class SingleMarketBotTest extends BasicTest with Matchers {
     assertState(_.candleHistory == chs, _ => "candle history was not as expected")
   }
 
-  test("the time passed to the bot is the latest candle end time") {
+  test("the time in the bot state is the latest candle end time") {
     candleLength = secs(10)
     minimumCandleHistoryLength = secs(10)
     startTime = sec(10)

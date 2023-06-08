@@ -12,7 +12,7 @@ class PoloniexModelConverterTest_SymbolInfo extends PoloniexModelConverterTest {
   }
 
   test("the quantity scale is set as the order quantity precision") {
-    convert(symbolInfo(quantityScale = 6)).orderQuantityPrecision shouldEqual NumberPrecision.digitsAfterSeparator(6)
+    convert(symbolInfo(quantityScale = 6)).quantityPrecision shouldEqual NumberPrecision.digitsAfterSeparator(6)
   }
 
 }

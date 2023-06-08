@@ -72,7 +72,7 @@ class BitfinexModelConverter(exchangeId: ExchangeId) {
   def convertPairInfo(bpi: BitfinexPairInfo): OrderConstraints =
     OrderConstraints(
       pricePrecision = NumberPrecision.significantDigits(5, Some(8)),
-      orderQuantityPrecision = NumberPrecision.digitsAfterSeparator(8),
+      quantityPrecision = NumberPrecision.digitsAfterSeparator(8),
     )
 
 }

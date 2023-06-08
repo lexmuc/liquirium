@@ -13,7 +13,7 @@ class OrderConstraintsTest_AdjustDefensively extends BasicTest {
 
   def constraints: OrderConstraints = OrderConstraints(
     pricePrecision = pricePrecision,
-    orderQuantityPrecision = orderQuantityPrecision,
+    quantityPrecision = orderQuantityPrecision,
   )
 
   def adjustDefensively(q: String, at: String): Option[OrderIntent] = {

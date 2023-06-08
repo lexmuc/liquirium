@@ -75,7 +75,7 @@ class BinanceModelConverter(exchangeId: ExchangeId) {
   def convertSymbolInfo(bsi: BinanceSymbolInfo): OrderConstraints =
     OrderConstraints(
       pricePrecision = NumberPrecision.MultipleOf(bsi.tickSize),
-      orderQuantityPrecision = NumberPrecision.MultipleOf(bsi.stepSize)
+      quantityPrecision = NumberPrecision.MultipleOf(bsi.stepSize)
     )
 
 }

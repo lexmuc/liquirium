@@ -19,7 +19,7 @@ class OrderIntentConveyorTest extends EvalTest with TestWithMocks {
   private val orderConstraintsEval = fakeEvalWithValue(
     OrderConstraints(
       pricePrecision = NumberPrecision.Infinite,
-      orderQuantityPrecision = NumberPrecision.Infinite,
+      quantityPrecision = NumberPrecision.Infinite,
     )
   )
 
@@ -48,7 +48,7 @@ class OrderIntentConveyorTest extends EvalTest with TestWithMocks {
   ): Unit = {
     fakeEvalValue(orderConstraintsEval, OrderConstraints(
       pricePrecision = pricePrecision,
-      orderQuantityPrecision = orderQuantityPrecision,
+      quantityPrecision = orderQuantityPrecision,
     ))
   }
 

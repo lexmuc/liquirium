@@ -5,16 +5,16 @@ import io.liquirium.util.NumberPrecision
 
 case class OrderConstraints(
   pricePrecision: NumberPrecision,
-  orderQuantityPrecision: NumberPrecision,
+  quantityPrecision: NumberPrecision,
 ) {
 
   def adjustDefensively(orderIntent: OrderIntent): Option[OrderIntent] = {
     val isBuy = orderIntent.quantity.signum > 0
-    val closestQuantity = orderQuantityPrecision.apply(orderIntent.quantity)
+    val closestQuantity = quantityPrecision.apply(orderIntent.quantity)
     val adjustedQuantity =
       if (closestQuantity.abs > orderIntent.quantity.abs) {
-        if (isBuy) orderQuantityPrecision.nextLower(orderIntent.quantity)
-        else orderQuantityPrecision.nextHigher(orderIntent.quantity)
+        if (isBuy) quantityPrecision.nextLower(orderIntent.quantity)
+        else quantityPrecision.nextHigher(orderIntent.quantity)
       }
       else closestQuantity
 
@@ -24,12 +24,13 @@ case class OrderConstraints(
       else if (!isBuy && closestPrice < orderIntent.price) pricePrecision.nextHigher(orderIntent.price)
       else closestPrice
 
-    if (adjustedPrice != BigDecimal(0) && adjustedQuantity != BigDecimal(0))
-      Some(orderIntent.copy(
+    if (adjustedPrice == BigDecimal(0) || adjustedQuantity == BigDecimal(0)) None
+    else Some(
+      orderIntent.copy(
         quantity = adjustedQuantity,
         price = adjustedPrice,
-      ))
-    else None
+      )
+    )
   }
 
 }

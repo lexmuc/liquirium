@@ -16,7 +16,7 @@ class BitfinexModelConverterTest_PairInfo extends BitfinexModelConverterTest {
   }
 
   test("the order quantity precision is set to 8 digits after separator") {
-    convert(pairInfo(1)).orderQuantityPrecision shouldEqual
+    convert(pairInfo(1)).quantityPrecision shouldEqual
       NumberPrecision.digitsAfterSeparator(8)
   }
 

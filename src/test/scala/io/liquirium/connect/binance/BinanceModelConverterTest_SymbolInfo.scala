@@ -14,7 +14,7 @@ class BinanceModelConverterTest_SymbolInfo extends BinanceModelConverterTest {
   }
 
   test("the step size is set as the order quantity precision") {
-    convert(symbolInfo(stepSize = dec("0.0001"))).orderQuantityPrecision shouldEqual
+    convert(symbolInfo(stepSize = dec("0.0001"))).quantityPrecision shouldEqual
       NumberPrecision.multipleOf(dec("0.0001"))
   }
 

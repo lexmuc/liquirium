@@ -40,7 +40,7 @@ object MarketHelpers {
     orderQuantityPrecision: NumberPrecision = NumberPrecision.MultipleOf(dec(1)),
   ): OrderConstraints = OrderConstraints(
     pricePrecision = pricePrecision,
-    orderQuantityPrecision = orderQuantityPrecision,
+    quantityPrecision = orderQuantityPrecision,
   )
 
   def orderConstraints(n: Int): OrderConstraints = orderConstraints(pricePrecision = NumberPrecision.MultipleOf(dec(n)))

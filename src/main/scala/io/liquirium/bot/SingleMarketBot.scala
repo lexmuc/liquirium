@@ -3,7 +3,7 @@ package io.liquirium.bot
 import io.liquirium.bot.BotInput.{CandleHistoryInput, TradeHistoryInput}
 import io.liquirium.bot.SingleMarketBot.Strategy
 import io.liquirium.core.OperationIntent.OrderIntent
-import io.liquirium.core.{CandleHistorySegment, Market}
+import io.liquirium.core.{CandleHistorySegment, ExactResources, Market}
 import io.liquirium.eval.IncrementalFoldHelpers.IncrementalEval
 import io.liquirium.eval.{Eval, InputEval}
 
@@ -35,9 +35,7 @@ abstract class SingleMarketBot extends EvalBot {
 
   protected def startTime: Instant
 
-  protected def initialBaseBalance: BigDecimal
-
-  protected def initialQuoteBalance: BigDecimal
+  protected def initialResources: ExactResources
 
   protected def getOrderIntentConveyor: (Market, Eval[Seq[OrderIntent]]) => Eval[Iterable[BotOutput]]
 
@@ -58,11 +56,11 @@ abstract class SingleMarketBot extends EvalBot {
       start = if (isSimulation) Instant.ofEpochSecond(0) else startTime,
     )
 
-  private val baseBalanceEval = InputEval(tradeHistoryInput).foldIncremental(_ => initialBaseBalance) {
+  private val baseBalanceEval = InputEval(tradeHistoryInput).foldIncremental(_ => initialResources.baseBalance) {
     (bb, t) => bb + t.effects.filter(_.ledger == market.baseLedger).map(_.change).sum
   }
 
-  private val quoteBalanceEval = InputEval(tradeHistoryInput).foldIncremental(_ => initialQuoteBalance) {
+  private val quoteBalanceEval = InputEval(tradeHistoryInput).foldIncremental(_ => initialResources.quoteBalance) {
     (qb, t) => qb + t.effects.filter(_.ledger == market.quoteLedger).map(_.change).sum
   }
 
