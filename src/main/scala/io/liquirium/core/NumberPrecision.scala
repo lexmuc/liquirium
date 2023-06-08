@@ -3,25 +3,25 @@ package io.liquirium.core
 import java.math.{MathContext, RoundingMode => JavaRoundingMode}
 import scala.math.BigDecimal.RoundingMode
 
-trait PricePrecision extends Function[BigDecimal, BigDecimal] {
+trait NumberPrecision extends Function[BigDecimal, BigDecimal] {
 
   def nextHigher(p: BigDecimal): BigDecimal
   def nextLower(p: BigDecimal): BigDecimal
 
 }
 
-object PricePrecision {
+object NumberPrecision {
 
-  def digitsAfterSeparator(n: Int): PricePrecision = multipleOf(BigDecimal(1) / BigDecimal(10).pow(n))
+  def digitsAfterSeparator(n: Int): NumberPrecision = multipleOf(BigDecimal(1) / BigDecimal(10).pow(n))
 
-  def multipleOf(step: BigDecimal): PricePrecision = MultipleOf(step)
+  def multipleOf(step: BigDecimal): NumberPrecision = MultipleOf(step)
 
-  def inverseMultipleOf(step: BigDecimal): PricePrecision = InverseMultipleOf(step)
+  def inverseMultipleOf(step: BigDecimal): NumberPrecision = InverseMultipleOf(step)
 
-  def significantDigits(n: Int, maxDecimalsAfterPoint: Option[Int] = None): PricePrecision =
+  def significantDigits(n: Int, maxDecimalsAfterPoint: Option[Int] = None): NumberPrecision =
     SignificantDigits(n, maxDecimalsAfterPoint.map(digitsAfterSeparator))
 
-  case object Infinite extends PricePrecision {
+  case object Infinite extends NumberPrecision {
 
     override def apply(p: BigDecimal): BigDecimal = p
 
@@ -33,8 +33,8 @@ object PricePrecision {
 
   case class SignificantDigits(
     numberOfDigits: Int,
-    maxDecimalsAfterPointPrecision: Option[PricePrecision],
-  ) extends PricePrecision {
+    maxDecimalsAfterPointPrecision: Option[NumberPrecision],
+  ) extends NumberPrecision {
 
     val mc = new MathContext(numberOfDigits, JavaRoundingMode.HALF_UP)
     val mcUp = new MathContext(numberOfDigits, JavaRoundingMode.UP)
@@ -81,7 +81,7 @@ object PricePrecision {
 
   }
 
-  case class MultipleOf(step: BigDecimal) extends PricePrecision {
+  case class MultipleOf(step: BigDecimal) extends NumberPrecision {
 
     override def apply(p: BigDecimal): BigDecimal = (p / step).setScale(0, RoundingMode.HALF_UP) * step
 
@@ -99,10 +99,10 @@ object PricePrecision {
 
   }
 
-  case class InverseMultipleOf(step: BigDecimal) extends PricePrecision {
+  case class InverseMultipleOf(step: BigDecimal) extends NumberPrecision {
 
     val ONE: BigDecimal = BigDecimal(1)
-    val basePrecision: PricePrecision = multipleOf(step)
+    val basePrecision: NumberPrecision = multipleOf(step)
 
     override def apply(p: BigDecimal): BigDecimal = ONE / basePrecision(ONE / p)
 

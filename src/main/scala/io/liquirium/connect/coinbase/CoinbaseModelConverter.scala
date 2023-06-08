@@ -55,8 +55,8 @@ class CoinbaseModelConverter(exchangeId: ExchangeId) {
 
   def convertProductInfo(cpi: CoinbaseProductInfo): OrderConstraints =
     OrderConstraints(
-      pricePrecision = PricePrecision.MultipleOf(cpi.quoteIncrement),
-      orderQuantityPrecision = OrderQuantityPrecision.MultipleOf(cpi.baseIncrement),
+      pricePrecision = NumberPrecision.MultipleOf(cpi.quoteIncrement),
+      orderQuantityPrecision = NumberPrecision.MultipleOf(cpi.baseIncrement),
     )
 
 }

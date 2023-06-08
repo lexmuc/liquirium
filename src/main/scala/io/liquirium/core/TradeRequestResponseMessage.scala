@@ -14,20 +14,20 @@ object TradeRequestResponseMessage {
     override def getMessage: String = "Could not create post-only order"
   }
 
-  case class TradeRequestTimeout(requestId: TradeRequestId, d: FiniteDuration) extends Exception {
+  case class TradeRequestTimeout(requestId: OperationRequestId, d: FiniteDuration) extends Exception {
     override def getMessage = s"Trade request $requestId failed after ${ d.toSeconds } seconds"
   }
 
 }
 
 sealed trait TradeRequestResponseMessage {
-  def requestId: TradeRequestId
+  def requestId: OperationRequestId
 }
 
 case class TradeRequestSuccessResponseMessage[TR <: OperationRequest](
-  requestId: TradeRequestId,
+  requestId: OperationRequestId,
   response: OperationRequestSuccessResponse[TR],
 ) extends TradeRequestResponseMessage
 
-final case class TradeRequestFailureMessage(requestId: TradeRequestId, throwable: Throwable)
+final case class TradeRequestFailureMessage(requestId: OperationRequestId, throwable: Throwable)
   extends TradeRequestResponseMessage

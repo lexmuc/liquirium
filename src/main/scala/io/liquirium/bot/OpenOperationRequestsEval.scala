@@ -1,13 +1,13 @@
 package io.liquirium.bot
 
 import io.liquirium.bot.BotInput.CompletedOperationRequest
-import io.liquirium.core.TradeRequestId
+import io.liquirium.core.OperationRequestId
 import io.liquirium.eval.IncrementalFoldHelpers.{IncrementalMapEval, IncrementalEval}
 import io.liquirium.eval.{Eval, IncrementalMap, IncrementalSeq}
 
 object OpenOperationRequestsEval {
 
-  type RequestStatesById = IncrementalMap[TradeRequestId, RequestState]
+  type RequestStatesById = IncrementalMap[OperationRequestId, RequestState]
 
   case class RequestState(
     message: Option[OperationRequestMessage],
@@ -33,7 +33,7 @@ object OpenOperationRequestsEval {
 
     val requestStatesById =
       allOperationRequestsEval.mergeFoldIncremental(completedOperationRequestsEval)(
-        (_, _) => IncrementalMap.empty[TradeRequestId, RequestState]
+        (_, _) => IncrementalMap.empty[OperationRequestId, RequestState]
       )(
         (statesById: RequestStatesById, orm: OperationRequestMessage) => {
           val newState = statesById.mapValue.get(orm.id) match {

@@ -47,7 +47,7 @@ class SingleMarketBotTest extends BasicTest with Matchers {
 
     override protected val getOrderIntentConveyor: (Market, Eval[Seq[OrderIntent]]) => Eval[Seq[BotOutput]] =
       (m: Market, orderIntentEval: Eval[Seq[OrderIntent]]) => {
-        if (m != market) fail(s"Unexpected market ${market}")
+        if (m != market) fail(s"Unexpected market $market")
         orderIntentEval.map { intents => outputsByOrderIntents(intents) }
       }
 

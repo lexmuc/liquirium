@@ -68,10 +68,10 @@ class BitfinexModelConverter(exchangeId: ExchangeId) {
       quoteVolume = (c.high + c.low) / BigDecimal(2) * c.volume
     )
 
-  def convertPairInfo(bpi: BitfinexPairInfo): OrderConstraints = {
+  def convertPairInfo(bpi: BitfinexPairInfo): OrderConstraints =
     OrderConstraints(
-      pricePrecision = PricePrecision.significantDigits(5, Some(8)),
-      orderQuantityPrecision = OrderQuantityPrecision.DigitsAfterSeparator(8)
+      pricePrecision = NumberPrecision.significantDigits(5, Some(8)),
+      orderQuantityPrecision = NumberPrecision.digitsAfterSeparator(8),
     )
-  }
+
 }

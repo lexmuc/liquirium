@@ -35,13 +35,13 @@ object MarketHelpers {
   def exchangeId(s: String): ExchangeId = ExchangeId(s)
 
   def orderConstraints(
-    pricePrecision: PricePrecision = PricePrecision.MultipleOf(dec(1)),
-    orderQuantityPrecision: OrderQuantityPrecision = OrderQuantityPrecision.MultipleOf(dec(1)),
+    pricePrecision: NumberPrecision = NumberPrecision.MultipleOf(dec(1)),
+    orderQuantityPrecision: NumberPrecision = NumberPrecision.MultipleOf(dec(1)),
   ): OrderConstraints = OrderConstraints(
     pricePrecision = pricePrecision,
     orderQuantityPrecision = orderQuantityPrecision,
   )
 
-  def orderConstraints(n: Int): OrderConstraints = orderConstraints(pricePrecision = PricePrecision.MultipleOf(dec(n)))
+  def orderConstraints(n: Int): OrderConstraints = orderConstraints(pricePrecision = NumberPrecision.MultipleOf(dec(n)))
 
 }

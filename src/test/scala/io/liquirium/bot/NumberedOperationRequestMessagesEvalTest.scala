@@ -1,7 +1,7 @@
 package io.liquirium.bot
 
 import io.liquirium.bot.helpers.OperationRequestHelpers.{operationRequest, operationRequestMessage}
-import io.liquirium.core.{CompoundTradeRequestId, OperationRequest, BotId}
+import io.liquirium.core.{CompoundOperationRequestId, OperationRequest, BotId}
 import io.liquirium.eval.{Constant, Eval, IncrementalSeq}
 import io.liquirium.eval.helpers.EvalTestWithIncrementalContext
 
@@ -13,9 +13,9 @@ class NumberedOperationRequestMessagesEvalTest extends EvalTestWithIncrementalCo
   private val botId = BotId("BOT123")
   private val otherBotId = BotId("OTHER")
 
-  private def requestId(n: Int) = CompoundTradeRequestId(botId, n)
+  private def requestId(n: Int) = CompoundOperationRequestId(botId, n)
 
-  private def otherRequestId(n: Int) = CompoundTradeRequestId(otherBotId, n)
+  private def otherRequestId(n: Int) = CompoundOperationRequestId(otherBotId, n)
 
   override protected val evalUnderTest: Eval[Seq[OperationRequestMessage]] =
     NumberedOperationRequestMessagesEval(

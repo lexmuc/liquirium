@@ -37,12 +37,14 @@ object OperationRequestHelpers {
 
   def orderRequest(m: Market, n: Int): OrderRequest = orderRequest(quantity = dec(n), market = m)
 
-  def id(n: Int): TradeRequestId = CompoundTradeRequestId(BotId("trader" + n.toString), n)
+  def id(n: Int): OperationRequestId = operationRequestId(n)
+
+  def operationRequestId(n: Int): OperationRequestId = CompoundOperationRequestId(BotId("trader" + n.toString), n)
 
   def orderRequestMessage(n: Int): OperationRequestMessage = bot.OperationRequestMessage(id(n), orderRequest(n))
 
   def orderRequestMessage(
-    id: TradeRequestId = this.id(0),
+    id: OperationRequestId = this.id(0),
     market: Market = defaultMarket,
     quantity: BigDecimal = dec(1),
     price: BigDecimal = dec(1),
@@ -50,10 +52,10 @@ object OperationRequestHelpers {
   ): OperationRequestMessage =
     bot.OperationRequestMessage(id, orderRequest(market, quantity, price = price, modifiers))
 
-  def cancelRequestMessage(id: TradeRequestId, market: Market = defaultMarket, orderId: String = "")
+  def cancelRequestMessage(id: OperationRequestId, market: Market = defaultMarket, orderId: String = "")
   : OperationRequestMessage = bot.OperationRequestMessage(id, CancelRequest(market, orderId))
 
-  def cancelRequestMessage(id: TradeRequestId, request: CancelRequest) : OperationRequestMessage =
+  def cancelRequestMessage(id: OperationRequestId, request: CancelRequest) : OperationRequestMessage =
     bot.OperationRequestMessage(id, request)
 
   def cancelRequestMessage(n: Int): OperationRequestMessage = cancelRequestMessage(id(n), cancelRequest(n))
@@ -92,10 +94,10 @@ object OperationRequestHelpers {
   def cancelConfirmation(rest: BigDecimal): CancelRequestConfirmation =
     CancelRequestConfirmation(Some(AbsoluteQuantity(rest)))
 
-  def requestMessage(id: TradeRequestId, n: Int): OperationRequestMessage =
+  def requestMessage(id: OperationRequestId, n: Int): OperationRequestMessage =
     bot.OperationRequestMessage(id, operationRequest(n))
 
-  def operationRequestMessage[TR <: OperationRequest](id: TradeRequestId, request: TR): OperationRequestMessage =
+  def operationRequestMessage[TR <: OperationRequest](id: OperationRequestId, request: TR): OperationRequestMessage =
     OperationRequestMessage(id, request)
 
   def requestConfirmation(n: Int): OperationRequestSuccessResponse[_ <: OperationRequest] =

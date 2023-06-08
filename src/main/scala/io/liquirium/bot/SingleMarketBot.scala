@@ -20,12 +20,9 @@ object SingleMarketBot {
 
 }
 
-@deprecated("not complete yet")
 abstract class SingleMarketBot extends EvalBot {
 
   protected def market: Market
-
-  //  protected def orderConstraints: OrderConstraints
 
   protected def startTime: Instant
 
@@ -73,27 +70,6 @@ abstract class SingleMarketBot extends EvalBot {
         candleHistory = candleHistorySegment,
       )
     }
-
-  //  private val operationIntentConverter = OperationIntentConverter(market, Set())
-
-  //  private val newOperationRequestsEval: Eval[Seq[OperationRequest]] = {
-  ////    val syncer = SimpleOrderIntentSyncer(OrderMatcher.ExactMatcher)
-  //
-  //    for {
-  //      intents <- orderIntentEval
-  ////      openOrders <- inferredOpenOrdersEval
-  //    } yield {
-  ////      val operationIntents = syncer.apply(intents, openOrders.asInstanceOf[Set[Order.BasicOrderData]])
-  //      operationIntentConverter.apply(intents)
-  //    }
-  //  }
-
-  //  private val newOperationRequestMessages: Eval[Seq[OperationRequestMessage]] =
-  //    NumberedOperationRequestMessagesEval(
-  //      botIdEval = Constant(BotId("")),
-  //      pastMessagesEval = InputEval(BotOutputHistory).collectIncremental { case orm: OperationRequestMessage => orm },
-  //      newRequestsEval = newOperationRequestsEval,
-  //    )
 
   override def eval: Eval[Iterable[BotOutput]] =
     getOrderIntentConveyor(market, stateEval.map(s => getOrderIntents(s)))

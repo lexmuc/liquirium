@@ -1,6 +1,6 @@
 package io.liquirium.bot
 
-import io.liquirium.core.{CompoundTradeRequestId, OperationRequest, BotId}
+import io.liquirium.core.{CompoundOperationRequestId, OperationRequest, BotId}
 import io.liquirium.eval.{Eval, IncrementalSeq}
 
 object NumberedOperationRequestMessagesEval {
@@ -18,14 +18,14 @@ object NumberedOperationRequestMessagesEval {
       val nextIndex =
         pastMessages
           .reverseIterator
-          .filter(_.id.asInstanceOf[CompoundTradeRequestId].botId == botId)
+          .filter(_.id.asInstanceOf[CompoundOperationRequestId].botId == botId)
           .take(1).toList.headOption
-          .map(_.id.asInstanceOf[CompoundTradeRequestId].requestIndex + 1)
+          .map(_.id.asInstanceOf[CompoundOperationRequestId].requestIndex + 1)
           .getOrElse(1L)
 
       newRequests.foldLeft((nextIndex, Seq[OperationRequestMessage]())) {
         case ((n, mm), r) =>
-          val newMessages = mm :+ OperationRequestMessage(CompoundTradeRequestId(botId, n), r)
+          val newMessages = mm :+ OperationRequestMessage(CompoundOperationRequestId(botId, n), r)
           (n + 1, newMessages)
       }._2
     }
