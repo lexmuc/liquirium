@@ -23,13 +23,23 @@ class OrderIntentConveyorTest extends EvalTest with TestWithMocks {
     )
   )
 
+  private val isInSyncEval = testEval[Boolean]()
+  private val hasOpenRequestsEval = testEval[Boolean]()
   private val orderSyncerEval = testEval[OrderIntentSyncer]()
-  private val openOrdersEval = testEval[Set[BasicOrderData]]()
+  private val openOrdersEval = testEval[Set[Order]]()
   private val orderIntentsEval = testEval[Seq[OrderIntent]]()
   private val nextMessageIdsEval = testEval[Stream[OperationRequestId]]()
 
   def fakeOrderIntents(intents: OrderIntent*): Unit = {
     fakeEvalValue(orderIntentsEval, intents)
+  }
+
+  def fakeInSync(inSync: Boolean): Unit = {
+    fakeEvalValue(isInSyncEval, inSync)
+  }
+
+  def fakeOpenRequests(hasOpenRequests: Boolean): Unit = {
+    fakeEvalValue(hasOpenRequestsEval, hasOpenRequests)
   }
 
   def fakeOrderConstraints(
@@ -51,7 +61,7 @@ class OrderIntentConveyorTest extends EvalTest with TestWithMocks {
     fakeEvalValue(orderSyncerEval, syncer)
   }
 
-  def fakeOpenOrders(oo: BasicOrderData*): Unit = {
+  def fakeOpenOrders(oo: Order*): Unit = {
     fakeEvalValue(openOrdersEval, oo.toSet)
   }
 
@@ -68,11 +78,15 @@ class OrderIntentConveyorTest extends EvalTest with TestWithMocks {
     orderIntentsEval = orderIntentsEval,
     orderConstraintsEval = orderConstraintsEval,
     openOrdersEval = openOrdersEval,
-    orderSyncerEval = orderSyncerEval,
+    orderIntentSyncer = orderSyncerEval,
+    isInSyncEval = isInSyncEval,
+    hasOpenRequestsEval = hasOpenRequestsEval,
     nextMessageIdsEval = nextMessageIdsEval,
   )
 
   test("order intents and open orders are sent to the syncer and when its output is empty so is the conveyor output") {
+    fakeInSync(true)
+    fakeOpenRequests(false)
     fakeNextMessageIds()
     fakeOpenOrders(order(1))
     fakeOrderIntents(orderIntent(1))
@@ -81,6 +95,8 @@ class OrderIntentConveyorTest extends EvalTest with TestWithMocks {
   }
 
   test("when there is output, messages are numbered and intents are converted to requests without modifiers") {
+    fakeInSync(true)
+    fakeOpenRequests(false)
     fakeNextMessageIds(opId(1), opId(2), opId(3))
     fakeOpenOrders(order(1))
     fakeOrderIntents(orderIntent(1))
@@ -95,6 +111,8 @@ class OrderIntentConveyorTest extends EvalTest with TestWithMocks {
   }
 
   test("order intent price and quantity are adapted to match the order constraints") {
+    fakeInSync(true)
+    fakeOpenRequests(false)
     fakeNextMessageIds(opId(1), opId(2), opId(3))
     fakeOrderIntents(
       orderIntent("1.001", at = "2.09"),
@@ -116,6 +134,8 @@ class OrderIntentConveyorTest extends EvalTest with TestWithMocks {
   }
 
   test("order intents are ignored when they cannot be adapted") {
+    fakeInSync(true)
+    fakeOpenRequests(false)
     fakeNextMessageIds(opId(1), opId(2), opId(3))
     fakeOrderIntents(
       orderIntent("0.01", at = "2.09"),
@@ -132,6 +152,32 @@ class OrderIntentConveyorTest extends EvalTest with TestWithMocks {
     assertOutput(
       operationRequestMessage(opId(1), orderIntent(1).toOperationRequest(market, Set())),
     )
+  }
+
+  test("no output is sent when we are not in sync") {
+    fakeInSync(false)
+    fakeOpenRequests(false)
+    fakeNextMessageIds(opId(1), opId(2), opId(3))
+    fakeOpenOrders(order(1))
+    fakeOrderIntents(orderIntent(1))
+    fakeSyncer(Set(order(1)), Seq(orderIntent(1)))(
+      orderIntent(1),
+      cancelIntent("O2"),
+    )
+    assertOutput()
+  }
+
+  test("no output is sent when there are open requests") {
+    fakeInSync(true)
+    fakeOpenRequests(true)
+    fakeNextMessageIds(opId(1), opId(2), opId(3))
+    fakeOpenOrders(order(1))
+    fakeOrderIntents(orderIntent(1))
+    fakeSyncer(Set(order(1)), Seq(orderIntent(1)))(
+      orderIntent(1),
+      cancelIntent("O2"),
+    )
+    assertOutput()
   }
 
 }

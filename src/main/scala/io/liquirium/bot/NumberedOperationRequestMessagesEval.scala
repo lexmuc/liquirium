@@ -21,7 +21,7 @@ object NumberedOperationRequestMessagesEval {
           .filter(_.id.asInstanceOf[CompoundOperationRequestId].botId == botId)
           .take(1).toList.headOption
           .map(_.id.asInstanceOf[CompoundOperationRequestId].requestIndex + 1)
-          .getOrElse(1L)
+          .getOrElse(1)
 
       newRequests.foldLeft((nextIndex, Seq[OperationRequestMessage]())) {
         case ((n, mm), r) =>
