@@ -1,9 +1,9 @@
 package io.liquirium
 
-import io.liquirium.bot.BotInput.{BotOutputHistory, CompletedOperationRequestsInSession, OrderSnapshotHistoryInput, TimeInput, TradeHistoryInput}
+import io.liquirium.bot.BotInput._
 import io.liquirium.core.OperationIntent.OrderIntent
-import io.liquirium.core.orderTracking.{BasicOrderTrackingStateByIdEval, IsInSyncEval, OpenOrdersBasedOnTrackingStates, SuccessfulTradeRequestEvents}
-import io.liquirium.core.{BotId, CompoundOperationRequestId, Market, OrderConstraints, TradeHistorySegment}
+import io.liquirium.core.orderTracking._
+import io.liquirium.core.{BotId, Market, OrderConstraints, TradeHistorySegment}
 import io.liquirium.eval.IncrementalFoldHelpers.IncrementalEval
 import io.liquirium.eval.{Constant, Eval, InputEval}
 
@@ -19,15 +19,6 @@ package object bot {
     start: Instant,
     timeInputForSync: TimeInput,
   ): Eval[Iterable[BotOutput]] = {
-    val botId = BotId("")
-
-    // #TODO make separate, tested eval
-    val nextMessageIdsEval = InputEval(BotOutputHistory) map {
-      rr =>
-        val x = rr.reverseIterator.collect { case orm: OperationRequestMessage => orm.id }
-        val lastIndex = if (x.isEmpty) 0 else x.next().asInstanceOf[CompoundOperationRequestId].requestIndex
-        Stream.iterate(lastIndex + 1)(_ + 1).map(x => CompoundOperationRequestId(botId, x))
-    }
 
     val tradeHistoryEval: Eval[TradeHistorySegment] =
       InputEval(TradeHistoryInput(market, if (simulationMode) Instant.ofEpochSecond(0) else start))
@@ -59,7 +50,7 @@ package object bot {
       orderIntentSyncer = Constant(SimpleOrderIntentSyncer(OrderMatcher.ExactMatcher)),
       isInSyncEval = isInSyncEval,
       hasOpenRequestsEval = hasOpenRequestsEval,
-      nextMessageIdsEval = nextMessageIdsEval,
+      nextMessageIdsEval = NextRequestIdsEval(Constant(BotId("")), InputEval(BotOutputHistory)),
     )
   }
 
