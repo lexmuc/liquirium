@@ -15,11 +15,14 @@ class CandleHistorySegmentLoaderTest extends AsyncTestWithControlledTime with Te
   private val batchLoader =
     new FutureServiceMock[Instant => Future[CandleBatch], CandleBatch](_.apply(*))
 
+  private var dropLatest = false
+
   private var loaderCandleLength = secs(5)
 
   def loadSegment(start: Instant): Future[CandleHistorySegment] = {
     val segmentLoader = new CandleHistorySegmentLoader(
       batchLoader = batchLoader.instance,
+      dropLatest = dropLatest,
     )
     segmentLoader.loadFrom(start)
   }
@@ -82,6 +85,34 @@ class CandleHistorySegmentLoaderTest extends AsyncTestWithControlledTime with Te
       e5(sec(20)),
       c5(sec(25), 1),
     )
+  }
+
+  test("it can be configured to drop the latest candle") {
+    dropLatest = true
+    loaderCandleLength = secs(5)
+    val f = loadSegment(sec(10))
+    returnBatch(sec(10), nextStart = Some(sec(20)))(
+      c5(sec(10), 1),
+      c5(sec(15), 1),
+    )
+    returnBatch(sec(20), nextStart = None)(
+      c5(sec(20), 1),
+      c5(sec(25), 1),
+    )
+    f.value.get.get shouldEqual candleHistorySegment(
+      c5(sec(10), 1),
+      c5(sec(15), 1),
+      c5(sec(20), 1),
+    )
+  }
+
+  test("when the latest candle is to be dropped and no candles are found, no candles are returned") {
+    dropLatest = true
+    loaderCandleLength = secs(5)
+    val f = loadSegment(sec(10))
+    returnBatch(sec(10), nextStart = None)(
+    )
+    f.value.get.get shouldEqual candleHistorySegment(sec(10), secs(5))()
   }
 
   test("if one request fails it fails with the same exception") {

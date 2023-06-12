@@ -6,12 +6,16 @@ import scala.concurrent.{ExecutionContext, Future}
 
 
 class CandleHistorySegmentLoader(
-  batchLoader: Instant => Future[CandleBatch]
+  batchLoader: Instant => Future[CandleBatch],
+  dropLatest: Boolean,
 )(implicit val executionContext: ExecutionContext) {
 
-  def loadFrom(start: Instant): Future[CandleHistorySegment] = appendNext(start, None)
+  def loadFrom(start: Instant): Future[CandleHistorySegment] =
+    completeSegment(start, None).map { s =>
+      if (dropLatest) s.dropRight(1) else s
+    }
 
-  def appendNext(start: Instant, historySegment: Option[CandleHistorySegment]): Future[CandleHistorySegment] =
+  def completeSegment(start: Instant, historySegment: Option[CandleHistorySegment]): Future[CandleHistorySegment] =
     batchLoader.apply(start) flatMap { batch =>
       if (batch.start != start)
         throw new RuntimeException("Candle batch start does not equal expected start")
@@ -21,7 +25,7 @@ class CandleHistorySegmentLoader(
       }
       batch.nextBatchStart match {
         case None => Future { segment }
-        case Some(start) => appendNext(start, Some(segment))
+        case Some(start) => completeSegment(start, Some(segment))
       }
     }
 

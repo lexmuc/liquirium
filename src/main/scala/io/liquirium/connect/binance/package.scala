@@ -87,7 +87,10 @@ package object binance {
         tradingPair: TradingPair,
         candleLength: Duration,
       ): CandleHistorySegmentLoader =
-        new CandleHistorySegmentLoader(start => binanceApi.getCandleBatch(tradingPair, candleLength, start))
+        new CandleHistorySegmentLoader(
+          start => binanceApi.getCandleBatch(tradingPair, candleLength, start),
+          dropLatest = true, // the latest candle is incomplete
+        )
 
       private def makeCandleHistoryStream(tradingPair: TradingPair, candleLength: Duration) =
         new PollingCandleHistoryStream(
