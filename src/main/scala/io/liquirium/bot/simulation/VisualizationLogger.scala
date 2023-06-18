@@ -70,26 +70,24 @@ object VisualizationLogger {
     candleStartValues: Map[String, BigDecimal],
   ) extends VisualizationLogger {
 
-    override def log(context: UpdatableContext): (EvalResult[VisualizationLogger], UpdatableContext) = {
-      def candleChangeEval(optCandle: Option[Candle]) = for {
-        endAndStartValues <- config.endStartTupleEval
-      } yield {
-        val (endValues, startValues) = endAndStartValues
-        copy(
-          lastCandle = optCandle,
-          candleStartValues = startValues,
-        ).append(VisualizationUpdate(optCandle.get, candleStartValues ++ endValues))
-      }
+    private def candleChangeEval(optCandle: Option[Candle]) = for {
+      endAndStartValues <- config.endStartTupleEval
+    } yield {
+      val (endValues, startValues) = endAndStartValues
+      val update = VisualizationUpdate(optCandle.get, candleStartValues ++ endValues)
+      copy(
+        lastCandle = optCandle,
+        candleStartValues = startValues,
+        visualizationUpdates = visualizationUpdates :+ update
+      )
+    }
 
+    override def log(context: UpdatableContext): (EvalResult[VisualizationLogger], UpdatableContext) = {
       val tempEval = config.latestCandle.flatMap { optCandle =>
         if (optCandle != lastCandle) candleChangeEval(optCandle) else Eval.unit(this)
       }
-
       context.evaluate(tempEval)
-
     }
-
-    private def append(update: VisualizationUpdate) = copy(visualizationUpdates = visualizationUpdates :+ update)
 
   }
 
