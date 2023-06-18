@@ -2,7 +2,7 @@ package io.liquirium.bot.simulation
 
 import io.liquirium.bot.simulation.VisualizationLogger.VisualizationConfig
 import io.liquirium.core.Candle
-import io.liquirium.eval.{Eval, EvalResult, InputRequest, UpdatableContext, Value}
+import io.liquirium.eval.{Eval, EvalResult, UpdatableContext}
 
 
 trait VisualizationLogger extends SimulationLogger[VisualizationLogger] {
@@ -11,28 +11,13 @@ trait VisualizationLogger extends SimulationLogger[VisualizationLogger] {
 
   def visualizationUpdates: Iterable[VisualizationUpdate]
 
-  protected def startNextCandle(
-    lastCandle: Option[Candle],
-    candleStartValues: Map[String, BigDecimal],
-  ): VisualizationLogger
-
   protected def config: VisualizationConfig
-
-  protected def tryEvaluation[E](context: UpdatableContext, eval: Eval[E])(
-    f: (UpdatableContext, E) => (EvalResult[VisualizationLogger], UpdatableContext)
-  ): (EvalResult[VisualizationLogger], UpdatableContext) = {
-    val (evalResult, newContext) = context.evaluate(eval)
-    evalResult match {
-      case ir: InputRequest => (ir, newContext)
-      case Value(v) => f(newContext, v)
-    }
-  }
 
 }
 
 object VisualizationLogger {
 
-  private case class VisualizationConfig(
+  protected case class VisualizationConfig(
     latestCandle: Eval[Option[Candle]],
     candleStartEvals: Map[String, Eval[BigDecimal]],
     candleEndEvals: Map[String, Eval[BigDecimal]],
@@ -55,34 +40,26 @@ object VisualizationLogger {
     candleStartEvals: Map[String, Eval[BigDecimal]],
     candleEndEvals: Map[String, Eval[BigDecimal]],
   ): VisualizationLogger = InitState(VisualizationConfig(
-    latestCandle =  latestCandle,
+    latestCandle = latestCandle,
     candleStartEvals = candleStartEvals,
     candleEndEvals = candleEndEvals,
   ))
 
   private case class InitState(config: VisualizationConfig) extends VisualizationLogger {
+    private val firstStateEval = for {
+      optCandle <- config.latestCandle
+      startValuesMap <- config.candleStartMapEval
+    } yield MainImpl(
+      config = config,
+      lastCandle = optCandle,
+      visualizationUpdates = Vector(),
+      candleStartValues = startValuesMap,
+    )
 
     override def log(context: UpdatableContext): (EvalResult[VisualizationLogger], UpdatableContext) =
-      tryEvaluation(context, config.latestCandle) { (afterCandleContext, optCandle) =>
-        tryEvaluation(afterCandleContext, config.candleStartMapEval) { (finalContext, startValuesMap) =>
-          val newLogger = MainImpl(
-            config = config,
-            lastCandle = optCandle,
-            visualizationUpdates = Vector(),
-            candleStartValues = startValuesMap,
-          )
-          (Value(newLogger), finalContext)
-        }
-      }
+      context.evaluate(firstStateEval)
 
     override def visualizationUpdates: Iterable[VisualizationUpdate] = Vector()
-
-    override def startNextCandle(lastCandle: Option[Candle], candleStartValues: Map[String, BigDecimal]): MainImpl =
-      MainImpl(
-        config = config,
-        lastCandle = lastCandle,
-        candleStartValues = candleStartValues,
-      )
 
   }
 
@@ -93,28 +70,24 @@ object VisualizationLogger {
     candleStartValues: Map[String, BigDecimal],
   ) extends VisualizationLogger {
 
-    override def log(context: UpdatableContext): (EvalResult[VisualizationLogger], UpdatableContext) =
-      tryEvaluation(context, config.latestCandle) { (afterCandleContext, optCandle) =>
-        if (optCandle != lastCandle) {
-          tryEvaluation(afterCandleContext, config.endStartTupleEval) {
-            case (finalContext, (endValues, startValues)) =>
-              val newLogger = startNextCandle(
-                lastCandle = optCandle,
-                candleStartValues = startValues,
-              ).append(VisualizationUpdate(optCandle.get, candleStartValues ++ endValues))
-              (Value(newLogger), finalContext)
-          }
-        }
-        else {
-          (Value(this), afterCandleContext)
-        }
+    override def log(context: UpdatableContext): (EvalResult[VisualizationLogger], UpdatableContext) = {
+      def candleChangeEval(optCandle: Option[Candle]) = for {
+        endAndStartValues <- config.endStartTupleEval
+      } yield {
+        val (endValues, startValues) = endAndStartValues
+        copy(
+          lastCandle = optCandle,
+          candleStartValues = startValues,
+        ).append(VisualizationUpdate(optCandle.get, candleStartValues ++ endValues))
       }
 
-    override def startNextCandle(lastCandle: Option[Candle], candleStartValues: Map[String, BigDecimal]): MainImpl =
-      copy(
-        lastCandle = lastCandle,
-        candleStartValues = candleStartValues,
-      )
+      val tempEval = config.latestCandle.flatMap { optCandle =>
+        if (optCandle != lastCandle) candleChangeEval(optCandle) else Eval.unit(this)
+      }
+
+      context.evaluate(tempEval)
+
+    }
 
     private def append(update: VisualizationUpdate) = copy(visualizationUpdates = visualizationUpdates :+ update)
 
