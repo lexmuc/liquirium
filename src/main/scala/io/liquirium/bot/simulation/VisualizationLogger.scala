@@ -32,7 +32,7 @@ trait VisualizationLogger extends SimulationLogger[VisualizationLogger] {
 
 object VisualizationLogger {
 
-  case class VisualizationConfig(
+  private case class VisualizationConfig(
     latestCandle: Eval[Option[Candle]],
     candleStartEvals: Map[String, Eval[BigDecimal]],
     candleEndEvals: Map[String, Eval[BigDecimal]],
@@ -50,7 +50,15 @@ object VisualizationLogger {
 
   }
 
-  def apply(config: VisualizationConfig): VisualizationLogger = InitState(config)
+  def apply(
+    latestCandle: Eval[Option[Candle]],
+    candleStartEvals: Map[String, Eval[BigDecimal]],
+    candleEndEvals: Map[String, Eval[BigDecimal]],
+  ): VisualizationLogger = InitState(VisualizationConfig(
+    latestCandle =  latestCandle,
+    candleStartEvals = candleStartEvals,
+    candleEndEvals = candleEndEvals,
+  ))
 
   private case class InitState(config: VisualizationConfig) extends VisualizationLogger {
 

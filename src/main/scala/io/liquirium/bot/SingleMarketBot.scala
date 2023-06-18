@@ -23,6 +23,7 @@ object SingleMarketBot {
 
     def candleLength: Duration
 
+    // The SingleMarketBot will always provide a candle history of at least this length
     def minimumCandleHistoryLength: Duration
 
   }

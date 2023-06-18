@@ -1,6 +1,5 @@
 package io.liquirium.bot.simulation
 
-import io.liquirium.bot.simulation.VisualizationLogger.VisualizationConfig
 import io.liquirium.core.Candle
 import io.liquirium.core.helpers.CandleHelpers.candle
 import io.liquirium.core.helpers.CoreHelpers.dec
@@ -17,8 +16,8 @@ class VisualizationLoggerTest extends SimulationLoggerTest[VisualizationLogger] 
     def dataPoints: Iterable[Map[String, BigDecimal]] = updates.map(_.namedDataPoints)
   }
 
-  var candleStartMetrics: Map[String, Eval[BigDecimal]] = Map()
-  var candleEndMetrics: Map[String, Eval[BigDecimal]] = Map()
+  var candleStartEvals: Map[String, Eval[BigDecimal]] = Map()
+  var candleEndEvals: Map[String, Eval[BigDecimal]] = Map()
 
   val candleEval: Eval[Option[Candle]] = testEval(1)
   val mA: Eval[BigDecimal] = testEval(2)
@@ -27,7 +26,11 @@ class VisualizationLoggerTest extends SimulationLoggerTest[VisualizationLogger] 
   val mD: Eval[BigDecimal] = testEval(5)
 
   override def initialLogger(): VisualizationLogger =
-    VisualizationLogger(VisualizationConfig(candleEval, candleStartMetrics, candleEndMetrics))
+    VisualizationLogger(
+      latestCandle = candleEval,
+      candleStartEvals = candleStartEvals,
+      candleEndEvals = candleEndEvals,
+    )
 
   private def fakeEvaluationsAndLogWithoutCandle(tuples: (Eval[_], _)*): Unit = {
     val candleTuple = candleEval -> None
@@ -86,8 +89,8 @@ class VisualizationLoggerTest extends SimulationLoggerTest[VisualizationLogger] 
     assertCandles(candle(2), candle(3))
   }
 
-  test("start metrics are taken at the beginning of the candle") {
-    candleStartMetrics = Map("mA" -> mA)
+  test("start evals are taken at the beginning of the candle") {
+    candleStartEvals = Map("mA" -> mA)
     initLogger()
     fakeEvaluationsAndLog(candle(1), mA -> dec(1))
     fakeEvaluationsAndLog(candle(1))
@@ -101,8 +104,8 @@ class VisualizationLoggerTest extends SimulationLoggerTest[VisualizationLogger] 
     )
   }
 
-  test("end metrics are taken at the end of the candle (beginning of next)") {
-    candleEndMetrics = Map("mB" -> mB)
+  test("end evals are taken at the end of the candle (beginning of next)") {
+    candleEndEvals = Map("mB" -> mB)
     initLogger()
     fakeEvaluationsAndLog(candle(1))
     fakeEvaluationsAndLog(candle(1))
@@ -116,9 +119,9 @@ class VisualizationLoggerTest extends SimulationLoggerTest[VisualizationLogger] 
     )
   }
 
-  test("there can be several metrics at the start and the end of the candle") {
-    candleStartMetrics = Map("mA" -> mA, "mB" -> mB)
-    candleEndMetrics = Map("mC" -> mC, "mD" -> mD)
+  test("there can be several evals at the start and the end of the candle") {
+    candleStartEvals = Map("mA" -> mA, "mB" -> mB)
+    candleEndEvals = Map("mC" -> mC, "mD" -> mD)
     initLogger()
     fakeEvaluationsAndLog(candle(1), mA -> dec(1), mB -> dec(2))
     fakeEvaluationsAndLog(candle(1))
