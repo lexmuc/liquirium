@@ -1,32 +1,37 @@
 package io.liquirium.connect
 
 import io.liquirium.core.CandleHistorySegment
-import java.time.Instant
+import io.liquirium.util.Clock
+
+import java.time.{Duration, Instant}
 import scala.concurrent.{ExecutionContext, Future}
 
 
 class CandleHistorySegmentLoader(
   batchLoader: Instant => Future[CandleBatch],
-  dropLatest: Boolean,
+  candleLength: Duration,
+  clock: Clock,
 )(implicit val executionContext: ExecutionContext) {
 
   def loadFrom(start: Instant): Future[CandleHistorySegment] =
-    completeSegment(start, None).map { s =>
-      if (dropLatest) s.dropRight(1) else s
-    }
+    completeSegment(CandleHistorySegment.empty(start, candleLength))
+      .map(_.padUntil(clock.getTime).cutOff(clock.getTime))
 
-  def completeSegment(start: Instant, historySegment: Option[CandleHistorySegment]): Future[CandleHistorySegment] =
-    batchLoader.apply(start) flatMap { batch =>
-      if (batch.start != start)
-        throw new RuntimeException("Candle batch start does not equal expected start")
-      val segment = historySegment match {
-        case None => batch.toHistorySegment
-        case Some(seg) => seg.extendWith(batch.toHistorySegment)
+  def completeSegment(historySegment: CandleHistorySegment): Future[CandleHistorySegment] =
+      if (historySegment.end.plus(candleLength).isAfter(clock.getTime)) {
+        Future { historySegment }
       }
-      batch.nextBatchStart match {
-        case None => Future { segment }
-        case Some(start) => completeSegment(start, Some(segment))
+      else {
+        batchLoader.apply(historySegment.end) flatMap { batch =>
+          if (batch.start != historySegment.end)
+            throw new RuntimeException("Candle batch start does not equal expected start")
+          val newSegment = historySegment.extendWith(batch.toHistorySegment)
+          batch.nextBatchStart match {
+            // next batch start is redundant because it equals current end
+            case Some(_) => completeSegment(newSegment)
+            case _ => Future { newSegment }
+          }
+        }
       }
-    }
 
 }

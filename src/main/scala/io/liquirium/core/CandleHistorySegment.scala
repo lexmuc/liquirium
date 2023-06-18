@@ -75,7 +75,7 @@ sealed trait CandleHistorySegment
   }
 
   @tailrec
-  private def cutOff(time: Instant): CandleHistorySegment = this match {
+  final def cutOff(time: Instant): CandleHistorySegment = this match {
     case Empty(_, _) => this
     case s: Increment => if (s.end isAfter time) s.init.cutOff(time) else s
   }
@@ -93,7 +93,12 @@ sealed trait CandleHistorySegment
 
   override def equals(that: Any): Boolean = that match {
     case that: CandleHistorySegment =>
-      (that eq this.asInstanceOf[CandleHistorySegment]) || (that.reverseIterator sameElements this.reverseIterator)
+      (that eq this.asInstanceOf[CandleHistorySegment]) ||
+        (
+          that.start == this.start &&
+            that.candleLength == this.candleLength &&
+            (that.reverseIterator sameElements this.reverseIterator)
+          )
     case _ => super.equals(that)
   }
 

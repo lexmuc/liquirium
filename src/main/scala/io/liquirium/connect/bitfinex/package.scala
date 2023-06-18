@@ -95,9 +95,11 @@ package object bitfinex {
     new ExchangeConnector {
 
       private def makeCandleHistoryStream(tradingPair: TradingPair, candleLength: Duration) = {
-        val segmentLoader = new CandleHistorySegmentLoader(
+        val segmentLoader: CandleHistorySegmentLoader =
+        new CandleHistorySegmentLoader(
           batchLoader = start => bitfinexApi.getCandleBatch(tradingPair, candleLength, start),
-          dropLatest = true, // latest candle is incomplete
+          candleLength = candleLength,
+          clock = SystemClock,
         )
         new PollingCandleHistoryStream(
           segmentLoader = segmentLoader.loadFrom,
