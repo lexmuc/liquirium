@@ -59,6 +59,21 @@ class PollingCandleHistoryStreamTest extends AsyncTestWithControlledTime with Te
     sinkProbe.requestNext shouldEqual initialSegment.extendWith(updateSegment)
   }
 
+  test("it does not emit an update if the segment is not changed by the update, except for the first time") {
+    updateStartProvider = CandleUpdateOverlapStrategy.complete
+    interval = 10.seconds
+    val initialSegment = segment(sec(10), secs(5))(1, 2)
+    val sinkProbe = runWithProbe(initialSegment)
+    wait(2.seconds)
+    val updateSegment = segment(sec(10), secs(5))(1, 2)
+    candleLoader.completeNext(updateSegment)
+    sinkProbe.requestNext shouldEqual initialSegment.extendWith(updateSegment)
+    wait(12.seconds)
+    candleLoader.completeNext(updateSegment)
+    sinkProbe.request(1)
+    sinkProbe.expectNoMessage()
+  }
+
   test("it requests the next segment for the new update start after the given interval (starting when received)") {
     updateStartProvider = _.end
     interval = 10.seconds

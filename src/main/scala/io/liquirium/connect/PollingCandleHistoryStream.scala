@@ -40,7 +40,10 @@ class PollingCandleHistoryStream(
 
         queue.watchCompletion().foreach(_ => context.self ! Completed)
 
-        def running(segment: CandleHistorySegment): Behavior[Protocol] = Behaviors.receiveMessage {
+        def running(
+          segment: CandleHistorySegment,
+          initialising: Boolean,
+        ): Behavior[Protocol] = Behaviors.receiveMessage {
 
           case GetCandles =>
             segmentLoader.apply(updateOverlapStrategy(segment)).onComplete {
@@ -52,15 +55,17 @@ class PollingCandleHistoryStream(
 
           case GotCandles(cc) =>
             val extendedSegment = segment.extendWith(cc)
-            queue.offer(extendedSegment)
+            if (initialising || extendedSegment != segment) {
+              queue.offer(extendedSegment)
+            }
             timers.startSingleTimer(GetCandles, GetCandles, interval)
-            running(extendedSegment)
+            running(extendedSegment, initialising = false)
 
           case Completed =>
             Behaviors.stopped
         }
 
-        running(initialSegment)
+        running(initialSegment, initialising = true)
       }
     }
 
