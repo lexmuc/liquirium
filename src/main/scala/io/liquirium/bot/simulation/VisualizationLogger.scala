@@ -30,8 +30,13 @@ object VisualizationLogger {
     val candleStartMapEval: Eval[Map[String, BigDecimal]] = toMapEval(candleStartEvals)
     val candleEndMapEval: Eval[Map[String, BigDecimal]] = toMapEval(candleEndEvals)
 
-    val endStartTupleEval: Eval[(Map[String, BigDecimal], Map[String, BigDecimal])] =
-      Eval.map2(candleEndMapEval, candleStartMapEval) { case (e, s) => (e, s) }
+    val candleAndValuesEval: Eval[(Option[Candle], Map[String, BigDecimal], Map[String, BigDecimal])] = for {
+      optCandle <- latestCandle
+      startValues <- candleStartMapEval
+      endValues <- candleEndMapEval
+    } yield {
+      (optCandle, startValues, endValues)
+    }
 
   }
 
@@ -70,20 +75,16 @@ object VisualizationLogger {
       visualizationUpdates = visualizationUpdates :+ VisualizationUpdate(candle, candleStartValues ++ endValues)
     )
 
-    private val regularEval = for {
-      optCandle <- config.latestCandle
-      endAndStartValues <- config.endStartTupleEval
-    } yield {
-      if (optCandle != lastCandle) logCandle(
-        optCandle.get,
-        endAndStartValues._2,
-        endAndStartValues._1,
-      ) else this
-    }
-
     override def log(context: UpdatableContext): (EvalResult[VisualizationLogger], UpdatableContext) =
       if (isInitialized) {
-        context.evaluate(regularEval)
+        context.evaluate(config.candleAndValuesEval) match {
+          case (evalResult, newContext) =>
+            val mappedResult = evalResult.map {
+              case (optCandle, startValues, endValues) =>
+                if (optCandle != lastCandle) logCandle(optCandle.get, startValues, endValues) else this
+            }
+            (mappedResult, newContext)
+        }
       }
       else {
         val initEval = for {
