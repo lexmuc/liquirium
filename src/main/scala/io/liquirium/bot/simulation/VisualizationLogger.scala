@@ -1,7 +1,7 @@
 package io.liquirium.bot.simulation
 
 import io.liquirium.bot.simulation.VisualizationLogger.VisualizationConfig
-import io.liquirium.core.Candle
+import io.liquirium.core.{Candle, CandleHistorySegment}
 import io.liquirium.eval.{Eval, EvalResult, UpdatableContext}
 
 
@@ -18,7 +18,7 @@ trait VisualizationLogger extends SimulationLogger[VisualizationLogger] {
 object VisualizationLogger {
 
   protected case class VisualizationConfig(
-    latestCandle: Eval[Option[Candle]],
+    candlesEval: Eval[CandleHistorySegment],
     candleStartEvals: Map[String, Eval[BigDecimal]],
     candleEndEvals: Map[String, Eval[BigDecimal]],
   ) {
@@ -30,37 +30,33 @@ object VisualizationLogger {
     val candleStartMapEval: Eval[Map[String, BigDecimal]] = toMapEval(candleStartEvals)
     val candleEndMapEval: Eval[Map[String, BigDecimal]] = toMapEval(candleEndEvals)
 
-    val candleAndValuesEval: Eval[(Option[Candle], Map[String, BigDecimal], Map[String, BigDecimal])] = for {
-      optCandle <- latestCandle
+    val candlesAndValuesEval: Eval[(CandleHistorySegment, Map[String, BigDecimal], Map[String, BigDecimal])] = for {
+      candles <- candlesEval
       startValues <- candleStartMapEval
       endValues <- candleEndMapEval
-    } yield {
-      (optCandle, startValues, endValues)
-    }
+    } yield (candles, startValues, endValues)
 
   }
 
   def apply(
-    latestCandle: Eval[Option[Candle]],
+    candlesEval: Eval[CandleHistorySegment],
     candleStartEvals: Map[String, Eval[BigDecimal]],
     candleEndEvals: Map[String, Eval[BigDecimal]],
   ): VisualizationLogger =
     Impl(
-      isInitialized = false,
       config = VisualizationConfig(
-        latestCandle = latestCandle,
+        candlesEval = candlesEval,
         candleStartEvals = candleStartEvals,
         candleEndEvals = candleEndEvals,
       ),
-      lastCandle = None,
+      lastCandles = None,
       visualizationUpdates = Vector(),
       candleStartValues = Map[String, BigDecimal](),
     )
 
   private case class Impl(
-    isInitialized: Boolean,
     config: VisualizationConfig,
-    lastCandle: Option[Candle],
+    lastCandles: Option[CandleHistorySegment],
     visualizationUpdates: Vector[VisualizationUpdate],
     candleStartValues: Map[String, BigDecimal],
   ) extends VisualizationLogger {
@@ -70,34 +66,44 @@ object VisualizationLogger {
       startValues: Map[String, BigDecimal],
       endValues: Map[String, BigDecimal],
     ) = copy(
-      lastCandle = Some(candle),
       candleStartValues = startValues,
       visualizationUpdates = visualizationUpdates :+ VisualizationUpdate(candle, candleStartValues ++ endValues)
     )
 
-    override def log(context: UpdatableContext): (EvalResult[VisualizationLogger], UpdatableContext) =
-      if (isInitialized) {
-        context.evaluate(config.candleAndValuesEval) match {
-          case (evalResult, newContext) =>
-            val mappedResult = evalResult.map {
-              case (optCandle, startValues, endValues) =>
-                if (optCandle != lastCandle) logCandle(optCandle.get, startValues, endValues) else this
-            }
-            (mappedResult, newContext)
-        }
-      }
-      else {
-        val initEval = for {
-          optCandle <- config.latestCandle
-          startValuesMap <- config.candleStartMapEval
-        } yield copy(
-          isInitialized = true,
-          lastCandle = optCandle,
-          candleStartValues = startValuesMap,
-        )
-        context.evaluate(initEval)
-      }
+    override def log(context: UpdatableContext): (EvalResult[VisualizationLogger], UpdatableContext) = {
+      context.evaluate(config.candlesAndValuesEval) match {
+        case (evalResult, newContext) =>
+          val mappedResult = evalResult.map {
+            case (candles, startValues, endValues) =>
 
+              if (lastCandles.isDefined) {
+                if (candles != lastCandles.get) {
+                  val newCandles = candles.incrementsAfter(lastCandles.get)
+                  if (newCandles.size != 1) {
+                    throw new RuntimeException(
+                      "VisualizationLogger expected exactly 1 new candle but was " + newCandles.size
+                    )
+                  }
+                  logCandle(newCandles.head, startValues, endValues).copy(lastCandles = Some(candles))
+                } else this
+              }
+
+              else {
+                if (candles.nonEmpty) {
+                  throw new RuntimeException(
+                    s"VisualizationLogger was called for the first time but there are already ${candles.size} candle(s)"
+                  )
+                }
+                copy(
+                  lastCandles = Some(candles),
+                  candleStartValues = startValues,
+                )
+              }
+
+          }
+          (mappedResult, newContext)
+      }
+    }
   }
 
 }

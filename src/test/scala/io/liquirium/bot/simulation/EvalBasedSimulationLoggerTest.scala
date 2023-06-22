@@ -23,13 +23,26 @@ abstract class EvalBasedSimulationLoggerTest [L <: SimulationLogger[L]] extends 
     logger = initialLogger()
   }
 
-  protected def runLogWithEvaluations(tuples: Seq[(Eval[_], _)]): Unit = {
+  protected def fakeValues(tuples: (Eval[_], _)*): Unit = {
     context = tuples.foldLeft(context) {
       case (c, t) => c.fake(t._1, t._2)
     }
+  }
+
+  protected def log(): Unit = {
     val loggingResult = logger.log(context)
     lastLoggingResult = Some(loggingResult)
     logger = loggingResult._1.get
+  }
+
+  protected def fakeValuesAndLog(tuples: (Eval[_], _)*): Unit = {
+    fakeValues(tuples: _*)
+    log()
+  }
+
+  protected def runLogWithEvaluations(tuples: Seq[(Eval[_], _)]): Unit = {
+    fakeValues(tuples: _*)
+    log()
   }
 
 }

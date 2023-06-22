@@ -1,6 +1,6 @@
 package io.liquirium.core
 
-import io.liquirium.core.CandleAggregationFold.{AggregationState}
+import io.liquirium.core.CandleAggregationFold.AggregationState
 import io.liquirium.eval.IncrementalFold
 
 import java.time.{Duration, Instant}
