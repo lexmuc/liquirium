@@ -5,7 +5,7 @@ import io.liquirium.eval.Eval
 import io.liquirium.eval.helpers.EvalHelpers.testEval
 
 class CombinedSimulationLoggerTest
-  extends SimulationLoggerTest[CombinedSimulationLogger[FakeSimulationLogger, FakeSimulationLogger]] {
+  extends NoEvalSimulationLoggerTest[CombinedSimulationLogger[FakeSimulationLogger, FakeSimulationLogger]] {
 
   val mA: Eval[Int] = testEval(1)
   val mB: Eval[Int] = testEval(2)

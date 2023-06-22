@@ -6,7 +6,7 @@ import io.liquirium.core.helpers.CoreHelpers.dec
 import io.liquirium.eval.Eval
 import io.liquirium.eval.helpers.EvalHelpers.testEval
 
-class VisualizationLoggerTest extends SimulationLoggerTest[VisualizationLogger] {
+class VisualizationLoggerTest extends EvalBasedSimulationLoggerTest[VisualizationLogger] {
 
   implicit class ResultAccessors(vl: VisualizationLogger) {
     private def updates = vl.visualizationUpdates
@@ -107,7 +107,7 @@ class VisualizationLoggerTest extends SimulationLoggerTest[VisualizationLogger] 
   test("end evals are taken at the end of the candle (beginning of next)") {
     candleEndEvals = Map("mB" -> mB)
     initLogger()
-    fakeEvaluationsAndLog(candle(1))
+    fakeEvaluationsAndLog(candle(1), mB -> dec(0))
     fakeEvaluationsAndLog(candle(1))
     fakeEvaluationsAndLog(candle(2), mB -> dec(3))
     fakeEvaluationsAndLog(candle(2))
@@ -123,7 +123,7 @@ class VisualizationLoggerTest extends SimulationLoggerTest[VisualizationLogger] 
     candleStartEvals = Map("mA" -> mA, "mB" -> mB)
     candleEndEvals = Map("mC" -> mC, "mD" -> mD)
     initLogger()
-    fakeEvaluationsAndLog(candle(1), mA -> dec(1), mB -> dec(2))
+    fakeEvaluationsAndLog(candle(1), mA -> dec(1), mB -> dec(2), mC -> dec(0), mD -> dec(0))
     fakeEvaluationsAndLog(candle(1))
     fakeEvaluationsAndLog(candle(2), mC -> dec(3), mD -> dec(4), mA -> dec(5), mB -> dec(6))
     fakeEvaluationsAndLog(candle(2))

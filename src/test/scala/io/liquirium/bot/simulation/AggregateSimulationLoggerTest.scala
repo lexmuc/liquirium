@@ -4,7 +4,7 @@ import io.liquirium.bot.simulation.helpers.FakeSimulationLogger
 import io.liquirium.eval.Eval
 import io.liquirium.eval.helpers.EvalHelpers.testEval
 
-class AggregateSimulationLoggerTest extends SimulationLoggerTest[AggregateSimulationLogger[FakeSimulationLogger]] {
+class AggregateSimulationLoggerTest extends NoEvalSimulationLoggerTest[AggregateSimulationLogger[FakeSimulationLogger]] {
 
   var subLoggers: Seq[FakeSimulationLogger] = Seq()
 
@@ -14,7 +14,7 @@ class AggregateSimulationLoggerTest extends SimulationLoggerTest[AggregateSimula
   override protected def initialLogger(): AggregateSimulationLogger[FakeSimulationLogger] =
     AggregateSimulationLogger(subLoggers)
 
-  test("it simply returns the logger as is if there are no sub loggers") {
+  test("it simply returns the logger when there are no sub loggers") {
     subLoggers = Seq()
     initLogger()
     runLogWithEvaluations(Seq())

@@ -39,55 +39,63 @@ object VisualizationLogger {
     latestCandle: Eval[Option[Candle]],
     candleStartEvals: Map[String, Eval[BigDecimal]],
     candleEndEvals: Map[String, Eval[BigDecimal]],
-  ): VisualizationLogger = InitState(VisualizationConfig(
-    latestCandle = latestCandle,
-    candleStartEvals = candleStartEvals,
-    candleEndEvals = candleEndEvals,
-  ))
-
-  private case class InitState(config: VisualizationConfig) extends VisualizationLogger {
-    private val firstStateEval = for {
-      optCandle <- config.latestCandle
-      startValuesMap <- config.candleStartMapEval
-    } yield MainImpl(
-      config = config,
-      lastCandle = optCandle,
+  ): VisualizationLogger =
+    Impl(
+      isInitialized = false,
+      config = VisualizationConfig(
+        latestCandle = latestCandle,
+        candleStartEvals = candleStartEvals,
+        candleEndEvals = candleEndEvals,
+      ),
+      lastCandle = None,
       visualizationUpdates = Vector(),
-      candleStartValues = startValuesMap,
+      candleStartValues = Map[String, BigDecimal](),
     )
 
-    override def log(context: UpdatableContext): (EvalResult[VisualizationLogger], UpdatableContext) =
-      context.evaluate(firstStateEval)
-
-    override def visualizationUpdates: Iterable[VisualizationUpdate] = Vector()
-
-  }
-
-  private case class MainImpl(
+  private case class Impl(
+    isInitialized: Boolean,
     config: VisualizationConfig,
     lastCandle: Option[Candle],
-    visualizationUpdates: Vector[VisualizationUpdate] = Vector(),
+    visualizationUpdates: Vector[VisualizationUpdate],
     candleStartValues: Map[String, BigDecimal],
   ) extends VisualizationLogger {
 
-    private def candleChangeEval(optCandle: Option[Candle]) = for {
+    private def logCandle(
+      candle: Candle,
+      startValues: Map[String, BigDecimal],
+      endValues: Map[String, BigDecimal],
+    ) = copy(
+      lastCandle = Some(candle),
+      candleStartValues = startValues,
+      visualizationUpdates = visualizationUpdates :+ VisualizationUpdate(candle, candleStartValues ++ endValues)
+    )
+
+    private val regularEval = for {
+      optCandle <- config.latestCandle
       endAndStartValues <- config.endStartTupleEval
     } yield {
-      val (endValues, startValues) = endAndStartValues
-      val update = VisualizationUpdate(optCandle.get, candleStartValues ++ endValues)
-      copy(
-        lastCandle = optCandle,
-        candleStartValues = startValues,
-        visualizationUpdates = visualizationUpdates :+ update
-      )
+      if (optCandle != lastCandle) logCandle(
+        optCandle.get,
+        endAndStartValues._2,
+        endAndStartValues._1,
+      ) else this
     }
 
-    override def log(context: UpdatableContext): (EvalResult[VisualizationLogger], UpdatableContext) = {
-      val tempEval = config.latestCandle.flatMap { optCandle =>
-        if (optCandle != lastCandle) candleChangeEval(optCandle) else Eval.unit(this)
+    override def log(context: UpdatableContext): (EvalResult[VisualizationLogger], UpdatableContext) =
+      if (isInitialized) {
+        context.evaluate(regularEval)
       }
-      context.evaluate(tempEval)
-    }
+      else {
+        val initEval = for {
+          optCandle <- config.latestCandle
+          startValuesMap <- config.candleStartMapEval
+        } yield copy(
+          isInitialized = true,
+          lastCandle = optCandle,
+          candleStartValues = startValuesMap,
+        )
+        context.evaluate(initEval)
+      }
 
   }
 

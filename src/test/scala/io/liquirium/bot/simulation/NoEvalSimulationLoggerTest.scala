@@ -7,9 +7,13 @@ import io.liquirium.eval.{BaseContext, Context, DerivedEval, Eval, EvalResult, I
 import scala.annotation.tailrec
 
 /**
- * super class for the logger tests
+ * Super class for some of the logger tests
+ *
+ * A logger should make use of Evals so it is guaranteed that input requests and the context itself is passed
+ * along correctly. This test is for the other loggers that do not use Evals yet.
+ *
  */
-abstract class SimulationLoggerTest[L <: SimulationLogger[L]] extends BasicTest {
+abstract class NoEvalSimulationLoggerTest[L <: SimulationLogger[L]] extends BasicTest {
 
   val finalContext: UpdatableContext = BaseContext.fromInputValues(Map())
 
