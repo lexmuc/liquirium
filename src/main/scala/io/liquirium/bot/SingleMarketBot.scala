@@ -78,6 +78,6 @@ abstract class SingleMarketBot extends EvalBot {
         candleHistory = candleHistorySegment,
       )
 
-  override def eval: Eval[Iterable[BotOutput]] = getOrderIntentConveyor(market, stateEval.map(s => strategy(s)))
+  override val eval: Eval[Iterable[BotOutput]] = getOrderIntentConveyor(market, stateEval.map(s => strategy(s)))
 
 }
