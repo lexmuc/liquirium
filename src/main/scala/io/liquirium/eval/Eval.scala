@@ -159,6 +159,8 @@ case class IncrementalFoldEval[I, IV <: IncrementalValue[I, IV], T](
     (er.map(_.value), c)
   }
 
+  override val hashCode: Int = scala.util.hashing.MurmurHash3.productHash(this)
+
 }
 
 
