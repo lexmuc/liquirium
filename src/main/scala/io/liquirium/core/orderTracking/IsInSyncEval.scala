@@ -12,16 +12,19 @@ object IsInSyncEval {
     statesByIdEval: Eval[IncrementalMap[String, BasicOrderTrackingState]],
     maxSyncDurationEval: Eval[Duration],
     currentTimeEval: Eval[Instant],
-  ): Eval[Boolean] =
+  ): Eval[Boolean] = {
+    val syncingStatesEval = statesByIdEval.filterValuesIncremental(_.syncReasons.nonEmpty).map(_.mapValue.values)
+    val errorStatesEval = statesByIdEval.filterValuesIncremental(_.errorState.isDefined).map(_.mapValue.values)
     for {
-      syncingStates <- statesByIdEval.filterValuesIncremental(_.syncReasons.nonEmpty).map(_.mapValue.values)
-      errorStates <- statesByIdEval.filterValuesIncremental(_.errorState.isDefined).map(_.mapValue.values)
       maxDuration <- maxSyncDurationEval
+      syncingStates <- syncingStatesEval
+      errorStates <- errorStatesEval
       currentTime <- currentTimeEval
     } yield syncingStates.flatMap(_.syncReasons).collectFirst {
       case UnknownWhyOrderIsGone(reasonTime) if (reasonTime plus maxDuration).isAfter(currentTime) => ()
       case ExpectingObservationChange(_, _) => ()
       case ExpectingTrades(_, _) => ()
     }.isEmpty && errorStates.isEmpty
+  }
 
 }
