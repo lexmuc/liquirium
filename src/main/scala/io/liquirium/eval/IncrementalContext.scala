@@ -7,6 +7,18 @@ trait IncrementalContext extends UpdatableContext {
 
 }
 
+object DependencyCollector {
+
+  def empty(e: Eval[_]): DependencyCollector = DependencyCollector(e, Set())
+
+}
+
+case class DependencyCollector(eval: Eval[_], dependencies: Set[Eval[_]]) {
+
+  def add(dep: Eval[_]): DependencyCollector = copy(dependencies = dependencies + dep)
+
+}
+
 object IncrementalContext {
 
   def apply(): IncrementalContext = Impl(Map(), Map(), None, DependencyGraph.empty)
@@ -14,37 +26,36 @@ object IncrementalContext {
   private case class Impl(
     inputValues: Map[Input[_], _],
     cachedValues: Map[Eval[_], EvalResult[_]],
-    parentEval: Option[Eval[_]],
-    dependencyGraph: DependencyGraph[Eval[_]]
+    dependencyCollector: Option[DependencyCollector],
+    dependencyGraph: DependencyGraph[Eval[_]],
   ) extends IncrementalContext {
 
-    override def evaluate[M](eval: Eval[M]): (EvalResult[M], Impl) = internalEval(eval, None)
+    override def evaluate[M](eval: Eval[M]): (EvalResult[M], Impl) = doEvaluate(eval, None)
 
-    private def internalEval[M](eval: Eval[M], oldValue: Option[M]): (EvalResult[M], Impl) = {
-      val (er, newContext) = this.setParentEval(Some(eval)).doEvaluate(eval, oldValue)
-      val resultContext = (parentEval match {
-        case None => newContext
-        case Some(pm) => newContext.addDependency(pm, eval)
-      }).setParentEval(parentEval)
-      (er, resultContext)
+    private def doEvaluate[M](eval: Eval[M], oldValue: Option[M]): (EvalResult[M], Impl) = {
+      val (res, contextAfterEval) = eval match {
+        case de: DerivedEval[M] if cachedValues.contains(de) =>
+          (cachedValues(de).asInstanceOf[EvalResult[M]], this)
+        case de: DerivedEval[M] => evaluateDerivedEval(de, oldValue)
+        case be: BaseEval[M] => (evaluateBaseEval(be), this)
+      }
+      (res, contextAfterEval.copy(
+        dependencyCollector = contextAfterEval.dependencyCollector.map(_.add(eval))
+      ))
     }
 
-    private def setParentEval(cm: Option[Eval[_]]) = copy(parentEval = cm)
-
-    private def doEvaluate[M](eval: Eval[M], oldValue: Option[M]): (EvalResult[M], Impl) =
-      eval match {
-        case dm: DerivedEval[M] if cachedValues.contains(dm) =>
-          (cachedValues(dm).asInstanceOf[EvalResult[M]], this)
-        case dm: DerivedEval[M] =>
-          val oldDependencies = this.dependencyGraph.getDependencies(dm)
-          val (result, ctx1) = dm.eval(this.clearDependencies(dm), oldValue)
-          val newDependencies = ctx1.asInstanceOf[Impl].dependencyGraph.getDependencies(dm)
-          val ctx2 = ctx1.asInstanceOf[Impl]
-            .cache(dm, result)
-            .dropDependencies(oldDependencies -- newDependencies)
-          (result, ctx2)
-        case bm: BaseEval[M] => (evaluateBaseEval(bm), this)
-      }
+    private def evaluateDerivedEval[M](dm: DerivedEval[M], oldValue: Option[M]): (EvalResult[M], Impl) = {
+      val oldDependencies = this.dependencyGraph.getDependencies(dm)
+      val contextWithCollector = copy(dependencyCollector = Some(DependencyCollector.empty(dm)))
+      val (result, contextAfterEval) = dm.eval(contextWithCollector, oldValue)
+      val newDependencies = contextAfterEval.asInstanceOf[Impl].dependencyCollector.get.dependencies
+      val finalContext =
+        contextAfterEval.asInstanceOf[Impl].copy(dependencyCollector = this.dependencyCollector)
+        .cache(dm, result)
+        .setDependencies(dm, newDependencies)
+        .dropDependencies(oldDependencies -- newDependencies)
+      (result, finalContext)
+    }
 
     override def update(update: InputUpdate): IncrementalContext = {
       val changedInputs = update.updateMappings.filter {
@@ -70,7 +81,7 @@ object IncrementalContext {
             case Value(x) => Some(x)
             case _ => None
           }
-          val (er, newContext) = copy(cachedValues = cachedValues - am).internalEval(am, oldValue)
+          val (er, newContext) = copy(cachedValues = cachedValues - am).doEvaluate(am, oldValue)
           if (er == v) newContext
           else newContext.propagateChange(am)
         case None => this
@@ -78,9 +89,6 @@ object IncrementalContext {
 
     private def cache(m: DerivedEval[_], er: EvalResult[_]) =
       copy(cachedValues = cachedValues.updated(m, er))
-
-    private def clearDependencies(m: DerivedEval[_]): Impl =
-      copy(dependencyGraph = dependencyGraph.removeDependenciesOf(m))
 
     private def dropDependencies(mm: Iterable[Eval[_]]): Impl = {
       val z = (dependencyGraph, Set[Eval[_]]())
@@ -94,8 +102,9 @@ object IncrementalContext {
       )
     }
 
-    private def addDependency(m: Eval[_], dep: Eval[_]) =
-      copy(dependencyGraph = dependencyGraph.add(m, dep))
+    private def setDependencies(m: Eval[_], set: Set[Eval[_]]) = {
+      copy(dependencyGraph = dependencyGraph.setNodeDependencies(m, set))
+    }
 
     private def evaluateBaseEval[M](bm: BaseEval[M]): EvalResult[M] = bm match {
       case InputEval(input) =>

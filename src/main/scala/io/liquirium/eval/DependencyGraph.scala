@@ -44,8 +44,9 @@ case class DependencyGraph[T](dependencies: Map[T, Set[T]], provisions: Map[T, S
       }
     }
 
-  def removeDependenciesOf(node: T): DependencyGraph[T] =
+  def removeDependenciesOf(node: T): DependencyGraph[T] = {
     getDependencies(node).foldLeft(this) { (g, d) => g.remove(node, d)}
+  }
 
   def isDependedOn(node: T): Boolean = provisions.contains(node)
 
