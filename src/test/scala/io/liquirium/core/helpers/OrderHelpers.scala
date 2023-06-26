@@ -50,14 +50,20 @@ object OrderHelpers {
     originalQuantity: BigDecimal = BigDecimal("1.0"),
     price: BigDecimal = BigDecimal("1.0"),
     market: Market = m(0),
-  ): Order =
+  ): Order = {
+    // set original quantity to quantity if the default is incompatible with the quantity
+    val effectiveOriginalQuantity =
+      if (originalQuantity == BigDecimal("1.0") && (quantity.signum == -1 || quantity > originalQuantity))
+        quantity
+      else originalQuantity
     core.Order(
       id = id,
       market = market,
       openQuantity = quantity,
-      fullQuantity = originalQuantity,
+      fullQuantity = effectiveOriginalQuantity,
       price = price
     )
+  }
 
   def order(id: Int): Order = order(id.toString)
 
