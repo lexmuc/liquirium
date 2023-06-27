@@ -1,12 +1,18 @@
 package io.liquirium.core
 
 import io.liquirium.core.CandleAggregationFold.AggregationState
-import io.liquirium.eval.IncrementalFold
+import io.liquirium.eval.{Eval, IncrementalFold, IncrementalFoldEval}
 
 import java.time.{Duration, Instant}
 import scala.annotation.tailrec
 
 object CandleAggregationFold {
+
+  def aggregate(candlesEval: Eval[CandleHistorySegment], aggregateLength: Duration): Eval[CandleHistorySegment] =
+    IncrementalFoldEval(
+      candlesEval,
+      CandleAggregationFold(aggregateLength),
+    ).map(_.completedAggregates)
 
   @tailrec
   private def padBatch(cc: Seq[Candle], length: Int): Seq[Candle] = {
@@ -18,7 +24,7 @@ object CandleAggregationFold {
     else cc
   }
 
-  def startSegment(baseValue: CandleHistorySegment, aggregateLength: Duration): CandleHistorySegment = {
+  private def startSegment(baseValue: CandleHistorySegment, aggregateLength: Duration): CandleHistorySegment = {
     val baseMillis = baseValue.candleLength.toMillis
     val aggregateMillis = aggregateLength.toMillis
     if (aggregateMillis % baseMillis != 0) {

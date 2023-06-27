@@ -1,12 +1,12 @@
 package io.liquirium.core
 
-import io.liquirium.core.helpers.BasicTest
 import io.liquirium.core.helpers.CandleHelpers.{c5, candleHistorySegment, e5}
 import io.liquirium.core.helpers.CoreHelpers.{sec, secs}
+import io.liquirium.eval.helpers.EvalTest
 
 import java.time.Duration
 
-class CandleAggregationFoldTest extends BasicTest {
+class CandleAggregationFoldTest extends EvalTest {
 
   private def aggregate(cc: Candle*) = Candle.aggregate(cc)
 
@@ -48,6 +48,22 @@ class CandleAggregationFoldTest extends BasicTest {
       aggregate(c5(sec(20), 2), c5(sec(25), 3)),
     )
     fold(secs(10), chs) shouldEqual expected
+  }
+
+  test("an eval can be obtained for a candle history eval and a candle length") {
+    val chs = candleHistorySegment(
+      c5(sec(10), 1),
+      c5(sec(15), 2),
+      c5(sec(20), 3),
+      c5(sec(25), 4),
+    )
+    val expected = candleHistorySegment(
+      aggregate(c5(sec(10), 1), c5(sec(15), 2)),
+      aggregate(c5(sec(20), 3), c5(sec(25), 4)),
+    )
+    val candlesEval = testEval[CandleHistorySegment]()
+    fakeEvalValue(candlesEval, chs)
+    evaluate(CandleAggregationFold.aggregate(candlesEval, secs(10))).get shouldEqual expected
   }
 
 }
