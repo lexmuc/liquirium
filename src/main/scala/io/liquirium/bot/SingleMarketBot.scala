@@ -42,8 +42,6 @@ abstract class SingleMarketBot extends EvalBot {
 
   protected def strategy: Strategy
 
-  protected def isSimulation: Boolean
-
   private val candleHistoryInput: CandleHistoryInput =
     CandleHistoryInput(
       market = market,
@@ -51,11 +49,7 @@ abstract class SingleMarketBot extends EvalBot {
       candleLength = strategy.candleLength,
     )
 
-  private val tradeHistoryInput: TradeHistoryInput =
-    TradeHistoryInput(
-      market = market,
-      start = if (isSimulation) Instant.ofEpochSecond(0) else startTime,
-    )
+  private val tradeHistoryInput: TradeHistoryInput = TradeHistoryInput(market, startTime)
 
   private val baseBalanceEval = InputEval(tradeHistoryInput).foldIncremental(_ => initialResources.baseBalance) {
     (bb, t) => bb + t.effects.filter(_.ledger == market.baseLedger).map(_.change).sum

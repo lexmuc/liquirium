@@ -21,14 +21,14 @@ class CandleSimulatorMarketplaceTest extends TestWithMocks {
   protected val candlesEval: Eval[CandleHistorySegment] = InputEval(mock[Input[CandleHistorySegment]])
   protected var candleSimulator: FakeCandleSimulator = FakeCandleSimulator()
   protected var orderIds: Stream[String] = Stream.from(1).map(_.toString).take(10)
-  protected var lastKnownCandleEndTime: Instant = sec(0)
+  protected var simulationStartTime: Instant = sec(0)
   protected var lastInputUpdate: InputUpdate = _
 
 
   def c(n: Int): Candle = CandleHelpers.candle(start = sec(n), length = secs(1))
 
-  protected val completeTradeHistoryInput: TradeHistoryInput = TradeHistoryInput(defaultMarket, sec(0))
-  protected val orderHistoryInput: OrderSnapshotHistoryInput = OrderSnapshotHistoryInput(defaultMarket)
+  protected def completeTradeHistoryInput: TradeHistoryInput = TradeHistoryInput(defaultMarket, simulationStartTime)
+  protected def orderHistoryInput: OrderSnapshotHistoryInput = OrderSnapshotHistoryInput(defaultMarket)
 
   protected def makeInitialMarketplace(): CandleSimulatorMarketplace =
     CandleSimulatorMarketplace(
@@ -36,7 +36,7 @@ class CandleSimulatorMarketplaceTest extends TestWithMocks {
       candlesEval = candlesEval,
       simulator = candleSimulator,
       orderIds = orderIds,
-      lastCandleEndTime = lastKnownCandleEndTime,
+      simulationStartTime = simulationStartTime,
     )
 
   def updateContext(update: SimpleFakeContext => SimpleFakeContext): Unit = {
@@ -56,7 +56,8 @@ class CandleSimulatorMarketplaceTest extends TestWithMocks {
   }
 
   def fakeTradeHistory(tt: Trade*): Unit = {
-    updateContext(_.fake(TradeHistoryInput(defaultMarket, sec(0)), TradeHistorySegment.fromForwardTrades(sec(0), tt)))
+    val segment = TradeHistorySegment.fromForwardTrades(simulationStartTime, tt)
+    updateContext(_.fake(completeTradeHistoryInput, segment))
   }
 
   def fakeMissingTradeHistory(): Unit = {

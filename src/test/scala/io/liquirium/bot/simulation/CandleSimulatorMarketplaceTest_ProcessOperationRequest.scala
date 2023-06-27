@@ -43,7 +43,7 @@ class CandleSimulatorMarketplaceTest_ProcessOperationRequest extends CandleSimul
 
   test("the update of the order set is appended to the order snapshot and time is taken from the candles") {
     orderIds = List("A", "B").toStream
-    lastKnownCandleEndTime = sec(777)
+    simulationStartTime = sec(777)
     fakeCandles(c(100), c(101))
     fakeOrderHistory(
       openOrdersSnapshot(sec(100), order(42)),
@@ -61,13 +61,14 @@ class CandleSimulatorMarketplaceTest_ProcessOperationRequest extends CandleSimul
     orderIds = List("A", "B").toStream
     fakeCandles(c(100), c(101))
     fakeMissingOrderHistory()
-//    process(msg(1, orderRequest(123)))
-    expectInputRequestUponProcess(msg(1, orderRequest(123)))(inputRequest(OrderSnapshotHistoryInput(defaultMarket)))
+    expectInputRequestUponProcess(msg(1, orderRequest(123)))(
+      inputRequest(OrderSnapshotHistoryInput(defaultMarket))
+    )
   }
 
   test("the completed requests are extended with another completed order request with the order id") {
     orderIds = List("A", "B").toStream
-    lastKnownCandleEndTime = sec(777)
+    simulationStartTime = sec(777)
     fakeCandles(c(100), c(101))
     fakeCompletedOperationRequests(completedOperationRequest(1))
     fakeEmptyOrderHistory()

@@ -22,7 +22,6 @@ class SingleMarketBotTest extends BasicTest with Matchers {
   private var initialBaseBalance: BigDecimal = BigDecimal(0)
   private var initialQuoteBalance: BigDecimal = BigDecimal(0)
   private var candleLength: Duration = Duration.ofSeconds(1)
-  private var isSimulation: Boolean = false
   private var minimumCandleHistoryLength = Duration.ofSeconds(0)
   private var strategyFunction: SingleMarketBot.State => Seq[OrderIntent] = (_: SingleMarketBot.State) => Seq()
   private var outputsByOrderIntents: Map[Seq[OrderIntent], Seq[BotOutput]] = Map(Seq() -> Seq())
@@ -40,8 +39,6 @@ class SingleMarketBotTest extends BasicTest with Matchers {
         baseBalance = SingleMarketBotTest.this.initialBaseBalance,
         quoteBalance = SingleMarketBotTest.this.initialQuoteBalance,
       )
-
-    override def isSimulation: Boolean = SingleMarketBotTest.this.isSimulation
 
     override def strategy: SingleMarketBot.Strategy = new SingleMarketBot.Strategy {
 
@@ -170,30 +167,6 @@ class SingleMarketBotTest extends BasicTest with Matchers {
     assertState(
       s => s.quoteBalance == dec(9),
       s => s"quote balance was ${s.quoteBalance} but was expected to be 9",
-    )
-  }
-
-  test("in simulation mode the balances are based on the trade history from second 0") {
-    initialBaseBalance = dec(1)
-    initialQuoteBalance = dec(10)
-    startTime = sec(10)
-    isSimulation = true
-    fakeDefaultCandleHistory()
-    fakeTradeHistory(sec(0))(
-      trade(
-        market = market,
-        time = sec(11),
-        quantity = dec(2),
-        price = dec(2),
-      ),
-    )
-    assertState(
-      s => s.baseBalance == dec(3),
-      s => s"base balance was ${s.baseBalance} but was expected to be 3",
-    )
-    assertState(
-      s => s.quoteBalance == dec(6),
-      s => s"quote balance was ${s.quoteBalance} but was expected to be 6",
     )
   }
 

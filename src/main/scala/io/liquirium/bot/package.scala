@@ -15,13 +15,12 @@ package object bot {
     market: Market,
     orderIntentsEval: Eval[Seq[OrderIntent]],
     orderConstraints: OrderConstraints,
-    simulationMode: Boolean,
     start: Instant,
     timeInputForSync: TimeInput,
   ): Eval[Iterable[BotOutput]] = {
 
     val tradeHistoryEval: Eval[TradeHistorySegment] =
-      InputEval(TradeHistoryInput(market, if (simulationMode) Instant.ofEpochSecond(0) else start))
+      InputEval(TradeHistoryInput(market, start))
 
     val orderStatesByIdEval = BasicOrderTrackingStateByIdEval(
       trades = tradeHistoryEval,

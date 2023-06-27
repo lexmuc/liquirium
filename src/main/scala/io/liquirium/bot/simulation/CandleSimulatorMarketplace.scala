@@ -30,13 +30,14 @@ object CandleSimulatorMarketplace {
     candlesEval: Eval[CandleHistorySegment],
     simulator: CandleSimulator,
     orderIds: Stream[String],
-    lastCandleEndTime: Instant,
+    simulationStartTime: Instant,
   ): CandleSimulatorMarketplace = Impl(
     market = market,
     candlesEval = candlesEval,
     simulator = simulator,
     orderIds = orderIds,
-    lastCandleEndTime = lastCandleEndTime,
+    lastCandleEndTime = simulationStartTime,
+    tradeHistoryInput = TradeHistoryInput(market, simulationStartTime),
   )
 
   case class Impl(
@@ -45,10 +46,10 @@ object CandleSimulatorMarketplace {
     simulator: CandleSimulator,
     orderIds: Stream[String],
     lastCandleEndTime: Instant,
+    tradeHistoryInput: TradeHistoryInput,
   ) extends CandleSimulatorMarketplace {
 
     private val orderHistoryInput: OrderSnapshotHistoryInput = OrderSnapshotHistoryInput(market)
-    private val tradeHistoryInput = TradeHistoryInput(market, Instant.ofEpochSecond(0))
 
     override def processOperationRequest(
       requestMessage: OperationRequestMessage,

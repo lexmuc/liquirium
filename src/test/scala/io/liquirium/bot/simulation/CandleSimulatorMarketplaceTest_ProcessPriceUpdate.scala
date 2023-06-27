@@ -2,7 +2,7 @@ package io.liquirium.bot.simulation
 
 import io.liquirium.bot.BotInput.{OrderSnapshotHistoryInput, TradeHistoryInput}
 import io.liquirium.core.helpers.CoreHelpers.sec
-import io.liquirium.core.helpers.FakeOrderSet
+import io.liquirium.core.helpers.{FakeOrderSet, TradeHelpers}
 import io.liquirium.core.helpers.OrderHelpers.{order => o}
 import io.liquirium.core.helpers.TradeHelpers.{trade => t}
 import io.liquirium.core.orderTracking.helpers.OrderTrackingHelpers.openOrdersSnapshot
@@ -40,43 +40,44 @@ class CandleSimulatorMarketplaceTest_ProcessPriceUpdate extends CandleSimulatorM
   }
 
   test("it returns an input request when the candle input is missing") {
+    simulationStartTime = sec(0)
     fakeOrderHistory(openOrdersSnapshot(orders(0), sec(0)))
-    fakeTradeHistory(t(1))
+    fakeTradeHistory(t(7))
     fakeMissingInputsForCandles(inputRequest(input(123)))
-    lastKnownCandleEndTime = sec(5)
     expectInputRequest(input(123))
   }
 
   test("trades resulting from the simulation of all new candles are appended to the history") {
+    def t(n: Int) = TradeHelpers.trade(sec(n), n.toString)
+    simulationStartTime = sec(5)
     fakeOrderHistory(openOrdersSnapshot(orders(0), sec(0)))
     fakeCandles(c(4), c(5), c(6))
-    fakeTradeHistory(t(1))
-    fakeSimulatorOutput(orders(1))(t(2), t(3))
-    fakeSimulatorOutput(orders(2))(t(4))
-    lastKnownCandleEndTime = sec(5)
+    fakeTradeHistory(t(6))
+    fakeSimulatorOutput(orders(1))(t(7), t(8))
+    fakeSimulatorOutput(orders(2))(t(9))
     processPriceUpdate()
-    assertCompleteTradeHistory(t(1), t(2), t(3), t(4))
+    assertCompleteTradeHistory(t(6), t(7), t(8), t(9))
   }
 
-  test("it returns an input request when the tade history is missing") {
+  test("it returns an input request when the trade history is missing (start is simulation start)") {
+    simulationStartTime = sec(5)
     fakeOrderHistory(openOrdersSnapshot(orders(0), sec(0)))
     fakeCandles(c(4), c(5))
     fakeMissingTradeHistory()
     fakeSimulatorOutput(orders(1))(t(1), t(2))
-    lastKnownCandleEndTime = sec(5)
-    expectInputRequest(TradeHistoryInput(defaultMarket, sec(0)))
+    expectInputRequest(TradeHistoryInput(defaultMarket, sec(5)))
   }
 
   test("the order history is extended with all new order sets and the proper times") {
+    def t(n: Int) = TradeHelpers.trade(sec(n), n.toString)
+    simulationStartTime = sec(5)
     fakeTradeHistory()
     fakeOrderHistory(
       openOrdersSnapshot(orders(1), sec(5)),
     )
-    fakeTradeHistory()
     fakeCandles(c(4), c(5), c(6))
-    fakeSimulatorOutput(orders(2))(t(2))
-    fakeSimulatorOutput(orders(3))(t(3))
-    lastKnownCandleEndTime = sec(5)
+    fakeSimulatorOutput(orders(2))(t(7))
+    fakeSimulatorOutput(orders(3))(t(8))
     processPriceUpdate()
     assertOrderHistory(
       openOrdersSnapshot(orders(1), sec(5)),
@@ -86,25 +87,26 @@ class CandleSimulatorMarketplaceTest_ProcessPriceUpdate extends CandleSimulatorM
   }
 
   test("it returns an input request when the order history is missing") {
+    simulationStartTime = sec(5)
     fakeMissingOrderHistory()
     fakeTradeHistory()
     fakeCandles(c(4), c(5))
     fakeSimulatorOutput(orders(2))(t(2))
-    lastKnownCandleEndTime = sec(5)
     expectInputRequest(OrderSnapshotHistoryInput(defaultMarket))
   }
 
   test("the respectively last known order set is fed to the candle simulator with the current candle") {
+    def t(n: Int) = TradeHelpers.trade(sec(n), n.toString)
+    simulationStartTime = sec(5)
     fakeOrderHistory(
       openOrdersSnapshot(orders(1), sec(5)),
     )
     fakeCandles(c(4), c(5), c(6))
     fakeTradeHistory()
     expectSimulatorInput(orders(1), c(5))
-    fakeSimulatorOutput(orders(2))(t(2))
+    fakeSimulatorOutput(orders(2))(t(7))
     expectSimulatorInput(orders(2), c(6))
-    fakeSimulatorOutput(orders(3))(t(3))
-    lastKnownCandleEndTime = sec(5)
+    fakeSimulatorOutput(orders(3))(t(8))
     processPriceUpdate()
   }
 
@@ -118,31 +120,33 @@ class CandleSimulatorMarketplaceTest_ProcessPriceUpdate extends CandleSimulatorM
   }
 
   test("nothing happens when no new candles are obtained") {
+    def t(n: Int) = TradeHelpers.trade(sec(n), n.toString)
+    simulationStartTime = sec(3)
     fakeCandles(c(1))
     fakeOrderHistory(
       openOrdersSnapshot(orders(1), sec(1)),
     )
-    fakeTradeHistory(t(1))
-    lastKnownCandleEndTime = sec(3)
+    fakeTradeHistory(t(6))
     processPriceUpdate()
-    assertCompleteTradeHistory(t(1))
+    assertCompleteTradeHistory(t(6))
     currentMarketplace shouldEqual makeInitialMarketplace()
-    assertCompleteTradeHistory(t(1))
+    assertCompleteTradeHistory(t(6))
     assertOrderHistory(
       openOrdersSnapshot(orders(1), sec(1)),
     )
   }
 
   test("it keeps track of which candles have already been processed") {
+    def t(n: Int) = TradeHelpers.trade(sec(n), n.toString)
+    simulationStartTime = sec(5)
     fakeCandles(c(4), c(5))
     fakeOrderHistory(
       openOrdersSnapshot(orders(1), sec(5)),
     )
     fakeTradeHistory()
     expectSimulatorInput(orders(1), c(5))
-    fakeSimulatorOutput(orders(2))(t(2))
+    fakeSimulatorOutput(orders(2))(t(7))
     expectSimulatorInput(orders(2), c(6))
-    lastKnownCandleEndTime = sec(5)
     processPriceUpdate()
     fakeCandles(c(4), c(5), c(6))
     processPriceUpdate()
