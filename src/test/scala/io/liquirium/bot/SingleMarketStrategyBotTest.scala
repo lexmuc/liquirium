@@ -23,14 +23,15 @@ class SingleMarketStrategyBotTest extends BasicTest with Matchers {
   private var initialQuoteBalance: BigDecimal = BigDecimal(0)
   private var candleLength: Duration = Duration.ofSeconds(1)
   private var minimumCandleHistoryLength = Duration.ofSeconds(0)
-  private var strategyFunction: SingleMarketStrategyBot.State => Seq[OrderIntent] = (_: SingleMarketStrategyBot.State) => Seq()
+  private var strategyFunction: SingleMarketStrategy.State => Seq[OrderIntent] =
+    (_: SingleMarketStrategy.State) => Seq()
   private var outputsByOrderIntents: Map[Seq[OrderIntent], Seq[BotOutput]] = Map(Seq() -> Seq())
 
   private var context: UpdatableContext = IncrementalContext()
 
-  private def makeStrategy() = new SingleMarketStrategyBot.Strategy {
+  private def makeStrategy() = new SingleMarketStrategy {
 
-    override def apply(state: SingleMarketStrategyBot.State): Seq[OrderIntent] =
+    override def apply(state: SingleMarketStrategy.State): Seq[OrderIntent] =
       SingleMarketStrategyBotTest.this.strategyFunction(state)
 
     override def minimumCandleHistoryLength: Duration = SingleMarketStrategyBotTest.this.minimumCandleHistoryLength
@@ -82,8 +83,11 @@ class SingleMarketStrategyBotTest extends BasicTest with Matchers {
     output.get.toSeq
   }
 
-  private def assertState(p: SingleMarketStrategyBot.State => Boolean, getMessage: SingleMarketStrategyBot.State => String): Unit = {
-    var state: SingleMarketStrategyBot.State = null
+  private def assertState(
+    p: SingleMarketStrategy.State => Boolean,
+    getMessage: SingleMarketStrategy.State => String,
+  ): Unit = {
+    var state: SingleMarketStrategy.State = null
     fakeOrderIntentConversion(orderIntent(1))(botOutput(1))
     strategyFunction = s => {
       state = s

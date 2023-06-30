@@ -1,43 +1,21 @@
 package io.liquirium.bot
 
 import io.liquirium.bot.BotInput.{CandleHistoryInput, TradeHistoryInput}
-import io.liquirium.bot.SingleMarketStrategyBot.Strategy
 import io.liquirium.core.OperationIntent.OrderIntent
-import io.liquirium.core.{CandleHistorySegment, ExactResources, Market}
+import io.liquirium.core.{ExactResources, Market}
 import io.liquirium.eval.IncrementalFoldHelpers.IncrementalEval
 import io.liquirium.eval.{Eval, InputEval}
 
-import java.time.{Duration, Instant}
+import java.time.Instant
 
-
-object SingleMarketStrategyBot {
-
-  case class State(
-    time: Instant,
-    baseBalance: BigDecimal,
-    quoteBalance: BigDecimal,
-    candleHistory: CandleHistorySegment,
-  )
-
-  trait Strategy extends (SingleMarketStrategyBot.State => Seq[OrderIntent]) {
-
-    def candleLength: Duration
-
-    // The SingleMarketBot will always provide a candle history of at least this length
-    def minimumCandleHistoryLength: Duration
-
-  }
-
-}
 
 case class SingleMarketStrategyBot(
   market: Market,
   startTime: Instant,
   initialResources: ExactResources,
   orderIntentConveyorEval: Eval[Seq[OrderIntent] => Iterable[BotOutput]],
-  strategy: Strategy,
+  strategy: SingleMarketStrategy,
 ) extends EvalBot {
-
 
   private val candleHistoryInput: CandleHistoryInput =
     CandleHistoryInput(
@@ -56,13 +34,13 @@ case class SingleMarketStrategyBot(
     (qb, t) => qb + t.effects.filter(_.ledger == market.quoteLedger).map(_.change).sum
   }
 
-  private val stateEval: Eval[SingleMarketStrategyBot.State] =
+  private val stateEval: Eval[SingleMarketStrategy.State] =
     for {
       baseBalance <- baseBalanceEval
       quoteBalance <- quoteBalanceEval
       candleHistorySegment <- InputEval(candleHistoryInput)
     } yield
-      SingleMarketStrategyBot.State(
+      SingleMarketStrategy.State(
         time = candleHistorySegment.end,
         baseBalance = baseBalance,
         quoteBalance = quoteBalance,
