@@ -10,45 +10,43 @@ object OrderIntentConveyor {
 
   def apply(
     market: Market,
-    orderIntentsEval: Eval[Seq[OrderIntent]],
     orderConstraintsEval: Eval[OrderConstraints],
-    openOrdersEval: Eval[Set[Order]],
     orderIntentSyncer: Eval[OrderIntentSyncer],
+    openOrdersEval: Eval[Set[Order]],
     isInSyncEval: Eval[Boolean],
     hasOpenRequestsEval: Eval[Boolean],
     nextMessageIdsEval: Eval[Stream[OperationRequestId]],
-  ): Eval[Iterable[BotOutput]] = for {
-    orderSyncer <- orderIntentSyncer
-    orderConstraints <- orderConstraintsEval
-    orderIntents <- orderIntentsEval
-    openOrders <- openOrdersEval
-    isInSync <- isInSyncEval
-    hasOpenRequests <- hasOpenRequestsEval
-    nextMessageIds <- nextMessageIdsEval
-  } yield {
-    if (!isInSync || hasOpenRequests) {
-      Seq()
-    }
-    else {
-      val adjustedIntents =
-        orderIntents
-          .map { oi => orderConstraints.adjustDefensively(oi) }
-          .collect { case Some(x) => x }
+  ): Eval[Seq[OrderIntent] => Iterable[BotOutput]] =
+    for {
+      orderSyncer <- orderIntentSyncer
+      orderConstraints <- orderConstraintsEval
+      openOrders <- openOrdersEval
+      isInSync <- isInSyncEval
+      hasOpenRequests <- hasOpenRequestsEval
+      nextMessageIds <- nextMessageIdsEval
+    } yield
+      (orderIntents: Seq[OrderIntent]) => {
+        if (!isInSync || hasOpenRequests) Seq()
+        else {
+          val adjustedIntents =
+            orderIntents
+              .map { oi => orderConstraints.adjustDefensively(oi) }
+              .collect { case Some(x) => x }
 
-      val orderDataSet = openOrders.map(_.asInstanceOf[BasicOrderData])
-      val operationIntents = orderSyncer.apply(adjustedIntents, orderDataSet)
+          val orderDataSet = openOrders.map(_.asInstanceOf[BasicOrderData])
+          val operationIntents = orderSyncer.apply(adjustedIntents, orderDataSet)
 
-      def convertIntent(oi: OperationIntent, id: OperationRequestId): OperationRequestMessage =
-        oi match {
-          case oi: OrderIntent => OperationRequestMessage(id, oi.toOperationRequest(market, Set()))
-          case ci: CancelIntent => OperationRequestMessage(id, ci.toOperationRequest(market))
+          def convertIntent(oi: OperationIntent, id: OperationRequestId): OperationRequestMessage =
+            oi match {
+              case oi: OrderIntent => OperationRequestMessage(id, oi.toOperationRequest(market, Set()))
+              case ci: CancelIntent => OperationRequestMessage(id, ci.toOperationRequest(market))
+            }
+
+          val (_, result) = operationIntents.foldLeft((nextMessageIds, Seq[OperationRequestMessage]())) {
+            case ((ids, messages), intent) => (ids.drop(1), messages :+ convertIntent(intent, ids.head))
+          }
+          result
         }
-
-      val (_, result) = operationIntents.foldLeft((nextMessageIds, Seq[OperationRequestMessage]())) {
-        case ((ids, messages), intent) => (ids.drop(1), messages :+ convertIntent(intent, ids.head))
       }
-      result
-    }
-  }
 
 }

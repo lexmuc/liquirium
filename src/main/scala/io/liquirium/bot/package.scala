@@ -11,13 +11,12 @@ import java.time.{Duration, Instant}
 
 package object bot {
 
-  def getSimpleOrderIntentConveyor(
+  def getSimpleOrderIntentConveyorEval(
     market: Market,
-    orderIntentsEval: Eval[Seq[OrderIntent]],
     orderConstraints: OrderConstraints,
     start: Instant,
-    timeInputForSync: TimeInput,
-  ): Eval[Iterable[BotOutput]] = {
+    syncInterval: Duration,
+  ): Eval[Seq[OrderIntent] => Iterable[BotOutput]] = {
 
     val tradeHistoryEval: Eval[TradeHistorySegment] =
       InputEval(TradeHistoryInput(market, start))
@@ -31,7 +30,7 @@ package object bot {
     val isInSyncEval: Eval[Boolean] = IsInSyncEval(
       statesByIdEval = orderStatesByIdEval,
       maxSyncDurationEval = Constant(Duration.ofSeconds(60)),
-      currentTimeEval = InputEval(timeInputForSync),
+      currentTimeEval = InputEval(TimeInput(syncInterval)),
     )
 
     val hasOpenRequestsEval: Eval[Boolean] = OpenOperationRequestsEval(
@@ -43,10 +42,9 @@ package object bot {
 
     OrderIntentConveyor(
       market = market,
-      orderIntentsEval = orderIntentsEval,
       orderConstraintsEval = Constant(orderConstraints),
-      openOrdersEval = OpenOrdersBasedOnTrackingStates(orderStatesByIdEval),
       orderIntentSyncer = Constant(SimpleOrderIntentSyncer(OrderMatcher.ExactMatcher)),
+      openOrdersEval = OpenOrdersBasedOnTrackingStates(orderStatesByIdEval),
       isInSyncEval = isInSyncEval,
       hasOpenRequestsEval = hasOpenRequestsEval,
       nextMessageIdsEval = NextRequestIdsEval(Constant(BotId("")), InputEval(BotOutputHistory)),

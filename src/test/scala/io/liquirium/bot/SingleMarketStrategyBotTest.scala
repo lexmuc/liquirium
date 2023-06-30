@@ -15,7 +15,7 @@ import org.scalatest.Matchers
 
 import java.time.{Duration, Instant}
 
-class SingleMarketBotTest extends BasicTest with Matchers {
+class SingleMarketStrategyBotTest extends BasicTest with Matchers {
 
   private var startTime: Instant = Instant.ofEpochSecond(0)
   private val market: Market = MarketHelpers.market(1)
@@ -23,41 +23,34 @@ class SingleMarketBotTest extends BasicTest with Matchers {
   private var initialQuoteBalance: BigDecimal = BigDecimal(0)
   private var candleLength: Duration = Duration.ofSeconds(1)
   private var minimumCandleHistoryLength = Duration.ofSeconds(0)
-  private var strategyFunction: SingleMarketBot.State => Seq[OrderIntent] = (_: SingleMarketBot.State) => Seq()
+  private var strategyFunction: SingleMarketStrategyBot.State => Seq[OrderIntent] = (_: SingleMarketStrategyBot.State) => Seq()
   private var outputsByOrderIntents: Map[Seq[OrderIntent], Seq[BotOutput]] = Map(Seq() -> Seq())
 
   private var context: UpdatableContext = IncrementalContext()
 
-  def makeBot(): SingleMarketBot = new SingleMarketBot {
+  private def makeStrategy() = new SingleMarketStrategyBot.Strategy {
 
-    override def market: Market = SingleMarketBotTest.this.market
+    override def apply(state: SingleMarketStrategyBot.State): Seq[OrderIntent] =
+      SingleMarketStrategyBotTest.this.strategyFunction(state)
 
-    override def startTime: Instant = SingleMarketBotTest.this.startTime
+    override def minimumCandleHistoryLength: Duration = SingleMarketStrategyBotTest.this.minimumCandleHistoryLength
 
-    override protected def initialResources: ExactResources =
-      ExactResources(
-        baseBalance = SingleMarketBotTest.this.initialBaseBalance,
-        quoteBalance = SingleMarketBotTest.this.initialQuoteBalance,
-      )
-
-    override def strategy: SingleMarketBot.Strategy = new SingleMarketBot.Strategy {
-
-      override def apply(state: SingleMarketBot.State): Seq[OrderIntent] =
-        SingleMarketBotTest.this.strategyFunction(state)
-
-      override def minimumCandleHistoryLength: Duration = SingleMarketBotTest.this.minimumCandleHistoryLength
-
-      override def candleLength: Duration = SingleMarketBotTest.this.candleLength
-
-    }
-
-    override protected val getOrderIntentConveyor: (Market, Eval[Seq[OrderIntent]]) => Eval[Seq[BotOutput]] =
-      (m: Market, orderIntentEval: Eval[Seq[OrderIntent]]) => {
-        if (m != market) fail(s"Unexpected market $market")
-        orderIntentEval.map { intents => outputsByOrderIntents(intents) }
-      }
+    override def candleLength: Duration = SingleMarketStrategyBotTest.this.candleLength
 
   }
+
+  def makeBot(): SingleMarketStrategyBot = SingleMarketStrategyBot(
+    market = market,
+    startTime = startTime,
+    initialResources = ExactResources(
+      baseBalance = SingleMarketStrategyBotTest.this.initialBaseBalance,
+      quoteBalance = SingleMarketStrategyBotTest.this.initialQuoteBalance,
+    ),
+    strategy = makeStrategy(),
+    orderIntentConveyorEval = Eval.unit(
+      (intents: Seq[OrderIntent]) => outputsByOrderIntents(intents)
+    ),
+  )
 
   private def fakeOrderIntentConversion(intents: OrderIntent*)(outputs: BotOutput*): Unit = {
     outputsByOrderIntents = outputsByOrderIntents.updated(intents, outputs)
@@ -89,8 +82,8 @@ class SingleMarketBotTest extends BasicTest with Matchers {
     output.get.toSeq
   }
 
-  private def assertState(p: SingleMarketBot.State => Boolean, getMessage: SingleMarketBot.State => String): Unit = {
-    var state: SingleMarketBot.State = null
+  private def assertState(p: SingleMarketStrategyBot.State => Boolean, getMessage: SingleMarketStrategyBot.State => String): Unit = {
+    var state: SingleMarketStrategyBot.State = null
     fakeOrderIntentConversion(orderIntent(1))(botOutput(1))
     strategyFunction = s => {
       state = s

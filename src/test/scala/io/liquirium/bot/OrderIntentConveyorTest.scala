@@ -8,7 +8,6 @@ import io.liquirium.core.helpers.OrderHelpers.order
 import io.liquirium.core.helpers.{MarketHelpers, TestWithMocks}
 import io.liquirium.core._
 import io.liquirium.core.helpers.CoreHelpers.dec
-import io.liquirium.eval.Value
 import io.liquirium.eval.helpers.EvalTest
 import io.liquirium.util.NumberPrecision
 
@@ -27,11 +26,12 @@ class OrderIntentConveyorTest extends EvalTest with TestWithMocks {
   private val hasOpenRequestsEval = testEval[Boolean]()
   private val orderSyncerEval = testEval[OrderIntentSyncer]()
   private val openOrdersEval = testEval[Set[Order]]()
-  private val orderIntentsEval = testEval[Seq[OrderIntent]]()
   private val nextMessageIdsEval = testEval[Stream[OperationRequestId]]()
 
+  private var orderIntents: Seq[OrderIntent] = Seq()
+
   def fakeOrderIntents(intents: OrderIntent*): Unit = {
-    fakeEvalValue(orderIntentsEval, intents)
+    orderIntents = intents
   }
 
   def fakeInSync(inSync: Boolean): Unit = {
@@ -70,15 +70,14 @@ class OrderIntentConveyorTest extends EvalTest with TestWithMocks {
   }
 
   def assertOutput(oo: BotOutput*): Unit = {
-    evaluate(conveyorEval) shouldEqual Value(oo)
+    evaluate(conveyorEval).get.apply(orderIntents) shouldEqual oo
   }
 
   private def conveyorEval = OrderIntentConveyor(
     market = market,
-    orderIntentsEval = orderIntentsEval,
     orderConstraintsEval = orderConstraintsEval,
-    openOrdersEval = openOrdersEval,
     orderIntentSyncer = orderSyncerEval,
+    openOrdersEval = openOrdersEval,
     isInSyncEval = isInSyncEval,
     hasOpenRequestsEval = hasOpenRequestsEval,
     nextMessageIdsEval = nextMessageIdsEval,
