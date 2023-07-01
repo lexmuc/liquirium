@@ -1,6 +1,7 @@
 package io.liquirium.bot
 
-import io.liquirium.core.CandleHistorySegment
+import io.liquirium.bot.SingleMarketStrategy.State
+import io.liquirium.core.{CandleHistorySegment, ExactResources}
 import io.liquirium.core.OperationIntent.OrderIntent
 
 import java.time.{Duration, Instant}
@@ -20,7 +21,9 @@ trait SingleMarketStrategy extends (SingleMarketStrategy.State => Seq[OrderInten
 
   def candleLength: Duration
 
-  // The SingleMarketBot will always provide a candle history of at least this length
+  // The strategy needs to see the past candles. This is how far.
   def minimumCandleHistoryLength: Duration
+
+  def initialResources(totalQuoteValue: BigDecimal, initialPrice: BigDecimal): ExactResources
 
 }
