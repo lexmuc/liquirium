@@ -22,6 +22,11 @@ sealed trait CandleHistorySegment
 
   protected def candles: IndexedSeq[Candle]
 
+  lazy val lastPrice: Option[BigDecimal] = {
+    val it = reverseIterator.filter(!_.isEmpty).map(_.close)
+    if (it.hasNext) Some(it.next()) else None
+  }
+
   override def prev: Option[CandleHistorySegment] = this match {
     case _: Empty => None
     case Increment(init, _) => Some(init)
