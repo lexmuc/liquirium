@@ -26,4 +26,6 @@ trait SingleMarketStrategy extends (SingleMarketStrategy.State => Seq[OrderInten
 
   def initialResources(totalQuoteValue: BigDecimal, initialPrice: BigDecimal): ExactResources
 
+  def benchmark(initialResources: ExactResources): State => BigDecimal
+
 }

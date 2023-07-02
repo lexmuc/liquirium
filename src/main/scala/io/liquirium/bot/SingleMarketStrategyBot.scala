@@ -55,4 +55,9 @@ case class SingleMarketStrategyBot(
       conveyor(strategy(state))
     }
 
+  def benchmarkEval: Eval[BigDecimal] = {
+    val benchmarkFunction = strategy.benchmark(initialResources)
+    stateEval.map(benchmarkFunction)
+  }
+
 }

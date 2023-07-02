@@ -29,6 +29,8 @@ class SingleMarketStrategyBotTest extends BasicTest with Matchers {
 
   private var context: UpdatableContext = IncrementalContext()
 
+  private var calculateBenchmark: (ExactResources, SingleMarketStrategy.State) => BigDecimal = (_, _) => BigDecimal(0)
+
   private def makeStrategy() = new SingleMarketStrategy {
 
     override def apply(state: SingleMarketStrategy.State): Seq[OrderIntent] =
@@ -37,6 +39,12 @@ class SingleMarketStrategyBotTest extends BasicTest with Matchers {
     override def minimumCandleHistoryLength: Duration = SingleMarketStrategyBotTest.this.minimumCandleHistoryLength
 
     override def candleLength: Duration = SingleMarketStrategyBotTest.this.candleLength
+
+    override def initialResources(totalQuoteValue: BigDecimal, initialPrice: BigDecimal): ExactResources = ???
+
+    override def benchmark(
+      initialResources: ExactResources,
+    ): SingleMarketStrategy.State => BigDecimal = state => calculateBenchmark(initialResources, state)
 
   }
 
@@ -165,6 +173,26 @@ class SingleMarketStrategyBotTest extends BasicTest with Matchers {
       s => s.quoteBalance == dec(9),
       s => s"quote balance was ${s.quoteBalance} but was expected to be 9",
     )
+  }
+
+  test("it exposes a benchmark eval that is based on the initial resources and the strategy benchmark") {
+    startTime = sec(100)
+    candleLength = secs(5)
+    fakeTradeHistory(sec(100))()
+    minimumCandleHistoryLength = secs(10)
+    val chs = candleHistorySegment(
+      c5(sec(90), 1),
+      c5(sec(95), 2),
+      c5(sec(100), 3).copy(close = dec("2.5")),
+    )
+    fakeCandleHistory(CandleHistoryInput(market, candleLength = secs(5), start = sec(90)), chs)
+    initialBaseBalance = dec(1)
+    initialQuoteBalance = dec(10)
+    calculateBenchmark = (resources: ExactResources, state: SingleMarketStrategy.State) => {
+      resources.quoteBalance + resources.baseBalance + state.candleHistory.last.close
+    }
+    val (output, _) = context.evaluate(makeBot().benchmarkEval)
+    output.get shouldEqual dec("13.5")
   }
 
 }
