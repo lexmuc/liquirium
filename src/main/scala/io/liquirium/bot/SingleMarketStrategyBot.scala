@@ -2,7 +2,7 @@ package io.liquirium.bot
 
 import io.liquirium.bot.BotInput.{CandleHistoryInput, TradeHistoryInput}
 import io.liquirium.core.OperationIntent.OrderIntent
-import io.liquirium.core.{ExactResources, Market}
+import io.liquirium.core.{ExactResources, Market, TradeHistorySegment}
 import io.liquirium.eval.IncrementalFoldHelpers.IncrementalEval
 import io.liquirium.eval.{Eval, InputEval}
 
@@ -24,13 +24,13 @@ case class SingleMarketStrategyBot(
       candleLength = strategy.candleLength,
     )
 
-  private val tradeHistoryInput: TradeHistoryInput = TradeHistoryInput(market, startTime)
+  val tradeHistoryEval: Eval[TradeHistorySegment] = InputEval(TradeHistoryInput(market, startTime))
 
-  private val baseBalanceEval = InputEval(tradeHistoryInput).foldIncremental(_ => initialResources.baseBalance) {
+  private val baseBalanceEval = tradeHistoryEval.foldIncremental(_ => initialResources.baseBalance) {
     (bb, t) => bb + t.effects.filter(_.ledger == market.baseLedger).map(_.change).sum
   }
 
-  private val quoteBalanceEval = InputEval(tradeHistoryInput).foldIncremental(_ => initialResources.quoteBalance) {
+  private val quoteBalanceEval = tradeHistoryEval.foldIncremental(_ => initialResources.quoteBalance) {
     (qb, t) => qb + t.effects.filter(_.ledger == market.quoteLedger).map(_.change).sum
   }
 

@@ -10,7 +10,7 @@ import io.liquirium.core.helpers.TradeHelpers.{trade, tradeHistorySegment}
 import io.liquirium.core.helpers.{BasicTest, MarketHelpers}
 import io.liquirium.core.{CandleHistorySegment, ExactResources, Market, Trade}
 import io.liquirium.eval.helpers.ContextHelpers.inputUpdate
-import io.liquirium.eval.{Eval, IncrementalContext, UpdatableContext}
+import io.liquirium.eval.{Eval, IncrementalContext, InputEval, UpdatableContext}
 import org.scalatest.Matchers
 
 import java.time.{Duration, Instant}
@@ -193,6 +193,11 @@ class SingleMarketStrategyBotTest extends BasicTest with Matchers {
     }
     val (output, _) = context.evaluate(makeBot().benchmarkEval)
     output.get shouldEqual dec("13.5")
+  }
+
+  test("it exposes the trade history eval with correct market and start") {
+    startTime = sec(100)
+    makeBot().tradeHistoryEval shouldEqual InputEval(TradeHistoryInput(market, sec(100)))
   }
 
 }
