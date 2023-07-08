@@ -18,6 +18,7 @@ import java.time.{Duration, Instant}
 class SingleMarketStrategyBotTest extends BasicTest with Matchers {
 
   private var startTime: Instant = Instant.ofEpochSecond(0)
+  private var endTimeOption: Option[Instant] = None
   private val market: Market = MarketHelpers.market(1)
   private var initialBaseBalance: BigDecimal = BigDecimal(0)
   private var initialQuoteBalance: BigDecimal = BigDecimal(0)
@@ -29,8 +30,6 @@ class SingleMarketStrategyBotTest extends BasicTest with Matchers {
 
   private var context: UpdatableContext = IncrementalContext()
 
-  private var calculateBenchmark: (ExactResources, SingleMarketStrategy.State) => BigDecimal = (_, _) => BigDecimal(0)
-
   private def makeStrategy() = new SingleMarketStrategy {
 
     override def apply(state: SingleMarketStrategy.State): Seq[OrderIntent] =
@@ -40,22 +39,22 @@ class SingleMarketStrategyBotTest extends BasicTest with Matchers {
 
     override def candleLength: Duration = SingleMarketStrategyBotTest.this.candleLength
 
+    // the calculation of initial resources is not relevant for this test
     override def initialResources(totalQuoteValue: BigDecimal, initialPrice: BigDecimal): ExactResources = ???
-
-    override def benchmark(
-      initialResources: ExactResources,
-    ): SingleMarketStrategy.State => BigDecimal = state => calculateBenchmark(initialResources, state)
 
   }
 
   def makeBot(): SingleMarketStrategyBot = SingleMarketStrategyBot(
-    market = market,
-    startTime = startTime,
-    initialResources = ExactResources(
-      baseBalance = SingleMarketStrategyBotTest.this.initialBaseBalance,
-      quoteBalance = SingleMarketStrategyBotTest.this.initialQuoteBalance,
-    ),
     strategy = makeStrategy(),
+    runConfiguration = SingleMarketBotRunConfiguration(
+      market = market,
+      startTime = startTime,
+      endTimeOption = endTimeOption,
+      initialResources = ExactResources(
+        baseBalance = SingleMarketStrategyBotTest.this.initialBaseBalance,
+        quoteBalance = SingleMarketStrategyBotTest.this.initialQuoteBalance,
+      ),
+    ),
     orderIntentConveyorEval = Eval.unit(
       (intents: Seq[OrderIntent]) => outputsByOrderIntents(intents)
     ),
@@ -175,29 +174,93 @@ class SingleMarketStrategyBotTest extends BasicTest with Matchers {
     )
   }
 
-  test("it exposes a benchmark eval that is based on the initial resources and the strategy benchmark") {
-    startTime = sec(100)
-    candleLength = secs(5)
-    fakeTradeHistory(sec(100))()
-    minimumCandleHistoryLength = secs(10)
-    val chs = candleHistorySegment(
-      c5(sec(90), 1),
-      c5(sec(95), 2),
-      c5(sec(100), 3).copy(close = dec("2.5")),
+  test("the given run configuration is part of the state") {
+    initialBaseBalance = dec(10)
+    initialQuoteBalance = dec(20)
+    candleLength = secs(10)
+    startTime = sec(10)
+    endTimeOption = Some(sec(110))
+    fakeDefaultTradeHistory()
+    fakeDefaultCandleHistory()
+    val expectedRunConfiguration = SingleMarketBotRunConfiguration(
+      market = market,
+      startTime = startTime,
+      endTimeOption = endTimeOption,
+      initialResources = ExactResources(
+        baseBalance = initialBaseBalance,
+        quoteBalance = initialQuoteBalance,
+      ),
     )
-    fakeCandleHistory(CandleHistoryInput(market, candleLength = secs(5), start = sec(90)), chs)
+    assertState(
+      _.runConfiguration == expectedRunConfiguration,
+      s => s"run configuration was not as expected. got ${s.runConfiguration}",
+    )
+  }
+
+  test("the balances are exposed as evals as well") {
     initialBaseBalance = dec(1)
     initialQuoteBalance = dec(10)
-    calculateBenchmark = (resources: ExactResources, state: SingleMarketStrategy.State) => {
-      resources.quoteBalance + resources.baseBalance + state.candleHistory.last.close
-    }
-    val (output, _) = context.evaluate(makeBot().benchmarkEval)
-    output.get shouldEqual dec("13.5")
+    startTime = sec(10)
+    fakeDefaultCandleHistory()
+    fakeTradeHistory(sec(10))(
+      trade(
+        id = "t1",
+        market = market,
+        time = sec(11),
+        quantity = dec(2),
+        price = dec(2),
+        fees = Seq(market.quoteLedger -> dec(1))
+      ),
+      trade(
+        id = "t2",
+        market = market,
+        time = sec(12),
+        quantity = dec(-1),
+        price = dec(5),
+        fees = Seq(market.quoteLedger -> dec(1))
+      ),
+    )
+    val (baseBalance, _) = context.evaluate(makeBot().baseBalanceEval)
+    baseBalance.get shouldEqual dec(2)
+    val (quoteBalance, _) = context.evaluate(makeBot().quoteBalanceEval)
+    quoteBalance.get shouldEqual dec(9)
   }
 
   test("it exposes the trade history eval with correct market and start") {
     startTime = sec(100)
     makeBot().tradeHistoryEval shouldEqual InputEval(TradeHistoryInput(market, sec(100)))
+  }
+
+  test("before the bot start the no order intents are passed to the conveyor") {
+    minimumCandleHistoryLength = secs(10)
+    startTime = sec(10)
+    fakeCandleHistory(
+      CandleHistoryInput(market, candleLength, sec(0)),
+      candleHistorySegment(sec(0), candleLength)(),
+    )
+    strategyFunction = _ => Seq(orderIntent(1), orderIntent(2))
+    fakeDefaultTradeHistory()
+    fakeOrderIntentConversion()(botOutput(1))
+    evaluate() shouldEqual Seq(botOutput(1))
+  }
+
+  test("from the end on no order intents are passed to the conveyor") {
+    minimumCandleHistoryLength = secs(10)
+    startTime = sec(10)
+    endTimeOption = Some(sec(30))
+    fakeDefaultTradeHistory()
+    strategyFunction = _ => Seq(orderIntent(1), orderIntent(2))
+    fakeCandleHistory(
+      CandleHistoryInput(market, candleLength, sec(0)),
+      candleHistorySegment(sec(0), candleLength)(1, 2, 3),
+    )
+    fakeOrderIntentConversion()(botOutput(1))
+    evaluate() shouldEqual Seq(botOutput(1))
+    fakeCandleHistory(
+      CandleHistoryInput(market, candleLength, sec(0)),
+      candleHistorySegment(sec(0), candleLength)(1, 2, 3, 4),
+    )
+    evaluate() shouldEqual Seq(botOutput(1))
   }
 
 }

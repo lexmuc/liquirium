@@ -3,7 +3,7 @@ package io.liquirium
 import io.liquirium.bot.BotInput._
 import io.liquirium.core.OperationIntent.OrderIntent
 import io.liquirium.core.orderTracking._
-import io.liquirium.core.{BotId, CandleHistorySegment, Market, OrderConstraints, TradeHistorySegment}
+import io.liquirium.core.{BotId, CandleHistorySegment, Market, OrderConstraints}
 import io.liquirium.eval.IncrementalFoldHelpers.IncrementalEval
 import io.liquirium.eval.{Constant, Eval, InputEval}
 import io.liquirium.util.store.CandleStoreProvider
@@ -20,11 +20,8 @@ package object bot {
     syncInterval: Duration,
   ): Eval[Seq[OrderIntent] => Iterable[BotOutput]] = {
 
-    val tradeHistoryEval: Eval[TradeHistorySegment] =
-      InputEval(TradeHistoryInput(market, start))
-
     val orderStatesByIdEval = BasicOrderTrackingStateByIdEval(
-      trades = tradeHistoryEval,
+      trades = InputEval(TradeHistoryInput(market, start)),
       openOrdersHistory = InputEval(OrderSnapshotHistoryInput(market)),
       successfulOperations = SuccessfulTradeRequestEvents(market),
     )
@@ -53,7 +50,7 @@ package object bot {
     )
   }
 
-  def simulationSingleMarketStrategyBotFactory(
+  def singleMarketStrategyBotFactoryForSimulation(
     orderConstraints: OrderConstraints,
     candleStoreProvider: CandleStoreProvider,
   )(
@@ -64,24 +61,24 @@ package object bot {
       strategy: SingleMarketStrategy,
       market: Market,
       startTime: Instant,
-      endTime: Option[Instant],
+      endTimeOption: Option[Instant],
       totalValue: BigDecimal,
-    ): Future[SingleMarketStrategyBot] = {
-
-      val initialResourcesFuture =
-        getInitialPrice(market, strategy.candleLength, startTime) map { p =>
-          strategy.initialResources(
-            totalQuoteValue = totalValue,
-            initialPrice = p,
-          )
-        }
-
-      initialResourcesFuture map { initialResources =>
-        SingleMarketStrategyBot(
+    ): Future[SingleMarketStrategyBot] =
+      for {
+        p <- getInitialPrice(market, strategy.candleLength, startTime)
+      } yield {
+        val runConfiguration = SingleMarketBotRunConfiguration(
           market = market,
           startTime = startTime,
-          initialResources = initialResources,
+          endTimeOption = endTimeOption,
+          initialResources = strategy.initialResources(
+            totalQuoteValue = totalValue,
+            initialPrice = p,
+          ),
+        )
+        SingleMarketStrategyBot(
           strategy = strategy,
+          runConfiguration = runConfiguration,
           orderIntentConveyorEval = io.liquirium.bot.getSimpleOrderIntentConveyorEval(
             market = market,
             orderConstraints = orderConstraints,
@@ -90,7 +87,6 @@ package object bot {
           ),
         )
       }
-    }
 
     private def getInitialPrice(market: Market, candleLength: Duration, startTime: Instant): Future[BigDecimal] = {
       val store = candleStoreProvider.getStore(market, candleLength)

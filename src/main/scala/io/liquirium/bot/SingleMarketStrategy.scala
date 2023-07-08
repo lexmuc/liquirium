@@ -1,6 +1,5 @@
 package io.liquirium.bot
 
-import io.liquirium.bot.SingleMarketStrategy.State
 import io.liquirium.core.{CandleHistorySegment, ExactResources}
 import io.liquirium.core.OperationIntent.OrderIntent
 
@@ -13,6 +12,7 @@ object SingleMarketStrategy {
     baseBalance: BigDecimal,
     quoteBalance: BigDecimal,
     candleHistory: CandleHistorySegment,
+    runConfiguration: SingleMarketBotRunConfiguration,
   )
 
 }
@@ -25,7 +25,5 @@ trait SingleMarketStrategy extends (SingleMarketStrategy.State => Seq[OrderInten
   def minimumCandleHistoryLength: Duration
 
   def initialResources(totalQuoteValue: BigDecimal, initialPrice: BigDecimal): ExactResources
-
-  def benchmark(initialResources: ExactResources): State => BigDecimal
 
 }

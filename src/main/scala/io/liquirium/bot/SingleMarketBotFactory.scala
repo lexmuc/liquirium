@@ -11,7 +11,7 @@ trait SingleMarketBotFactory {
     strategy: SingleMarketStrategy,
     market: Market,
     startTime: Instant,
-    endTime: Option[Instant],
+    endTimeOption: Option[Instant],
     totalValue: BigDecimal,
   ): Future[SingleMarketStrategyBot]
 
