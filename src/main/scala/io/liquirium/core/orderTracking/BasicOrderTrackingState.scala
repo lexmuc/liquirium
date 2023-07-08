@@ -126,7 +126,7 @@ case class BasicOrderTrackingState(
         val expectedOrder = fullOrder.reduceQuantity(totalTradeQuantity)
         Some(ExpectingObservationChange(tradeEvents.last.timestamp, expectedOrder))
       }
-      else if (isCurrentlyObserved && (cancellation.isDefined || totalTradeQuantity == fullOrder.fullQuantity)) {
+      else if (isCurrentlyObserved && cancellation.isDefined) {
         Some(ExpectingObservationChange(cancellation.get.timestamp, None))
       }
       else None

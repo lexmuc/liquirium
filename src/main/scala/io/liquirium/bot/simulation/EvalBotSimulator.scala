@@ -3,6 +3,8 @@ package io.liquirium.bot.simulation
 import io.liquirium.bot.{BotEvaluator, BotOutput}
 import io.liquirium.eval.{InputRequest, UpdatableContext, Value}
 
+import scala.annotation.tailrec
+
 
 case class EvalBotSimulator[L <: SimulationLogger[L]](
   context: UpdatableContext,
@@ -30,7 +32,16 @@ case class EvalBotSimulator[L <: SimulationLogger[L]](
     )
   }
 
-  def evaluateBot(
+  def run(): L = {
+    @tailrec
+    def go(simulator: EvalBotSimulator[L]): L =
+      if (simulator.environment.isSimulationComplete) simulator.logger
+      else go(simulator.simulateOneStep())
+    go(this)
+  }
+
+  @tailrec
+  private def evaluateBot(
     c: UpdatableContext,
     e: SimulationEnvironment,
   ): (Seq[BotOutput], SimulationEnvironment, UpdatableContext) =
@@ -41,12 +52,17 @@ case class EvalBotSimulator[L <: SimulationLogger[L]](
         evaluateBot(updatedContext, newEnvironment)
     }
 
-  def log(l: L, c: UpdatableContext, e: SimulationEnvironment): (L, UpdatableContext, SimulationEnvironment) =
-    l.log(c) match {
-      case (Value(newLogger), newContext) => (newLogger, newContext, e)
+  @tailrec
+  private def log(
+    logger: L,
+    context: UpdatableContext,
+    environment: SimulationEnvironment,
+  ): (L, UpdatableContext, SimulationEnvironment) =
+    logger.log(context) match {
+      case (Value(newLogger), newContext) => (newLogger, newContext, environment)
       case (ir: InputRequest, newContext) =>
-        val (updatedContext, newEnvironment) = e.getInputs(ir, newContext)
-        log(l, updatedContext, newEnvironment)
+        val (updatedContext, newEnvironment) = environment.getInputs(ir, newContext)
+        log(logger, updatedContext, newEnvironment)
     }
 
 }

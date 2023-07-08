@@ -1,6 +1,6 @@
 package io.liquirium.bot.simulation
 
-import io.liquirium.eval.{Context, Eval, EvalResult, Input, InputRequest, InputUpdate, UpdatableContext, Value}
+import io.liquirium.eval._
 
 case class ContextWithInputResolution(
   baseContext: UpdatableContext,

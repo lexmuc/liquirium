@@ -79,29 +79,31 @@ class EvalBotSimulatorTest extends TestWithMocks {
     lastEnvironment = newEnvironment
   }
 
-  def fakeEnvironmentAdvance(): Unit = {
+  def fakeEnvironmentAdvance(isComplete: Boolean = false): Unit = {
     val inputContext = context
     advanceContext()
     val newEnvironment = mock[SimulationEnvironment]
+    newEnvironment.isSimulationComplete returns isComplete
     lastEnvironment.advance(inputContext) returns (context, newEnvironment)
     lastEnvironment = newEnvironment
   }
 
+  def makeSimulator(): EvalBotSimulator[TestLogger] = EvalBotSimulator(
+    context = firstContext,
+    evaluator = evaluator,
+    environment = firstEnvironment,
+    logger = firstLogger,
+  )
+
   def simulateStepAndAssertOutcome(): Unit = {
-    val simulator = EvalBotSimulator(
-      context = firstContext,
-      evaluator = evaluator,
-      environment = firstEnvironment,
-      logger = firstLogger,
-    )
-    val finalSimulator = simulator.simulateOneStep()
+    val finalSimulator = makeSimulator().simulateOneStep()
     finalSimulator.context shouldBe theSameInstanceAs(context)
     finalSimulator.evaluator shouldBe theSameInstanceAs(evaluator)
     finalSimulator.environment shouldBe theSameInstanceAs(lastEnvironment)
     finalSimulator.logger shouldBe theSameInstanceAs(lastLogger)
   }
 
-  test("context is passed through the bot, environment, logger, and environment again (for advancing)") {
+  test("the context is passed through the bot, environment, logger, and environment again (for advancing)") {
     fakeBotOutput()
     fakeOutputProcessing()
     fakeLogging()
@@ -135,6 +137,23 @@ class EvalBotSimulatorTest extends TestWithMocks {
     fakeLogging()
     fakeEnvironmentAdvance()
     simulateStepAndAssertOutcome()
+  }
+
+  test("when the simulation is run the final logger is returned when the environment is complete") {
+    fakeBotOutput()
+    fakeOutputProcessing()
+    fakeLogging()
+    fakeEnvironmentAdvance(isComplete = false)
+
+    fakeBotOutput(output(1))
+    fakeOutputProcessing(output(1))
+
+    fakeBotOutput()
+    fakeOutputProcessing()
+    fakeLogging()
+    fakeEnvironmentAdvance(isComplete = true)
+
+    makeSimulator().run() shouldBe theSameInstanceAs(lastLogger)
   }
 
 }

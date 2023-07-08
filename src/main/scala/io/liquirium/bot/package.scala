@@ -51,8 +51,8 @@ package object bot {
   }
 
   def singleMarketStrategyBotFactoryForSimulation(
-    orderConstraints: OrderConstraints,
     candleStoreProvider: CandleStoreProvider,
+    orderConstraints: OrderConstraints = OrderConstraints.none,
   )(
     implicit executionContext: ExecutionContext,
   ): SingleMarketBotFactory = new SingleMarketBotFactory {
