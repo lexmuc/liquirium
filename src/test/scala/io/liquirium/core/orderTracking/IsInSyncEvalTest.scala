@@ -66,6 +66,15 @@ class IsInSyncEvalTest extends EvalTest {
     assertSync(false)
   }
 
+  test("when there is a cancelled order for which trades might still be seen it is syncing for the sync duration") {
+    fakeMaxSyncDuration(secs(30))
+    updateState(o(1).id, stateWithSyncReasonUnknownIfMoreTrades(o(1), sec(5)))
+    fakeTime(sec(34))
+    assertSync(false)
+    fakeTime(sec(35))
+    assertSync(true)
+  }
+
   test("if enough time passes we are in sync again even if we don't know why an order is gone (cancel assumed)") {
     updateState(o(1).id, stateWithSyncReasonUnknownWhyGone(o(1), sec(5)))
     fakeMaxSyncDuration(secs(30))

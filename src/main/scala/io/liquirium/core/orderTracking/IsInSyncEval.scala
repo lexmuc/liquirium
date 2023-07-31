@@ -24,6 +24,7 @@ object IsInSyncEval {
       case UnknownWhyOrderIsGone(reasonTime) if (reasonTime plus maxDuration).isAfter(currentTime) => ()
       case ExpectingObservationChange(_, _) => ()
       case ExpectingTrades(_, _) => ()
+      case UnknownIfMoreTradesBeforeCancel(reasonTime) if (reasonTime plus maxDuration).isAfter(currentTime) => ()
     }.isEmpty && errorStates.isEmpty
   }
 

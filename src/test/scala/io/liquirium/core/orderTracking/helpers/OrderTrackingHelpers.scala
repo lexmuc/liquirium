@@ -7,6 +7,7 @@ import io.liquirium.core.orderTracking.BasicOrderTrackingState.SyncReason
 import io.liquirium.core.orderTracking.OrderTrackingEvent.{NewTrade, ObservationChange}
 import io.liquirium.core.orderTracking._
 import io.liquirium.core.{Order, OrderSet, orderTracking}
+import io.liquirium.util.AbsoluteQuantity
 import org.scalatest.Matchers
 
 import java.time.Instant
@@ -53,8 +54,16 @@ object OrderTrackingHelpers extends Matchers {
     time = time,
   ))
 
-  def cancelEvent(t: Instant, orderId: String): OrderTrackingEvent.Cancel =
-    OrderTrackingEvent.Cancel(t, orderId = orderId, absoluteRestQuantity = None)
+  def cancelEvent(
+    t: Instant,
+    orderId: String,
+    absoluteRestQuantity: Option[Integer] = None,
+  ): OrderTrackingEvent.Cancel =
+    OrderTrackingEvent.Cancel(
+      timestamp = t,
+      orderId = orderId,
+      absoluteRestQuantity = absoluteRestQuantity.map(q =>AbsoluteQuantity(dec(q))),
+    )
 
   def syncedStateWithReportableOrder(o: Order): BasicOrderTrackingState = {
     val result = basicOrderTrackingState(
@@ -74,7 +83,7 @@ object OrderTrackingHelpers extends Matchers {
         observationChange(sec(1)),
       ),
       operationEvents = Seq(
-        cancelEvent(sec(1), order.id),
+        cancelEvent(sec(1), order.id, absoluteRestQuantity = Some(1)),
       ),
     )
     result.errorState shouldBe None
@@ -150,6 +159,25 @@ object OrderTrackingHelpers extends Matchers {
     )
     result.errorState shouldEqual Some(ReappearingOrderInconsistency(observationChange(t, order)))
     result.syncReasons.size shouldBe 0
+    result
+  }
+
+  def stateWithSyncReasonUnknownIfMoreTrades(
+    order: Order,
+    t: Instant,
+  ): BasicOrderTrackingState = {
+    val result = basicOrderTrackingState(
+      observationHistory = singleOrderObservationHistory(
+        observationChange(t minus millis(1), order),
+        observationChange(t plus millis(1)),
+      ),
+      operationEvents = Seq(
+        cancelEvent(t, order.id),
+      ),
+    )
+    result.errorState shouldBe None
+    result.syncReasons shouldEqual Set(SyncReason.UnknownIfMoreTradesBeforeCancel(t))
+    result.reportingState shouldBe None
     result
   }
 

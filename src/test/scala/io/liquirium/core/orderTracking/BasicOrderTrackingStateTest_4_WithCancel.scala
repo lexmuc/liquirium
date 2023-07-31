@@ -23,10 +23,10 @@ class BasicOrderTrackingStateTest_4_WithCancel extends BasicOrderTrackingStateTe
     assertInSync()
   }
 
-  test("when an order has been cancelled and the order has has disappeared sync status is in sync without order") {
+  test("when an order has been cancelled with known rest quantity and the order is gone sync status is in sync") {
     observe(
       change(sec(1), o(10, of = 10)), // immediately observed
-      cancellation(sec(1)),
+      cancellation(sec(1), Some(10)),
       absence(sec(2)),
     )
     assertNotReported()
@@ -37,7 +37,7 @@ class BasicOrderTrackingStateTest_4_WithCancel extends BasicOrderTrackingStateTe
     observe(
       absence(sec(0)),
       change(sec(1), o(10, of = 10)), // not observed at first
-      cancellation(sec(1)),
+      cancellation(sec(1), Some(10)),
       absence(sec(2)),
     )
     assertNotReported()
@@ -47,7 +47,7 @@ class BasicOrderTrackingStateTest_4_WithCancel extends BasicOrderTrackingStateTe
   test("if the order is still there after a cancel it is expecting an observation change and order is reported gone") {
     observe(
       absence(sec(0)),
-      cancellation(sec(1)),
+      cancellation(sec(1), Some(10)),
       change(sec(2), o(10, of = 10)),
     )
     assertNotReported()
@@ -257,6 +257,16 @@ class BasicOrderTrackingStateTest_4_WithCancel extends BasicOrderTrackingStateTe
     )
     assertNotReported()
     assertInconsistentEvents(events(2), events(3))
+  }
+
+  test("if the cancel quantity is unknown the state is syncing because trades might still be seen") {
+    observe(
+      absence(sec(0)),
+      creation(sec(1), o(10, of = 10)),
+      cancellation(sec(2), absoluteRest = None),
+    )
+    assertNotReported()
+    assertSyncReasons(unknownIfMoreTradesBeforeCancel(sec(2)))
   }
 
 }

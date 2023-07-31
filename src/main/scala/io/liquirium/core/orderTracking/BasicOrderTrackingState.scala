@@ -25,6 +25,8 @@ object BasicOrderTrackingState {
 
     case class ExpectingObservationChange(since: Instant, observation: Option[Order]) extends SyncReason
 
+    case class UnknownIfMoreTradesBeforeCancel(time: Instant) extends SyncReason
+
   }
 
   object ErrorState {
@@ -92,18 +94,18 @@ case class BasicOrderTrackingState(
       case Some(o) => o.filledQuantity
     } getOrElse BigDecimal(0)
 
-    val optionalExpectingTrades = {
+    val optionalExpectingTrades: Option[ExpectingTrades] = {
       val impliedTradeQuantityFromCancelWithTime = cancellation collectFirst {
         case OrderTrackingEvent.Cancel(t, _, Some(AbsoluteQuantity(q))) =>
           (fullOrder.fullQuantity - (q * fullOrder.fullQuantity.signum), t)
       }
 
-      val impliedTradeQuantityFromObservationWithTime =
+      val impliedTradeQuantityFromObservationWithTime: Option[(BigDecimal, Instant)] =
         observationHistory.changes.reverseIterator.collectFirst {
           case OrderTrackingEvent.ObservationChange(t, Some(o)) => (o.filledQuantity, t)
         }
 
-      val impliedTradeQuantityWithTime =
+      val impliedTradeQuantityWithTime: Option[(BigDecimal, Instant)] =
         (impliedTradeQuantityFromCancelWithTime, impliedTradeQuantityFromObservationWithTime) match {
           case (None, None) => None
           case (Some(x), None) => Some(x)
@@ -136,8 +138,17 @@ case class BasicOrderTrackingState(
         Some(UnknownWhyOrderIsGone(lastObservationHistoryTime))
       else None
 
-    (optionalUnknownWhyGone ++ optionalExpectingTrades ++ optionalExpectingObservationChange).toSet
+    val optionalUnknownIfMoreTradesBeforeCancel = {
+      cancellation collectFirst {
+        case OrderTrackingEvent.Cancel(timestamp, _, None) => UnknownIfMoreTradesBeforeCancel(timestamp)
+      }
+    }
 
+    (optionalUnknownWhyGone
+      ++ optionalExpectingTrades
+      ++ optionalExpectingObservationChange
+      ++ optionalUnknownIfMoreTradesBeforeCancel
+      ).toSet
   }
 
   private def findReappearingOrder(observations: Seq[ObservationChange]): Option[ReappearingOrderInconsistency] = {

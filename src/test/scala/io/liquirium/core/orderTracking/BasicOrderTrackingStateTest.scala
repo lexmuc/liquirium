@@ -84,6 +84,9 @@ class BasicOrderTrackingStateTest extends BasicTest {
   protected def expectingTrades(time: Instant, quantity: BigDecimal): SyncReason =
     SyncReason.ExpectingTrades(time: Instant, quantity: BigDecimal)
 
+  protected def unknownIfMoreTradesBeforeCancel(time: Instant): SyncReason =
+    SyncReason.UnknownIfMoreTradesBeforeCancel(time: Instant)
+
   protected def assertInconsistentEvents(eventA: OrderTrackingEvent, eventB: OrderTrackingEvent): Unit = {
     state.errorState shouldEqual Some(ErrorState.InconsistentEvents(eventA, eventB))
   }
