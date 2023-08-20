@@ -8,8 +8,8 @@ import io.liquirium.util.NumberPrecision
 
 class OrderConstraintsTest_AdjustDefensively extends BasicTest {
 
-  private var pricePrecision: NumberPrecision = NumberPrecision.Infinite
-  private var orderQuantityPrecision: NumberPrecision = NumberPrecision.Infinite
+  private var pricePrecision: NumberPrecision = NumberPrecision.SignificantDigits(5, None)
+  private var orderQuantityPrecision: NumberPrecision = NumberPrecision.SignificantDigits(5, None)
 
   def constraints: OrderConstraints = OrderConstraints(
     pricePrecision = pricePrecision,

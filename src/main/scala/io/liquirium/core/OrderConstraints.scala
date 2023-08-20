@@ -3,14 +3,6 @@ package io.liquirium.core
 import io.liquirium.core.OperationIntent.OrderIntent
 import io.liquirium.util.NumberPrecision
 
-object OrderConstraints {
-
-  val none: OrderConstraints = OrderConstraints(
-    pricePrecision = NumberPrecision.Infinite,
-    quantityPrecision = NumberPrecision.Infinite,
-  )
-
-}
 
 case class OrderConstraints(
   pricePrecision: NumberPrecision,

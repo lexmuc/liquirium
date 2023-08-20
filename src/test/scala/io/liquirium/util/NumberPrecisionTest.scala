@@ -12,17 +12,6 @@ class NumberPrecisionTest extends BasicTest {
   def roundToSignificantDigits(n: Int, decimalsAfterPoint: Option[Int] = None)(p: BigDecimal): BigDecimal =
     NumberPrecision.significantDigits(n, maxDecimalsAfterPoint = decimalsAfterPoint).apply(p)
 
-  // infinite
-
-  test("the infinite precision does not change the prices") {
-    NumberPrecision.Infinite(dec("0.123456789")) shouldEqual dec("0.123456789")
-  }
-
-  test("next higher and lower price are the given price for the infinite precision") {
-    NumberPrecision.Infinite.nextHigher(dec("1.1")) shouldEqual dec("1.1")
-    NumberPrecision.Infinite.nextLower(dec("1.1")) shouldEqual dec("1.1")
-  }
-
   // digits after separator
 
   test("the price can be rounded to a certain number of digits after the point") {
@@ -32,14 +21,14 @@ class NumberPrecisionTest extends BasicTest {
   }
 
   test("next higher and lower prices can be obtained for decimals-after-point precision") {
-    val prec = NumberPrecision.digitsAfterSeparator(2)
-    prec.nextHigher(dec("1.236")) shouldEqual dec("1.24")
-    prec.nextHigher(dec("1.234")) shouldEqual dec("1.24")
-    prec.nextHigher(dec("1.23")) shouldEqual dec("1.24")
+    val p = NumberPrecision.digitsAfterSeparator(2)
+    p.nextHigher(dec("1.236")) shouldEqual dec("1.24")
+    p.nextHigher(dec("1.234")) shouldEqual dec("1.24")
+    p.nextHigher(dec("1.23")) shouldEqual dec("1.24")
 
-    prec.nextLower(dec("1.236")) shouldEqual dec("1.23")
-    prec.nextLower(dec("1.24")) shouldEqual dec("1.23")
-    prec.nextLower(dec("1.234")) shouldEqual dec("1.23")
+    p.nextLower(dec("1.236")) shouldEqual dec("1.23")
+    p.nextLower(dec("1.24")) shouldEqual dec("1.23")
+    p.nextLower(dec("1.234")) shouldEqual dec("1.23")
   }
 
   // multiple of
@@ -51,33 +40,33 @@ class NumberPrecisionTest extends BasicTest {
   }
 
   test("next higher and lower prices can be obtained for multiple-of precision") {
-    val prec = NumberPrecision.multipleOf(0.5)
-    prec.nextHigher(dec("1.2")) shouldEqual dec("1.5")
-    prec.nextHigher(dec("1.3")) shouldEqual dec("1.5")
-    prec.nextHigher(dec("1.5")) shouldEqual dec("2.0")
+    val p = NumberPrecision.multipleOf(0.5)
+    p.nextHigher(dec("1.2")) shouldEqual dec("1.5")
+    p.nextHigher(dec("1.3")) shouldEqual dec("1.5")
+    p.nextHigher(dec("1.5")) shouldEqual dec("2.0")
 
-    prec.nextLower(dec("1.2")) shouldEqual dec("1.0")
-    prec.nextLower(dec("1.3")) shouldEqual dec("1.0")
-    prec.nextLower(dec("1.5")) shouldEqual dec("1.0")
+    p.nextLower(dec("1.2")) shouldEqual dec("1.0")
+    p.nextLower(dec("1.3")) shouldEqual dec("1.0")
+    p.nextLower(dec("1.5")) shouldEqual dec("1.0")
   }
 
   // inverse multiple of
 
   test("the inverse multiple-of precision changes as if the inverse price was rounded to the next matching price") {
-    def prec(step: BigDecimal) = NumberPrecision.inverseMultipleOf(step)
-    prec(dec("0.25"))(dec("2.1")) shouldEqual dec("2")
-    prec(dec("0.25"))(dec("1.9")) shouldEqual dec("2")
-    prec(dec("4"))(dec("0.2")) shouldEqual dec("0.25")
+    def p(step: BigDecimal) = NumberPrecision.inverseMultipleOf(step)
+    p(dec("0.25"))(dec("2.1")) shouldEqual dec("2")
+    p(dec("0.25"))(dec("1.9")) shouldEqual dec("2")
+    p(dec("4"))(dec("0.2")) shouldEqual dec("0.25")
   }
 
   test("next higher and lower prices can be obtained for inverse multiple-of precision") {
-    val prec = NumberPrecision.inverseMultipleOf(0.5)
+    val p = NumberPrecision.inverseMultipleOf(0.5)
     // prices are 2, 1, 0.666..., 0.5, 0.4
-    prec.nextHigher(dec("0.7")) shouldEqual dec("1.0")
-    prec.nextHigher(dec("1.0")) shouldEqual dec("2.0")
+    p.nextHigher(dec("0.7")) shouldEqual dec("1.0")
+    p.nextHigher(dec("1.0")) shouldEqual dec("2.0")
 
-    prec.nextLower(dec("1.2")) shouldEqual dec("1.0")
-    prec.nextLower(dec("0.5")) shouldEqual dec("0.4")
+    p.nextLower(dec("1.2")) shouldEqual dec("1.0")
+    p.nextLower(dec("0.5")) shouldEqual dec("0.4")
   }
 
   // significant digits
@@ -95,30 +84,30 @@ class NumberPrecisionTest extends BasicTest {
   }
 
   test("next higher and lower prices can be obtained for significant digits precision") {
-    val twoDigitPrec = NumberPrecision.significantDigits(2)
-    twoDigitPrec.nextHigher(dec("123")) shouldEqual dec("130")
-    twoDigitPrec.nextHigher(dec("129")) shouldEqual dec("130")
-    twoDigitPrec.nextHigher(dec("130")) shouldEqual dec("140")
-    twoDigitPrec.nextLower(dec("123")) shouldEqual dec("120")
-    twoDigitPrec.nextLower(dec("129")) shouldEqual dec("120")
-    twoDigitPrec.nextLower(dec("130")) shouldEqual dec("120")
+    val twoDigitPrecision = NumberPrecision.significantDigits(2)
+    twoDigitPrecision.nextHigher(dec("123")) shouldEqual dec("130")
+    twoDigitPrecision.nextHigher(dec("129")) shouldEqual dec("130")
+    twoDigitPrecision.nextHigher(dec("130")) shouldEqual dec("140")
+    twoDigitPrecision.nextLower(dec("123")) shouldEqual dec("120")
+    twoDigitPrecision.nextLower(dec("129")) shouldEqual dec("120")
+    twoDigitPrecision.nextLower(dec("130")) shouldEqual dec("120")
 
-    twoDigitPrec.nextHigher(dec("0.0123")) shouldEqual dec("0.0130")
-    twoDigitPrec.nextHigher(dec("0.0129")) shouldEqual dec("0.0130")
-    twoDigitPrec.nextHigher(dec("0.0130")) shouldEqual dec("0.0140")
-    twoDigitPrec.nextLower(dec("0.0123")) shouldEqual dec("0.0120")
-    twoDigitPrec.nextLower(dec("0.0129")) shouldEqual dec("0.0120")
-    twoDigitPrec.nextLower(dec("0.0130")) shouldEqual dec("0.0120")
+    twoDigitPrecision.nextHigher(dec("0.0123")) shouldEqual dec("0.0130")
+    twoDigitPrecision.nextHigher(dec("0.0129")) shouldEqual dec("0.0130")
+    twoDigitPrecision.nextHigher(dec("0.0130")) shouldEqual dec("0.0140")
+    twoDigitPrecision.nextLower(dec("0.0123")) shouldEqual dec("0.0120")
+    twoDigitPrecision.nextLower(dec("0.0129")) shouldEqual dec("0.0120")
+    twoDigitPrecision.nextLower(dec("0.0130")) shouldEqual dec("0.0120")
   }
 
   test("rounding to significant digits and moving to higher and lower prices works for edge cases") {
-    val twoDigitPrec = NumberPrecision.significantDigits(2)
+    val twoDigitPrecision = NumberPrecision.significantDigits(2)
     roundToSignificantDigits(2)(dec("999")) shouldEqual dec("1000")
-    twoDigitPrec.nextHigher(dec("999")) shouldEqual dec("1000")
-    twoDigitPrec.nextHigher(dec("990")) shouldEqual dec("1000")
+    twoDigitPrecision.nextHigher(dec("999")) shouldEqual dec("1000")
+    twoDigitPrecision.nextHigher(dec("990")) shouldEqual dec("1000")
     roundToSignificantDigits(2)(dec("101")) shouldEqual dec("100")
-    twoDigitPrec.nextLower(dec("1000")) shouldEqual dec("990")
-    twoDigitPrec.nextLower(dec("1001")) shouldEqual dec("1000")
+    twoDigitPrecision.nextLower(dec("1000")) shouldEqual dec("990")
+    twoDigitPrecision.nextLower(dec("1001")) shouldEqual dec("1000")
   }
 
   // significant digits with extra number of decimal places after point

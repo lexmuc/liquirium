@@ -21,28 +21,18 @@ object NumberPrecision {
   def significantDigits(n: Int, maxDecimalsAfterPoint: Option[Int] = None): NumberPrecision =
     SignificantDigits(n, maxDecimalsAfterPoint.map(digitsAfterSeparator))
 
-  case object Infinite extends NumberPrecision {
-
-    override def apply(p: BigDecimal): BigDecimal = p
-
-    override def nextHigher(p: BigDecimal): BigDecimal = p
-
-    override def nextLower(p: BigDecimal): BigDecimal = p
-
-  }
-
   case class SignificantDigits(
     numberOfDigits: Int,
     maxDecimalsAfterPointPrecision: Option[NumberPrecision],
   ) extends NumberPrecision {
 
-    val mc = new MathContext(numberOfDigits, JavaRoundingMode.HALF_UP)
-    val mcUp = new MathContext(numberOfDigits, JavaRoundingMode.UP)
-    val mcDown = new MathContext(numberOfDigits, JavaRoundingMode.DOWN)
+    private val mc = new MathContext(numberOfDigits, JavaRoundingMode.HALF_UP)
+    private val mcUp = new MathContext(numberOfDigits, JavaRoundingMode.UP)
+    private val mcDown = new MathContext(numberOfDigits, JavaRoundingMode.DOWN)
 
-    val relativeDelta: BigDecimal = BigDecimal(1) / BigDecimal(10).pow(numberOfDigits)
-    val relativeDeltaUp: BigDecimal = BigDecimal(1) + relativeDelta
-    val relativeDeltaDown: BigDecimal = BigDecimal(1) - relativeDelta
+    private val relativeDelta: BigDecimal = BigDecimal(1) / BigDecimal(10).pow(numberOfDigits)
+    private val relativeDeltaUp: BigDecimal = BigDecimal(1) + relativeDelta
+    private val relativeDeltaDown: BigDecimal = BigDecimal(1) - relativeDelta
 
     override def apply(p: BigDecimal): BigDecimal = maxDecimalsAfterPointPrecision match {
       case Some(extraPrecision) => extraPrecision.apply(round(p))
@@ -101,8 +91,8 @@ object NumberPrecision {
 
   case class InverseMultipleOf(step: BigDecimal) extends NumberPrecision {
 
-    val ONE: BigDecimal = BigDecimal(1)
-    val basePrecision: NumberPrecision = multipleOf(step)
+    private val ONE: BigDecimal = BigDecimal(1)
+    private val basePrecision: NumberPrecision = multipleOf(step)
 
     override def apply(p: BigDecimal): BigDecimal = ONE / basePrecision(ONE / p)
 

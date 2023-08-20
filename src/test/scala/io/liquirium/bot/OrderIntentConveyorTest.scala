@@ -17,8 +17,8 @@ class OrderIntentConveyorTest extends EvalTest with TestWithMocks {
   private val market: Market = MarketHelpers.market(123)
   private val orderConstraintsEval = fakeEvalWithValue(
     OrderConstraints(
-      pricePrecision = NumberPrecision.Infinite,
-      quantityPrecision = NumberPrecision.Infinite,
+      pricePrecision = NumberPrecision.SignificantDigits(5, None),
+      quantityPrecision = NumberPrecision.SignificantDigits(5, None),
     )
   )
 
