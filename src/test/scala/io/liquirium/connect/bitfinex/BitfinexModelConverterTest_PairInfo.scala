@@ -11,7 +11,7 @@ class BitfinexModelConverterTest_PairInfo extends BitfinexModelConverterTest {
     convert(pairInfo(1)).pricePrecision shouldEqual
       NumberPrecision.SignificantDigits(
         numberOfDigits = 5,
-        maxDecimalsAfterPointPrecision = Some(NumberPrecision.digitsAfterSeparator(8)),
+        maxDecimalsAfterPoint = Some(8),
       )
   }
 

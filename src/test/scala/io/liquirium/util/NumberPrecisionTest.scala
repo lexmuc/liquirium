@@ -50,6 +50,12 @@ class NumberPrecisionTest extends BasicTest {
     p.nextLower(dec("1.5")) shouldEqual dec("1.0")
   }
 
+  test("multipleOf can be converted to a meaningful string") {
+    val p = NumberPrecision.digitsAfterSeparator(2)
+    p.toString shouldEqual "multipleOf(0.01)"
+  }
+
+
   // inverse multiple of
 
   test("the inverse multiple-of precision changes as if the inverse price was rounded to the next matching price") {
@@ -67,6 +73,11 @@ class NumberPrecisionTest extends BasicTest {
 
     p.nextLower(dec("1.2")) shouldEqual dec("1.0")
     p.nextLower(dec("0.5")) shouldEqual dec("0.4")
+  }
+
+  test("inverseMultipleOf can be converted to a meaningful string") {
+    val p = NumberPrecision.inverseMultipleOf(0.5)
+    p.toString shouldEqual "inverseMultipleOf(0.5)"
   }
 
   // significant digits
@@ -110,6 +121,11 @@ class NumberPrecisionTest extends BasicTest {
     twoDigitPrecision.nextLower(dec("1001")) shouldEqual dec("1000")
   }
 
+  test("significant digits can be converted to a meaningful string") {
+    val p = NumberPrecision.significantDigits(2)
+    p.toString shouldEqual "significantDigits(2)"
+  }
+
   // significant digits with extra number of decimal places after point
 
   test("extra digits are removed (with rounding) only when they exceed the maximum decimals after the point") {
@@ -128,6 +144,11 @@ class NumberPrecisionTest extends BasicTest {
     def precision(sig: Int, maxDec: Int) = NumberPrecision.significantDigits(sig, Some(maxDec))
     precision(2, 2).nextLower(dec("0.0123")) shouldEqual dec("0.01")
     precision(2, 3).nextLower(dec("0.0123")) shouldEqual dec("0.012")
+  }
+
+  test("significant digits with decimals limit can be converted to a meaningful string") {
+    val p = NumberPrecision.significantDigits(2, Some(1))
+    p.toString shouldEqual "significantDigits(2, decimals=1)"
   }
 
 }

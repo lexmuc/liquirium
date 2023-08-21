@@ -19,12 +19,13 @@ object NumberPrecision {
   def inverseMultipleOf(step: BigDecimal): NumberPrecision = InverseMultipleOf(step)
 
   def significantDigits(n: Int, maxDecimalsAfterPoint: Option[Int] = None): NumberPrecision =
-    SignificantDigits(n, maxDecimalsAfterPoint.map(digitsAfterSeparator))
+    SignificantDigits(n, maxDecimalsAfterPoint)
 
   case class SignificantDigits(
     numberOfDigits: Int,
-    maxDecimalsAfterPointPrecision: Option[NumberPrecision],
+    maxDecimalsAfterPoint: Option[Int],
   ) extends NumberPrecision {
+    private val maxDecimalsAfterPointPrecision = maxDecimalsAfterPoint.map(digitsAfterSeparator)
 
     private val mc = new MathContext(numberOfDigits, JavaRoundingMode.HALF_UP)
     private val mcUp = new MathContext(numberOfDigits, JavaRoundingMode.UP)
@@ -69,6 +70,11 @@ object NumberPrecision {
       }
     }
 
+    override def toString(): String = maxDecimalsAfterPoint match {
+      case Some(d) => "significantDigits(" + numberOfDigits + ", decimals=" + d + ")"
+      case None => "significantDigits(" + numberOfDigits + ")"
+    }
+
   }
 
   case class MultipleOf(step: BigDecimal) extends NumberPrecision {
@@ -87,6 +93,8 @@ object NumberPrecision {
       else applied - step
     }
 
+    override def toString(): String = "multipleOf(" + step + ")"
+
   }
 
   case class InverseMultipleOf(step: BigDecimal) extends NumberPrecision {
@@ -99,6 +107,8 @@ object NumberPrecision {
     override def nextHigher(p: BigDecimal): BigDecimal = ONE / basePrecision.nextLower(ONE / p)
 
     override def nextLower(p: BigDecimal): BigDecimal = ONE / basePrecision.nextHigher(ONE / p)
+
+    override def toString(): String = "inverseMultipleOf(" + step + ")"
 
   }
 
