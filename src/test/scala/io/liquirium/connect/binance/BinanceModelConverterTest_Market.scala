@@ -16,10 +16,16 @@ class BinanceModelConverterTest_Market extends BinanceModelConverterTest {
 
   test("there may be symbols longer than 6 characters when the quote currency is supported (error otherwise)") {
     convert("MANABTC").tradingPair shouldEqual TradingPair("MANA", "BTC")
+    convert("MANANGN").tradingPair shouldEqual TradingPair("MANA", "NGN")
     convert("REPUSDT").tradingPair shouldEqual TradingPair("REP", "USDT")
+    convert("REPTUSD").tradingPair shouldEqual TradingPair("REP", "TUSD")
+    convert("REPUSDC").tradingPair shouldEqual TradingPair("REP", "USDC")
+    convert("REPUSDS").tradingPair shouldEqual TradingPair("REP", "USDS")
     convert("MANAETH").tradingPair shouldEqual TradingPair("MANA", "ETH")
     convert("MANABNB").tradingPair shouldEqual TradingPair("MANA", "BNB")
+    convert("MANAPAX").tradingPair shouldEqual TradingPair("MANA", "PAX")
     convert("HNTBUSD").tradingPair shouldEqual TradingPair("HNT", "BUSD")
+    convert("HNTFDUSD").tradingPair shouldEqual TradingPair("HNT", "FDUSD")
     an[Exception] shouldBe thrownBy(convert("AAAAXXX"))
   }
 

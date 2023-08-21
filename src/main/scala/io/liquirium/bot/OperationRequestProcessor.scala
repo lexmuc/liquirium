@@ -50,7 +50,7 @@ class OperationRequestProcessor(
     input match {
       case CompletedOperationRequestsInSession =>
         val source = Source.future(inputProviderPromise.future).flatMapConcat(_.getInputUpdateStream)
-        Some(source.asInstanceOf[Source[T, NotUsed]])
+        Some(source)
       case _ => None
     }
 

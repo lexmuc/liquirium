@@ -47,10 +47,17 @@ class BinanceModelConverter(exchangeId: ExchangeId) {
       Market(exchangeId, TradingPair(base = s.substring(0, 2), quote = s.substring(2, 6)))
     else if (s.length == 6)
       Market(exchangeId, TradingPair(base = s.substring(0, 3), quote = s.substring(3, 6)))
-    else if (s.endsWith("BTC") || s.endsWith("ETH") || s.endsWith("BNB"))
+    else if (s.endsWith("BTC") || s.endsWith("ETH") || s.endsWith("BNB") || s.endsWith("PAX") || s.endsWith("NGN")
+      || s.endsWith("RUB") || s.endsWith("TRY") || s.endsWith("ZAR") || s.endsWith("UAH") || s.endsWith("DAI")
+      || s.endsWith("AUD") || s.endsWith("BRL") || s.endsWith("EUR") || s.endsWith("GBP") || s.endsWith("VAI")
+    || s.endsWith("UST") || s.endsWith("DOT") || s.endsWith("PLN") || s.endsWith("RON") || s.endsWith("ARS"))
       Market(exchangeId, TradingPair(base = s.substring(0, s.length - 3), quote = s.substring(s.length - 3)))
-    else if (s.endsWith("USDT") || s.endsWith("BUSD"))
+    else if (s.endsWith("USDT") || s.endsWith("BUSD") || s.endsWith("TUSD") || s.endsWith("USDC") ||
+      s.endsWith("USDS") || s.endsWith("BKRW") || s.endsWith("IDRT") || s.endsWith("BIDR") || s.endsWith("BVND") ||
+      s.endsWith("USDP") || s.endsWith("DOGE"))
       Market(exchangeId, TradingPair(base = s.substring(0, s.length - 4), quote = s.substring(s.length - 4)))
+    else if (s.endsWith("FDUSD"))
+      Market(exchangeId, TradingPair(base = s.substring(0, s.length - 5), quote = s.substring(s.length - 5)))
     else
       throw new IllegalArgumentException(s"symbol $s is currently not supported by the model converter")
 
