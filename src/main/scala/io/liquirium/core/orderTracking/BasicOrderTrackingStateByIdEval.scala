@@ -12,61 +12,37 @@ object BasicOrderTrackingStateByIdEval {
     openOrdersHistory: Eval[OpenOrdersHistory],
     successfulOperations: Eval[IncrementalSeq[OrderTrackingEvent.OperationEvent]],
   ): Eval[IncrementalMap[String, BasicOrderTrackingState]] = {
-    val tradeEventsById = trades
+    val operationsById = successfulOperations.groupByIncremental(_.orderId)
+    // it is important that we map to the empty single order history first, so we always work with the same instance
+    // of the empty order tracking state. Otherwise we would get a new instance whenever the open orders history changes
+    openOrdersHistory
+      .map(_.emptySingleOrderHistory)
+      .flatMap { emptySingleOrderHistory =>
+      val emptyState = BasicOrderTrackingState(Seq(), emptySingleOrderHistory , Seq())
+      allStates(
+        operationsWithOrdersEval(
+          orderHistoriesById = openOrdersHistory.map(_.definedHistoriesById),
+          operationsById = operationsById,
+          emptyOrderTrackingState = emptyState,
+        ),
+        tradeEventsByIdEval(trades),
+        emptyOrderTrackingState = emptyState,
+      )
+    }
+  }
+
+  private def tradeEventsByIdEval(
+    trades: Eval[TradeHistorySegment],
+  ): Eval[IncrementalMap[String, IncrementalSeq[NewTrade]]] =
+    trades
       .filterIncremental(_.orderId.isDefined)
       .mapIncremental(NewTrade.apply)
       .groupByIncremental(_.t.orderId.get)
-    val operationsById = successfulOperations.groupByIncremental(_.orderId)
-    val allIdsEval = allIds(tradeEventsById, openOrdersHistory.map(_.definedHistoriesById), operationsById)
-    allStates(
-      operationsWithOrdersEval(
-        orderHistoriesById = allOrderHistories(allIdsEval, openOrdersHistory),
-        operationsById = operationsById
-      ),
-      tradeEventsById,
-    )
-  }
-
-  private def idsFromMaps[A, B](
-    m1: Eval[IncrementalMap[String, A]],
-    m2: Eval[IncrementalMap[String, B]],
-  ): Eval[IncrementalMap[String, Unit]] =
-    m1.mergeFoldIncremental(m2)((_, _) => IncrementalMap.empty[String, Unit]) {
-      case (im, (oid, _)) => if (im.mapValue.contains(oid)) im else im.update(oid, ())
-    } {
-      case (im, (oid, _)) => if (im.mapValue.contains(oid)) im else im.update(oid, ())
-    }
-
-  private def allIds(
-    tradeEvents: Eval[IncrementalMap[String, IncrementalSeq[NewTrade]]],
-    orderHistoriesById: Eval[IncrementalMap[String, SingleOrderObservationHistory]],
-    operationsById: Eval[IncrementalMap[String, IncrementalSeq[OrderTrackingEvent.OperationEvent]]],
-  ): Eval[IncrementalMap[String, Unit]] =
-    idsFromMaps(
-      idsFromMaps(tradeEvents, operationsById),
-      orderHistoriesById,
-    )
-
-  private def allOrderHistories(
-    allIds: Eval[IncrementalMap[String, Unit]],
-    openOrdersHistory: Eval[OpenOrdersHistory],
-  ): Eval[IncrementalMap[String, SingleOrderObservationHistory]] =
-    openOrdersHistory.map(_.emptySingleOrderHistory).flatMap { emptyHistory =>
-      openOrdersHistory.map(_.definedHistoriesById).mergeFoldIncremental(allIds) {
-        (_, _) => IncrementalMap.empty[String, SingleOrderObservationHistory]
-      } {
-        case (im, (id, hist)) => im.update(id, hist.get)
-      } {
-        case (im, (id, _)) => im.mapValue.get(id) match {
-          case None => im.update(id, emptyHistory)
-          case Some(_) => im
-        }
-      }
-    }
 
   private def operationsWithOrdersEval(
     orderHistoriesById: Eval[IncrementalMap[String, SingleOrderObservationHistory]],
     operationsById: Eval[IncrementalMap[String, IncrementalSeq[OrderTrackingEvent.OperationEvent]]],
+    emptyOrderTrackingState: BasicOrderTrackingState,
   ): Eval[IncrementalMap[String, BasicOrderTrackingState]] =
     orderHistoriesById.mergeFoldIncremental(operationsById)(
       (_, _) => IncrementalMap.empty[String, BasicOrderTrackingState]
@@ -79,16 +55,14 @@ object BasicOrderTrackingStateByIdEval {
         im.update(id, newState)
     } {
       case (im, (id, newOperations)) =>
-        val newState = im.mapValue.get(id) match {
-          case None => throw new RuntimeException("not supposed to happen")
-          case Some(s) => s.copy(operationEvents = newOperations.get)
-        }
+        val newState = im.mapValue.getOrElse(id, emptyOrderTrackingState).copy(operationEvents = newOperations.get)
         im.update(id, newState)
     }
 
   private def allStates(
     statesWithoutTrades: Eval[IncrementalMap[String, BasicOrderTrackingState]],
     tradesById: Eval[IncrementalMap[String, IncrementalSeq[NewTrade]]],
+    emptyOrderTrackingState: BasicOrderTrackingState,
   ): Eval[IncrementalMap[String, BasicOrderTrackingState]] =
     statesWithoutTrades.mergeFoldIncremental(tradesById)(
       (_, _) => IncrementalMap.empty[String, BasicOrderTrackingState]
@@ -101,10 +75,7 @@ object BasicOrderTrackingStateByIdEval {
         im.update(id, newState)
     } {
       case (im, (id, tradeEvents)) =>
-        val newState = im.mapValue.get(id) match {
-          case None => throw new RuntimeException("not supposed to happen")
-          case Some(s) => s.copy(tradeEvents = tradeEvents.get)
-        }
+        val newState = im.mapValue.getOrElse(id, emptyOrderTrackingState).copy(tradeEvents = tradeEvents.get)
         im.update(id, newState)
     }
 
