@@ -25,6 +25,8 @@ object BasicOrderTrackingState {
 
     case class ExpectingObservationChange(since: Instant, observation: Option[Order]) extends SyncReason
 
+    case class ExpectingOrderToAppear(since: Instant, order: Order) extends SyncReason
+
     case class UnknownIfMoreTradesBeforeCancel(time: Instant) extends SyncReason
 
   }
@@ -76,7 +78,6 @@ case class BasicOrderTrackingState(
       .iterator.map(_.check(this))
       .collectFirst({ case Some(e) => e })
 
-
   val syncReasons: Set[SyncReason] = observationHistory.latestPresentObservation match {
     case None => syncReasonsIfNeverObserved()
     case Some(o) => syncReasonsIfObserved(o.resetQuantity)
@@ -98,7 +99,7 @@ case class BasicOrderTrackingState(
       orderWithFullQuantity.get.reduceQuantity(totalTradeQuantity) match {
         case Some(expectedState) =>
           val timestamp = (tradeEvents.map(_.timestamp)  ++ creation.map(_.timestamp)).max
-          Set(ExpectingObservationChange(timestamp, Some(expectedState)))
+          Set(ExpectingOrderToAppear(timestamp, expectedState))
         case None => Set()
       }
     }

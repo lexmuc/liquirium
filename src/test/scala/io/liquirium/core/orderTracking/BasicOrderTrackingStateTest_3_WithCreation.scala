@@ -8,7 +8,7 @@ class BasicOrderTrackingStateTest_3_WithCreation extends BasicOrderTrackingState
     observe(creation(sec(1), o(10, of = 10)))
     observe(absence(sec(2)))
     assertNotReported()
-    assertSyncReasons(expectingObservationChange(sec(1), Some(o(10, of = 10))))
+    assertSyncReasons(expectingOrderToAppear(sec(1), o(10, of = 10)))
   }
 
   test("when only creation and trades are observed the order remains not reported and syncing with correct size") {
@@ -19,7 +19,7 @@ class BasicOrderTrackingStateTest_3_WithCreation extends BasicOrderTrackingState
       trade(sec(3), 4),
     )
     assertNotReported()
-    assertSyncReasons(expectingObservationChange(sec(3), Some(o(4, of = 10))))
+    assertSyncReasons(expectingOrderToAppear(sec(3), o(4, of = 10)))
   }
 
   test("when only creation and trades that fill the order are seen it reported state is none and it is in sync") {

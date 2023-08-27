@@ -23,6 +23,7 @@ object IsInSyncEval {
     } yield syncingStates.flatMap(_.syncReasons).collectFirst {
       case UnknownWhyOrderIsGone(reasonTime) if (reasonTime plus maxDuration).isAfter(currentTime) => ()
       case ExpectingObservationChange(_, _) => ()
+      case ExpectingOrderToAppear(t, _) if (t plus maxDuration).isAfter(currentTime) => ()
       case ExpectingTrades(_, _) => ()
       case UnknownIfMoreTradesBeforeCancel(reasonTime) if (reasonTime plus maxDuration).isAfter(currentTime) => ()
     }.isEmpty && errorStates.isEmpty

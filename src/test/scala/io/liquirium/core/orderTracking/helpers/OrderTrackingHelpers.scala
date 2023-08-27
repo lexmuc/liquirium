@@ -65,6 +65,15 @@ object OrderTrackingHelpers extends Matchers {
       absoluteRestQuantity = absoluteRestQuantity.map(q =>AbsoluteQuantity(dec(q))),
     )
 
+  def creationEvent(
+    t: Instant,
+    order: Order,
+  ): OrderTrackingEvent.Creation =
+    OrderTrackingEvent.Creation(
+      timestamp = t,
+      order = order,
+    )
+
   def syncedStateWithReportableOrder(o: Order): BasicOrderTrackingState = {
     val result = basicOrderTrackingState(
       observationHistory = singleOrderObservationHistory(observationChange(sec(0), o)),
@@ -177,6 +186,24 @@ object OrderTrackingHelpers extends Matchers {
     )
     result.errorState shouldBe None
     result.syncReasons shouldEqual Set(SyncReason.UnknownIfMoreTradesBeforeCancel(t))
+    result.reportingState shouldBe None
+    result
+  }
+
+  def stateWithSyncReasonExpectingOrderToAppear(
+    order: Order,
+    t: Instant,
+  ): BasicOrderTrackingState = {
+    val result = basicOrderTrackingState(
+      observationHistory = singleOrderObservationHistory(
+        observationChange(t plus millis(1)),
+      ),
+      operationEvents = Seq(
+        creationEvent(t, order),
+      ),
+    )
+    result.errorState shouldBe None
+    result.syncReasons shouldEqual Set(SyncReason.ExpectingOrderToAppear(t, order))
     result.reportingState shouldBe None
     result
   }

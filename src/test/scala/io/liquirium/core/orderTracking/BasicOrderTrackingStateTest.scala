@@ -81,6 +81,9 @@ class BasicOrderTrackingStateTest extends BasicTest {
   protected def expectingObservationChange(since: Instant, observation: Option[Order]): SyncReason =
     SyncReason.ExpectingObservationChange(since, observation)
 
+  protected def expectingOrderToAppear(since: Instant, order: Order): SyncReason =
+    SyncReason.ExpectingOrderToAppear(since, order)
+
   protected def expectingTrades(time: Instant, quantity: BigDecimal): SyncReason =
     SyncReason.ExpectingTrades(time: Instant, quantity: BigDecimal)
 

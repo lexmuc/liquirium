@@ -75,6 +75,15 @@ class IsInSyncEvalTest extends EvalTest {
     assertSync(true)
   }
 
+  test("an order that is expected to appear leads to a syncing state for the sync duration") {
+    fakeMaxSyncDuration(secs(30))
+    updateState(o(1).id, stateWithSyncReasonExpectingOrderToAppear(o(1), sec(5)))
+    fakeTime(sec(34))
+    assertSync(false)
+    fakeTime(sec(35))
+    assertSync(true)
+  }
+
   test("if enough time passes we are in sync again even if we don't know why an order is gone (cancel assumed)") {
     updateState(o(1).id, stateWithSyncReasonUnknownWhyGone(o(1), sec(5)))
     fakeMaxSyncDuration(secs(30))
