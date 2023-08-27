@@ -61,6 +61,8 @@ case class BasicOrderTrackingState(
   val orderWithFullQuantity: Option[Order] =
     observationHistory.latestPresentObservation.map(_.resetQuantity) orElse creation.map(_.order)
 
+  val isCurrentlyObserved: Boolean = observationHistory.changes.last.order.isDefined
+
   private val consistencyRules = Seq(
     ConsistentFullQuantityInObservations,
     CreationMatchesObservations,
@@ -74,13 +76,10 @@ case class BasicOrderTrackingState(
       .iterator.map(_.check(this))
       .collectFirst({ case Some(e) => e })
 
-  private val lastObservationHistoryTime = observationHistory.changes.last.timestamp
 
-  val isCurrentlyObserved: Boolean = observationHistory.changes.last.order.isDefined
-
-  val syncReasons: Set[SyncReason] = orderWithFullQuantity match {
+  val syncReasons: Set[SyncReason] = observationHistory.latestPresentObservation match {
     case None => syncReasonsIfNeverObserved()
-    case Some(o) => syncReasonsIfObserved(o)
+    case Some(o) => syncReasonsIfObserved(o.resetQuantity)
   }
 
   val reportingState: Option[Order] =
@@ -91,11 +90,31 @@ case class BasicOrderTrackingState(
       case _ => None
     }
 
-  private def syncReasonsIfNeverObserved(): Set[SyncReason] =
-    if (tradeEvents.nonEmpty && cancellation.isEmpty) {
+  private def syncReasonsIfNeverObserved(): Set[SyncReason] = {
+    if (tradeEvents.nonEmpty && creation.isEmpty && cancellation.isEmpty) {
       Set(UnknownWhyOrderIsGone(tradeEvents.last.timestamp))
     }
-    else Set()
+    else if (creation.isDefined && cancellation.isEmpty) {
+      orderWithFullQuantity.get.reduceQuantity(totalTradeQuantity) match {
+        case Some(expectedState) =>
+          val timestamp = (tradeEvents.map(_.timestamp)  ++ creation.map(_.timestamp)).max
+          Set(ExpectingObservationChange(timestamp, Some(expectedState)))
+        case None => Set()
+      }
+    }
+    else {
+      val optReason = cancellation flatMap {
+        c =>
+          if (orderWithFullQuantity.isDefined && c.absoluteRestQuantity.isDefined) {
+            None
+          }
+          else {
+            Some(UnknownIfMoreTradesBeforeCancel(c.timestamp))
+          }
+      }
+      optReason.toSet
+    }
+  }
 
   private def syncReasonsIfObserved(fullOrder: Order): Set[SyncReason] = {
     val filledQuantity = observationHistory.changes.reverseIterator.map(_.order).collectFirst {
@@ -143,7 +162,7 @@ case class BasicOrderTrackingState(
 
     val optionalUnknownWhyGone =
       if (!isCurrentlyObserved && totalTradeQuantity != fullOrder.fullQuantity && cancellation.isEmpty)
-        Some(UnknownWhyOrderIsGone(lastObservationHistoryTime))
+        Some(UnknownWhyOrderIsGone(observationHistory.changes.last.timestamp))
       else None
 
     val optionalUnknownIfMoreTradesBeforeCancel = {

@@ -4,23 +4,55 @@ import io.liquirium.core.helpers.CoreHelpers.{dec, sec}
 
 class BasicOrderTrackingStateTest_4_WithCancel extends BasicOrderTrackingStateTest {
 
-  test("when only a cancel event is present, no order is reported and sync status is in sync") {
+  test("when only a cancel event is present, no order is reported") {
     observe(
       cancellation(sec(1)),
       absence(sec(1)),
     )
     assertNotReported()
-    assertInSync()
   }
 
-  test("when only a cancel event and trades are present, no order is reported and sync status is in sync") {
+  test("when only a cancel event is present, it is syncing because it is unknown if trades still appear") {
+    observe(
+      cancellation(sec(1)),
+      absence(sec(1)),
+    )
+    assertSyncReasons(unknownIfMoreTradesBeforeCancel(sec(1)))
+
+    resetEvents()
+
+    observe(
+      cancellation(sec(1), absoluteRest = Some(10)),
+      absence(sec(1)),
+    )
+    assertSyncReasons(unknownIfMoreTradesBeforeCancel(sec(1)))
+  }
+
+  test("when only a cancel event and trades are present, no order is reported") {
     observe(
       trade(sec(0), 1),
       cancellation(sec(1)),
       absence(sec(1)),
     )
     assertNotReported()
-    assertInSync()
+  }
+
+  test("when only a cancel event and trades are present, it is syncing because it is unknown if trades still appear") {
+    observe(
+      trade(sec(0), 1),
+      cancellation(sec(1)),
+      absence(sec(1)),
+    )
+    assertSyncReasons(unknownIfMoreTradesBeforeCancel(sec(1)))
+
+    resetEvents()
+
+    observe(
+      trade(sec(0), 1),
+      cancellation(sec(1), absoluteRest = Some(10)),
+      absence(sec(1)),
+    )
+    assertSyncReasons(unknownIfMoreTradesBeforeCancel(sec(1)))
   }
 
   test("when an order has been cancelled with known rest quantity and the order is gone sync status is in sync") {
@@ -267,6 +299,18 @@ class BasicOrderTrackingStateTest_4_WithCancel extends BasicOrderTrackingStateTe
     )
     assertNotReported()
     assertSyncReasons(unknownIfMoreTradesBeforeCancel(sec(2)))
+
+    resetEvents()
+
+    observe(
+      change(sec(1), o(-10, of = -10)),
+      cancellation(sec(2), absoluteRest = None),
+    )
+    assertNotReported()
+    assertSyncReasons(
+      unknownIfMoreTradesBeforeCancel(sec(2)),
+      expectingObservationChange(sec(2), None),
+    )
   }
 
 }

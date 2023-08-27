@@ -4,14 +4,32 @@ import io.liquirium.core.helpers.CoreHelpers.sec
 
 class BasicOrderTrackingStateTest_3_WithCreation extends BasicOrderTrackingStateTest {
 
-  test("when creation is observed the order remains syncing and not reported until the order is seen") {
+  test("when only creation is observed the order remains not reported and syncing because it is expected to appear") {
     observe(creation(sec(1), o(10, of = 10)))
     observe(absence(sec(2)))
     assertNotReported()
-    assertSyncReasons(unknownWhyOrderIsGone(sec(2)))
+    assertSyncReasons(expectingObservationChange(sec(1), Some(o(10, of = 10))))
+  }
 
-    observe(change(sec(3), o(10, of = 10)))
-    assertReportedState(o(10, of = 10))
+  test("when only creation and trades are observed the order remains not reported and syncing with correct size") {
+    observe(
+      creation(sec(1), o(10, of = 10)),
+      absence(sec(2)),
+      trade(sec(2), 2),
+      trade(sec(3), 4),
+    )
+    assertNotReported()
+    assertSyncReasons(expectingObservationChange(sec(3), Some(o(4, of = 10))))
+  }
+
+  test("when only creation and trades that fill the order are seen it reported state is none and it is in sync") {
+    observe(
+      creation(sec(1), o(10, of = 10)),
+      absence(sec(2)),
+      trade(sec(2), 2),
+      trade(sec(3), 8),
+    )
+    assertNotReported()
     assertInSync()
   }
 
