@@ -155,7 +155,8 @@ class BinanceRestApi(
       .map { j =>
         try {
           val res = request.convertResponse(j, jsonConverter).asInstanceOf[R]
-          logger.info("successfully received and parsed REST response")
+
+          logger.info("successfully received and parsed REST response: " + (res.toString).take(200))
           res
         }
         catch {
