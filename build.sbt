@@ -16,7 +16,7 @@ lazy val liquirium = (project in file("."))
         "org.mockito" % "mockito-core" % "4.7.0",
         "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
         "ch.qos.logback" % "logback-classic" % "1.2.3",
-        "com.h2database" % "h2" % "1.4.197",
+        "com.h2database" % "h2" % "2.2.222",
 
         "com.typesafe.akka" %% "akka-actor" % akkaVersion,
         "com.typesafe.akka" %% "akka-actor-typed" % akkaVersion,

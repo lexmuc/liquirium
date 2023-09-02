@@ -36,7 +36,7 @@ class H2CandleStore(
              |  ${c.close},
              |  ${c.high},
              |  ${c.low},
-             |  ${c.quoteVolume},
+             |  ${c.quoteVolume}
              |)
         """.stripMargin)
       }

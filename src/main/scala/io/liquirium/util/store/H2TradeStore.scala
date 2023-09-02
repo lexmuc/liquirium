@@ -26,7 +26,7 @@ class H2TradeStore(
       |  fee1Symbol VARCHAR,
       |  fee2 DECIMAL,
       |  fee2Symbol VARCHAR
-      |)""".stripMargin)
+      |);""".stripMargin)
 
   connection.createStatement().execute("CREATE INDEX IF NOT EXISTS timestamp_index ON TRADES(timestamp)")
 
@@ -43,7 +43,7 @@ class H2TradeStore(
         val fee2Symbol = if (feeSeq.size > 1) feeSeq(1)._1.symbol else ""
         connection.createStatement().execute(
           s"""
-             |MERGE INTO TRADES VALUES(
+             |MERGE INTO TRADES KEY(id) VALUES(
              |  '${ t.id }',
              |  '${ t.orderId getOrElse "" }',
              |  ${ t.quantity },
@@ -52,8 +52,8 @@ class H2TradeStore(
              |  $fee1,
              |  '$fee1Symbol',
              |  $fee2,
-             |  '$fee2Symbol',
-             |)
+             |  '$fee2Symbol'
+             |);
           """.stripMargin)
       }
     }
@@ -66,7 +66,7 @@ class H2TradeStore(
     val optEndCondition = until.map(i => "timestamp < " + i.toEpochMilli.toString)
     val conditions = (optStartCondition ++ optEndCondition).mkString(" AND ")
     val whereClause = if (conditions.isEmpty) "" else "WHERE " + conditions
-    val q = s"SELECT * FROM TRADES $whereClause ORDER BY timestamp, id ASC"
+    val q = s"SELECT * FROM TRADES $whereClause ORDER BY timestamp, id ASC;"
     val rs = connection.createStatement().executeQuery(q)
 
     val entries = read(rs)
@@ -102,7 +102,7 @@ class H2TradeStore(
 
   override def deleteFrom(time: Instant): Future[Unit] =
     Future {
-      connection.createStatement().execute(s"""DELETE FROM TRADES WHERE timestamp >= ${time.toEpochMilli }""")
+      connection.createStatement().execute(s"""DELETE FROM TRADES WHERE timestamp >= ${time.toEpochMilli };""")
     }
 
 }
