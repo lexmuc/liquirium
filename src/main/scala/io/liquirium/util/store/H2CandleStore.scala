@@ -17,11 +17,11 @@ class H2CandleStore(
   connection.createStatement().execute(
     """CREATE TABLE IF NOT EXISTS CANDLES (
       |  startTimestamp INT,
-      |  open DECIMAL,
-      |  close DECIMAL,
-      |  high DECIMAL,
-      |  low DECIMAL,
-      |  quoteVolume DECIMAL,
+      |  open DECIMAL(30, 10),
+      |  close DECIMAL(30, 10),
+      |  high DECIMAL(30, 10),
+      |  low DECIMAL(30, 10),
+      |  quoteVolume DECIMAL(30, 10),
       |  PRIMARY KEY (startTimestamp)
       |)""".stripMargin)
 

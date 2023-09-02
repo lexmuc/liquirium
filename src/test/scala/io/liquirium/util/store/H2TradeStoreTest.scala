@@ -101,6 +101,21 @@ class H2TradeStoreTest extends AsyncTestWithControlledTime {
     a[RuntimeException] shouldBe thrownBy(add(t(id = "1", fees = Seq(la -> dec(1)))))
   }
 
+  test("quantity, price and fees are stored with sufficient precision") {
+    val la = LedgerRef(market.exchangeId, "A")
+    val lb = LedgerRef(market.exchangeId, "B")
+    val trade = t(
+      id = "123",
+      market = market,
+      quantity = dec("-10987654321.00000123"),
+      price = dec("1234567890.00000123"),
+      fees = Seq(la -> dec("1234567890.00000123"), lb -> dec("-1234567890.00000123")),
+    )
+    add(trade)
+    val tradesById = retrieve().groupBy(_.id.toString).mapValues(_.head)
+    tradesById("123") shouldEqual trade
+  }
+
   test("trades are returned in a complete batch with given start") {
     add(tradeWithTime(5), tradeWithTime(3), tradeWithTime(4))
     retrieveBatch(Some(milli(2))) shouldEqual TradeBatch(

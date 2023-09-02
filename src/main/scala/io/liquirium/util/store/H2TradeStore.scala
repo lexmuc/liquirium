@@ -19,12 +19,12 @@ class H2TradeStore(
     """CREATE TABLE IF NOT EXISTS TRADES (
       |  id VARCHAR PRIMARY KEY,
       |  orderId VARCHAR,
-      |  quantity DECIMAL,
-      |  price DECIMAL,
+      |  quantity DECIMAL(30, 10),
+      |  price DECIMAL(30, 10),
       |  timestamp BIGINT,
-      |  fee1 DECIMAL,
+      |  fee1 DECIMAL(30, 10),
       |  fee1Symbol VARCHAR,
-      |  fee2 DECIMAL,
+      |  fee2 DECIMAL(30, 10),
       |  fee2Symbol VARCHAR
       |);""".stripMargin)
 

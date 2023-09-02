@@ -2,7 +2,7 @@ package io.liquirium.util.store
 
 import io.liquirium.core.Candle
 import io.liquirium.core.helpers.CandleHelpers.{candle, ohlc, ohlcCandle}
-import io.liquirium.core.helpers.CoreHelpers.{sec, secs}
+import io.liquirium.core.helpers.CoreHelpers.{dec, sec, secs}
 import io.liquirium.core.helpers.async.AsyncTestWithControlledTime
 import org.scalatest.Assertion
 
@@ -42,9 +42,13 @@ class H2CandleStoreTest extends AsyncTestWithControlledTime {
     )
   }
 
-  private def add(candles: Candle*): Unit = store.add(candles)
+  private def add(candles: Candle*): Unit = {
+    Await.ready(store.add(candles), 3.seconds)
+  }
 
-  private def deleteFrom(start: Instant): Unit = store.deleteFrom(start)
+  private def deleteFrom(start: Instant): Unit = {
+    Await.ready(store.deleteFrom(start), 3.seconds)
+  }
 
   private def retrieve(
     start: Option[Instant] = None,
@@ -69,8 +73,18 @@ class H2CandleStoreTest extends AsyncTestWithControlledTime {
 
   test("candles are stored and can be retrieved with all fields and the given length") {
     candleLength = secs(123)
-    add(c(1, secs(123)), c(2, secs(123)))
-    retrieve().toSet shouldEqual Set(c(1, secs(123)), c(2, secs(123)))
+    val c1 = candle(
+      start = sec(1),
+      length = candleLength,
+      open = dec("0.0002"),
+      close = dec("0.0003"),
+      high = dec("10.0001"),
+      low = dec("0.0001"),
+      quoteVolume = dec("1.2345"),
+    )
+    val c2 = c(2, secs(123))
+    add(c1, c2)
+    retrieve().toSet shouldEqual Set(c1, c2)
   }
 
   test("candles are returned in ascending order") {
