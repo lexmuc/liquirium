@@ -66,7 +66,8 @@ case class BasicOrderTrackingState(
   val isCurrentlyObserved: Boolean = observationHistory.changes.last.order.isDefined
 
   private val consistencyRules = Seq(
-    ConsistentFullQuantityInObservations,
+    SameFullQuantityInObservations,
+    NoQuantityIncrease,
     CreationMatchesObservations,
     CancelsAreConsistentWithOtherEvents,
     OrderDoesNotReappear,
@@ -215,11 +216,27 @@ object CreationMatchesObservations extends ConsistencyRule {
 
 }
 
-// #TODO separate decreasing order size
-object ConsistentFullQuantityInObservations extends ConsistencyRule {
+object SameFullQuantityInObservations extends ConsistencyRule {
+
+  def check(state: BasicOrderTrackingState): Option[ErrorState] = {
+    val reverseNonEmptyObservations = state.observationHistory.changes.filter(_.order.isDefined).reverse.toList
+
+    for {
+      lastObservation <- reverseNonEmptyObservations.headOption
+      mismatchingObservation <- reverseNonEmptyObservations.tail.find(
+        _.order.get.fullQuantity != lastObservation.order.get.fullQuantity
+      )
+    } yield InconsistentEvents(mismatchingObservation, lastObservation)
+
+
+  }
+
+}
+
+object NoQuantityIncrease extends ConsistencyRule {
 
   private def isConsistent(oldState: Order, newState: Order): Boolean =
-    oldState.fullQuantity == newState.fullQuantity && oldState.openQuantity.abs >= newState.openQuantity.abs
+    oldState.openQuantity.abs >= newState.openQuantity.abs
 
   @tailrec
   private def findInconsistentObservations(
@@ -235,7 +252,7 @@ object ConsistentFullQuantityInObservations extends ConsistencyRule {
     }
   }
 
-  def check(state: BasicOrderTrackingState): Option[ErrorState] = {
+  override def check(state: BasicOrderTrackingState): Option[ErrorState] = {
     val reverseNonEmptyObservations = state.observationHistory.changes.filter(_.order.isDefined).reverse.toList
     findInconsistentObservations(reverseNonEmptyObservations)
   }
