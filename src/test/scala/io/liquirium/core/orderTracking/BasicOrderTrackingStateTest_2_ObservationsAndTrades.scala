@@ -74,11 +74,12 @@ class BasicOrderTrackingStateTest_2_ObservationsAndTrades extends BasicOrderTrac
     assertSyncReasons(expectingTrades(sec(4), -1))
   }
 
-  test("when an order is fully filled with trades it is expected to disappear") {
+  test("when an order is fully filled with trades it is expected to disappear and it is not reported") {
     observe(change(sec(1), o(6, of = 10)))
     observe(trade(sec(2), 4))
     observe(trade(sec(3), 6))
     assertSyncReasons(expectingObservationChange(sec(3), None))
+    assertNotReported()
 
     resetEvents()
 
@@ -86,6 +87,7 @@ class BasicOrderTrackingStateTest_2_ObservationsAndTrades extends BasicOrderTrac
     observe(trade(sec(2), -4))
     observe(trade(sec(3), -6))
     assertSyncReasons(expectingObservationChange(sec(3), None))
+    assertNotReported()
   }
 
   test("when an order is fully filled and actually disappeared, the sync state is in sync and no order is reported") {

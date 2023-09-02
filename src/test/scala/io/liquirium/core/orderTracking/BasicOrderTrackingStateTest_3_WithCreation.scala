@@ -4,14 +4,34 @@ import io.liquirium.core.helpers.CoreHelpers.sec
 
 class BasicOrderTrackingStateTest_3_WithCreation extends BasicOrderTrackingStateTest {
 
-  test("when only creation is observed the order remains not reported and syncing because it is expected to appear") {
+  test("when only full creation is observed the order is not reported and expected to appear") {
     observe(creation(sec(1), o(10, of = 10)))
     observe(absence(sec(2)))
     assertNotReported()
     assertSyncReasons(expectingOrderToAppear(sec(1), o(10, of = 10)))
   }
 
-  test("when only creation and trades are observed the order remains not reported and syncing with correct size") {
+  test("when only partial creation is observed the order is not reported, expected to appear and trades are expected") {
+    observe(creation(sec(1), o(4, of = 10)))
+    observe(absence(sec(2)))
+    assertNotReported()
+    assertSyncReasons(
+      expectingOrderToAppear(sec(1), o(4, of = 10)),
+      expectingTrades(sec(1), 6),
+    )
+
+    resetEvents()
+
+    observe(creation(sec(1), o(-4, of = -10)))
+    observe(absence(sec(2)))
+    assertNotReported()
+    assertSyncReasons(
+      expectingOrderToAppear(sec(1), o(-4, of = -10)),
+      expectingTrades(sec(1), -6),
+    )
+  }
+
+  test("when only full creation and trades are observed the order remains not reported and syncing with correct size") {
     observe(
       creation(sec(1), o(10, of = 10)),
       absence(sec(2)),
@@ -20,6 +40,31 @@ class BasicOrderTrackingStateTest_3_WithCreation extends BasicOrderTrackingState
     )
     assertNotReported()
     assertSyncReasons(expectingOrderToAppear(sec(3), o(4, of = 10)))
+  }
+
+  test("when partial creation and part of the implied trades are observed, some trades and appearance are expected") {
+    observe(
+      creation(sec(1), o(-4, of = -10)),
+      absence(sec(2)),
+      trade(sec(1), -2),
+    )
+    assertNotReported()
+    assertSyncReasons(
+      expectingOrderToAppear(sec(1), o(-4, of = -10)),
+      expectingTrades(sec(1), -4),
+    )
+  }
+
+  test("when partial creation and more than the implied trades are observed, the correct appearance is expected") {
+    observe(
+      creation(sec(1), o(-4, of = -10)),
+      absence(sec(2)),
+      trade(sec(1), -7),
+    )
+    assertNotReported()
+    assertSyncReasons(
+      expectingOrderToAppear(sec(1), o(-3, of = -10)),
+    )
   }
 
   test("when only creation and trades that fill the order are seen it reported state is none and it is in sync") {

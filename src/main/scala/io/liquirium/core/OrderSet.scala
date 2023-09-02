@@ -27,7 +27,12 @@ object OrderSet {
     override def record(t: Trade): OrderSet =
       t.orderId.flatMap(x => orders.find(_.id == x)) match {
         case None => this
-        case Some(o) => copy((orders - o) ++ o.reduceQuantity(t.quantity))
+        case Some(o) =>
+          val newOrder = o.reduceQuantity(t.quantity)
+          if (newOrder.openQuantity == BigDecimal(0))
+            copy(orders = orders - o)
+          else
+            copy((orders - o) + newOrder)
       }
 
     override def contains(elem: Order): Boolean = orders(elem)

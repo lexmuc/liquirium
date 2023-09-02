@@ -61,7 +61,7 @@ case class BasicOrderTrackingState(
   val totalTradeQuantity: BigDecimal = tradeEvents.map(_.t.quantity).sum
 
   val orderWithFullQuantity: Option[Order] =
-    observationHistory.latestPresentObservation.map(_.resetQuantity) orElse creation.map(_.order)
+    observationHistory.latestPresentObservation.map(_.resetQuantity) orElse creation.map(_.order.resetQuantity)
 
   val isCurrentlyObserved: Boolean = observationHistory.changes.last.order.isDefined
 
@@ -86,8 +86,8 @@ case class BasicOrderTrackingState(
   val reportingState: Option[Order] =
     if (!isCurrentlyObserved || cancellation.isDefined) None
     else observationHistory.latestPresentObservation match {
-      case Some(lastObservedOrder) if totalTradeQuantity.abs <= lastObservedOrder.fullQuantity.abs =>
-        lastObservedOrder.resetQuantity.reduceQuantity(totalTradeQuantity)
+      case Some(lastObservedOrder) if totalTradeQuantity.abs < lastObservedOrder.fullQuantity.abs =>
+        Some(lastObservedOrder.resetQuantity.reduceQuantity(totalTradeQuantity))
       case _ => None
     }
 
@@ -96,12 +96,22 @@ case class BasicOrderTrackingState(
       Set(UnknownWhyOrderIsGone(tradeEvents.last.timestamp))
     }
     else if (creation.isDefined && cancellation.isEmpty) {
-      orderWithFullQuantity.get.reduceQuantity(totalTradeQuantity) match {
-        case Some(expectedState) =>
-          val timestamp = (tradeEvents.map(_.timestamp)  ++ creation.map(_.timestamp)).max
-          Set(ExpectingOrderToAppear(timestamp, expectedState))
-        case None => Set()
+      val reducedOrder = orderWithFullQuantity.get.reduceQuantity(totalTradeQuantity)
+      if (reducedOrder.openQuantity.abs > 0) {
+        val timestamp = (tradeEvents.map(_.timestamp) ++ creation.map(_.timestamp)).max
+        val impliedTradeQuantity = creation.get.order.filledQuantity
+        if (impliedTradeQuantity.abs > totalTradeQuantity.abs)
+          Set(
+            ExpectingTrades(timestamp, impliedTradeQuantity - totalTradeQuantity),
+            ExpectingOrderToAppear(timestamp, creation.get.order),
+          )
+        else
+          Set(
+            ExpectingOrderToAppear(timestamp, reducedOrder),
+          )
+
       }
+      else Set()
     }
     else {
       val optReason = cancellation flatMap {
@@ -117,67 +127,68 @@ case class BasicOrderTrackingState(
     }
   }
 
-  private def syncReasonsIfObserved(fullOrder: Order): Set[SyncReason] = {
-    val filledQuantity = observationHistory.changes.reverseIterator.map(_.order).collectFirst {
-      case Some(o) => o.filledQuantity
-    } getOrElse BigDecimal(0)
+private def syncReasonsIfObserved(fullOrder: Order): Set[SyncReason] = {
+  val filledQuantity = observationHistory.changes.reverseIterator.map(_.order).collectFirst {
+    case Some(o) => o.filledQuantity
+  } getOrElse BigDecimal(0)
 
-    val optionalExpectingTrades: Option[ExpectingTrades] = {
-      val impliedTradeQuantityFromCancelWithTime = cancellation collectFirst {
-        case OrderTrackingEvent.Cancel(t, _, Some(AbsoluteQuantity(q))) =>
-          (fullOrder.fullQuantity - (q * fullOrder.fullQuantity.signum), t)
-      }
-
-      val impliedTradeQuantityFromObservationWithTime: Option[(BigDecimal, Instant)] =
-        observationHistory.changes.reverseIterator.collectFirst {
-          case OrderTrackingEvent.ObservationChange(t, Some(o)) => (o.filledQuantity, t)
-        }
-
-      val impliedTradeQuantityWithTime: Option[(BigDecimal, Instant)] =
-        (impliedTradeQuantityFromCancelWithTime, impliedTradeQuantityFromObservationWithTime) match {
-          case (None, None) => None
-          case (Some(x), None) => Some(x)
-          case (None, Some(y)) => Some(y)
-          case (Some(x), Some(y)) if x._1.abs == y._1.abs && x._2.isBefore(y._2) => Some(x)
-          case (Some(x), Some(y)) if x._1.abs > y._1.abs => Some(x)
-          case (Some(_), Some(y)) => Some(y)
-        }
-
-      impliedTradeQuantityWithTime match {
-        case Some((q, t)) if q.abs > totalTradeQuantity.abs =>
-          Some(ExpectingTrades(t, q - totalTradeQuantity))
-        case _ => None
-      }
-
+  val optionalExpectingTrades: Option[ExpectingTrades] = {
+    val impliedTradeQuantityFromCancelWithTime = cancellation collectFirst {
+      case OrderTrackingEvent.Cancel(t, _, Some(AbsoluteQuantity(q))) =>
+        (fullOrder.fullQuantity - (q * fullOrder.fullQuantity.signum), t)
     }
 
-    val optionalExpectingObservationChange =
-      if (isCurrentlyObserved && totalTradeQuantity.abs > filledQuantity.abs) {
-        val expectedOrder = fullOrder.reduceQuantity(totalTradeQuantity)
-        Some(ExpectingObservationChange(tradeEvents.last.timestamp, expectedOrder))
+    val impliedTradeQuantityFromObservationWithTime: Option[(BigDecimal, Instant)] =
+      observationHistory.changes.reverseIterator.collectFirst {
+        case OrderTrackingEvent.ObservationChange(t, Some(o)) => (o.filledQuantity, t)
       }
-      else if (isCurrentlyObserved && cancellation.isDefined) {
-        Some(ExpectingObservationChange(cancellation.get.timestamp, None))
-      }
-      else None
 
-    val optionalUnknownWhyGone =
-      if (!isCurrentlyObserved && totalTradeQuantity != fullOrder.fullQuantity && cancellation.isEmpty)
-        Some(UnknownWhyOrderIsGone(observationHistory.changes.last.timestamp))
-      else None
-
-    val optionalUnknownIfMoreTradesBeforeCancel = {
-      cancellation collectFirst {
-        case OrderTrackingEvent.Cancel(timestamp, _, None) => UnknownIfMoreTradesBeforeCancel(timestamp)
+    val impliedTradeQuantityWithTime: Option[(BigDecimal, Instant)] =
+      (impliedTradeQuantityFromCancelWithTime, impliedTradeQuantityFromObservationWithTime) match {
+        case (None, None) => None
+        case (Some(x), None) => Some(x)
+        case (None, Some(y)) => Some(y)
+        case (Some(x), Some(y)) if x._1.abs == y._1.abs && x._2.isBefore(y._2) => Some(x)
+        case (Some(x), Some(y)) if x._1.abs > y._1.abs => Some(x)
+        case (Some(_), Some(y)) => Some(y)
       }
+
+    impliedTradeQuantityWithTime match {
+      case Some((q, t)) if q.abs > totalTradeQuantity.abs =>
+        Some(ExpectingTrades(t, q - totalTradeQuantity))
+      case _ => None
     }
 
-    (optionalUnknownWhyGone
-      ++ optionalExpectingTrades
-      ++ optionalExpectingObservationChange
-      ++ optionalUnknownIfMoreTradesBeforeCancel
-      ).toSet
   }
+
+  val optionalExpectingObservationChange =
+    if (isCurrentlyObserved && totalTradeQuantity.abs > filledQuantity.abs) {
+      val expectedOrder = fullOrder.reduceQuantity(totalTradeQuantity)
+      val optOrder = if (expectedOrder.openQuantity.abs > BigDecimal(0)) Some(expectedOrder) else None
+      Some(ExpectingObservationChange(tradeEvents.last.timestamp, optOrder))
+    }
+    else if (isCurrentlyObserved && cancellation.isDefined) {
+      Some(ExpectingObservationChange(cancellation.get.timestamp, None))
+    }
+    else None
+
+  val optionalUnknownWhyGone =
+    if (!isCurrentlyObserved && totalTradeQuantity != fullOrder.fullQuantity && cancellation.isEmpty)
+      Some(UnknownWhyOrderIsGone(observationHistory.changes.last.timestamp))
+    else None
+
+  val optionalUnknownIfMoreTradesBeforeCancel = {
+    cancellation collectFirst {
+      case OrderTrackingEvent.Cancel(timestamp, _, None) => UnknownIfMoreTradesBeforeCancel(timestamp)
+    }
+  }
+
+  (optionalUnknownWhyGone
+    ++ optionalExpectingTrades
+    ++ optionalExpectingObservationChange
+    ++ optionalUnknownIfMoreTradesBeforeCancel
+    ).toSet
+}
 
 }
 

@@ -21,8 +21,7 @@ final case class Order(
 
   def setQuantity(newQuantity: BigDecimal): Order = copy(openQuantity = newQuantity)
 
-  def reduceQuantity(by: BigDecimal): Option[Order] =
-    if (openQuantity == by) None else Some(copy(openQuantity = openQuantity - by))
+  def reduceQuantity(by: BigDecimal): Order = copy(openQuantity = openQuantity - by)
 
   def volume: BigDecimal = openQuantity.abs * price
 

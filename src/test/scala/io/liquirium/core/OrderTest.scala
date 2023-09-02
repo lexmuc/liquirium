@@ -16,20 +16,22 @@ class OrderTest extends BasicTest {
       order(quantity = dec("-0.99"), originalQuantity = dec("-2.77"))
   }
 
-  test("the quantity can be reduced and yields an option with the new order if not zero") {
+  test("the quantity can be reduced") {
     order(quantity = dec("-1.23"), originalQuantity = dec("-2.77"))
       .reduceQuantity(dec("-0.99")) shouldEqual
-      Some(order(quantity = dec("-0.24"), originalQuantity = dec("-2.77")))
+      order(quantity = dec("-0.24"), originalQuantity = dec("-2.77"))
     order(quantity = dec("1.23"), originalQuantity = dec("2.77"))
       .reduceQuantity(dec("0.99")) shouldEqual
-      Some(order(quantity = dec("0.24"), originalQuantity = dec("2.77")))
+      order(quantity = dec("0.24"), originalQuantity = dec("2.77"))
   }
 
-  test("reducing the quantity yields None when the order quantity becomes zero") {
+  test("the quantity cannot be reduced to zero") {
     order(quantity = dec("-1.23"), originalQuantity = dec("-2.77"))
-      .reduceQuantity(dec("-1.23")) shouldEqual None
+      .reduceQuantity(dec("-1.23")) shouldEqual
+      order(quantity = dec("0"), originalQuantity = dec("-2.77"))
     order(quantity = dec("1.23"), originalQuantity = dec("2.77"))
-      .reduceQuantity(dec("1.23")) shouldEqual None
+      .reduceQuantity(dec("1.23")) shouldEqual
+      order(quantity = dec("0"), originalQuantity = dec("2.77"))
   }
 
   test("an order with positive quantity is a buy order, not a sell order") {
