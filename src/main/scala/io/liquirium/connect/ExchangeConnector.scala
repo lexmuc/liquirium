@@ -12,6 +12,8 @@ trait ExchangeConnector {
 
   def loadCandleHistory(tradingPair: TradingPair, candleLength: Duration, start: Instant): Future[CandleHistorySegment]
 
+  def loadTradeHistory(tradingPair: TradingPair, start: Instant): Future[TradeHistorySegment]
+
   def candleHistoryStream(
     tradingPair: TradingPair,
     initialSegment: CandleHistorySegment,

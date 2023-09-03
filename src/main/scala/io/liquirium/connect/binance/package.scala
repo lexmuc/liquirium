@@ -120,6 +120,9 @@ package object binance {
       private def makeTradeHistorySegmentLoader(tradingPair: TradingPair): TradeHistorySegmentLoader =
         new TradeHistorySegmentLoader(start => binanceApi.getTradeBatch(tradingPair, start))
 
+      override def loadTradeHistory(tradingPair: TradingPair, start: Instant): Future[TradeHistorySegment] =
+        makeTradeHistorySegmentLoader(tradingPair).loadFrom(start)
+
       private def makeTradeHistoryStream(tradingPair: TradingPair) =
         new PollingTradeHistoryStream(
           segmentLoader = makeTradeHistorySegmentLoader(tradingPair).loadFrom,

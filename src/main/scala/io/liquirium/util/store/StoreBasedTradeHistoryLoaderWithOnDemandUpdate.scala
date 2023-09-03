@@ -5,13 +5,13 @@ import io.liquirium.core.TradeHistorySegment
 import java.time.{Duration, Instant}
 import scala.concurrent.{ExecutionContext, Future}
 
-class StoreBasedTradeHistoryProviderWithOnDemandUpdate(
+class StoreBasedTradeHistoryLoaderWithOnDemandUpdate(
   baseStore: TradeHistoryStore,
   liveSegmentLoader: Instant => Future[TradeHistorySegment],
   overlapDuration: Duration,
 )(
   implicit ec: ExecutionContext,
-) extends TradeHistoryProvider {
+) extends TradeHistoryLoader {
 
   override def loadHistory(start: Instant, inspectionTime: Option[Instant]): Future[TradeHistorySegment] =
     baseStore.loadHistory(start, inspectionTime).flatMap { storedHistory =>

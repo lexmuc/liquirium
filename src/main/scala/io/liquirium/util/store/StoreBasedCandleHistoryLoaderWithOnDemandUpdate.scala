@@ -5,11 +5,11 @@ import io.liquirium.core.CandleHistorySegment
 import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future}
 
-class StoreBasedCandleHistoryProviderWithOnDemandUpdate(
+class StoreBasedCandleHistoryLoaderWithOnDemandUpdate(
   baseStore: CandleHistoryStore,
   liveSegmentLoader: Instant => Future[CandleHistorySegment],
   overlapCandlesCount: Int,
-)(implicit ec: ExecutionContext) extends CandleHistoryProvider {
+)(implicit ec: ExecutionContext) extends CandleHistoryLoader {
 
   override def loadHistory(start: Instant, inspectionTime: Option[Instant]): Future[CandleHistorySegment] =
     baseStore.loadHistory(start, inspectionTime).flatMap { storedHistory =>

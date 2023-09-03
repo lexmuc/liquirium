@@ -9,15 +9,15 @@ import io.liquirium.core.helpers.async.{AsyncTestWithControlledTime, FutureServi
 import java.time.Instant
 import scala.concurrent.Future
 
-class StoreBasedCandleHistoryProviderWithOnDemandUpdateTest extends AsyncTestWithControlledTime with TestWithMocks {
+class StoreBasedCandleHistoryLoaderWithOnDemandUpdateTest extends AsyncTestWithControlledTime with TestWithMocks {
 
   private val baseStore = mock[CandleHistoryStore]
   private var overlapCandlesCount = 0
   val liveSegmentLoader =
     new FutureServiceMock[Instant => Future[CandleHistorySegment], CandleHistorySegment](_.apply(*))
 
-  private def provider: StoreBasedCandleHistoryProviderWithOnDemandUpdate =
-    new StoreBasedCandleHistoryProviderWithOnDemandUpdate(
+  private def provider: StoreBasedCandleHistoryLoaderWithOnDemandUpdate =
+    new StoreBasedCandleHistoryLoaderWithOnDemandUpdate(
       baseStore = baseStore,
       overlapCandlesCount = overlapCandlesCount,
       liveSegmentLoader = liveSegmentLoader.instance,

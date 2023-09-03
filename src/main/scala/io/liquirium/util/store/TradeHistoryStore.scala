@@ -9,7 +9,7 @@ class TradeHistoryStore(
   baseStore: TradeStore,
 )(
   implicit executionContext: ExecutionContext,
-) extends TradeHistoryProvider {
+) extends TradeHistoryLoader {
 
   def loadHistory(start: Instant, inspectionTime: Option[Instant]): Future[TradeHistorySegment] =
     baseStore.get(from = Some(start), until = inspectionTime) map { tb => tb.toHistorySegment }

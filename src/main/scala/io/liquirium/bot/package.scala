@@ -3,10 +3,10 @@ package io.liquirium
 import io.liquirium.bot.BotInput._
 import io.liquirium.core.OperationIntent.OrderIntent
 import io.liquirium.core.orderTracking._
-import io.liquirium.core.{BotId, CandleHistorySegment, Market, OrderConstraints}
+import io.liquirium.core.{BotId, Market, OrderConstraints}
 import io.liquirium.eval.IncrementalFoldHelpers.IncrementalEval
 import io.liquirium.eval.{Constant, Eval, InputEval}
-import io.liquirium.util.store.CandleStoreProvider
+import io.liquirium.util.store.CandleHistoryLoaderProvider
 
 import java.time.{Duration, Instant}
 import scala.concurrent.{ExecutionContext, Future}
@@ -51,7 +51,7 @@ package object bot {
   }
 
   def singleMarketStrategyBotFactoryForSimulation(
-    candleStoreProvider: CandleStoreProvider,
+    candleHistoryLoaderProvider: CandleHistoryLoaderProvider,
     orderConstraints: OrderConstraints,
   )(
     implicit executionContext: ExecutionContext,
@@ -67,6 +67,7 @@ package object bot {
       for {
         p <- getInitialPrice(market, strategy.candleLength, startTime)
       } yield {
+        println("initial price: " + p)
         val runConfiguration = SingleMarketBotRunConfiguration(
           market = market,
           startTime = startTime,
@@ -89,12 +90,13 @@ package object bot {
       }
 
     private def getInitialPrice(market: Market, candleLength: Duration, startTime: Instant): Future[BigDecimal] = {
-      val store = candleStoreProvider.getStore(market, candleLength)
-      val candlesFuture = store.get(
-        from = Some(startTime.minusSeconds(60 * 60 * 12)),
-        until = Some(startTime),
-      )
-      candlesFuture.map(cc => CandleHistorySegment.fromCandles(cc).lastPrice.get)
+      for {
+        loader <- candleHistoryLoaderProvider.getHistoryLoader(market, candleLength)
+        history <- loader.loadHistory(
+          start = startTime.minusSeconds(60 * 60 * 12),
+          inspectionTime = Some(startTime),
+        )
+      } yield history.lastPrice.get
     }
 
   }

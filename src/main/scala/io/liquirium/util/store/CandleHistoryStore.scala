@@ -9,7 +9,7 @@ class CandleHistoryStore(
   baseStore: CandleStore,
 )(
   implicit executionContext: ExecutionContext,
-) extends CandleHistoryProvider {
+) extends CandleHistoryLoader {
 
   def loadHistory(start: Instant, inspectionTime: Option[Instant]): Future[CandleHistorySegment] =
     baseStore.get(from = Some(start), until = inspectionTime) map { cc =>
