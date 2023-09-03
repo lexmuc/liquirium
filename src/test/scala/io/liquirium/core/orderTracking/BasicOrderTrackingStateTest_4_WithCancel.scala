@@ -1,6 +1,7 @@
 package io.liquirium.core.orderTracking
 
 import io.liquirium.core.helpers.CoreHelpers.{dec, sec}
+import io.liquirium.core.orderTracking.helpers.BasicOrderTrackingStateTest
 
 class BasicOrderTrackingStateTest_4_WithCancel extends BasicOrderTrackingStateTest {
 

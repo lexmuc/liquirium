@@ -62,17 +62,30 @@ class SingleOrderObservationHistoryTest extends BasicTest {
     h4.hasDisappeared shouldEqual true
   }
 
-  test("the last observation is available as an option") {
+  test("the latest observed present state is available as an option") {
     val h0 = history(observationChange(sec(10)))
     val h1 = h0.append(observationChange(sec(12), order("A", 2)))
     val h2 = h1.append(observationChange(sec(14)))
     val h3 = h2.append(observationChange(sec(15), order("A", 3)))
     val h4 = h3.append(observationChange(sec(16)))
-    h0.latestPresentObservation shouldEqual None
-    h1.latestPresentObservation shouldEqual Some(order("A", 2))
-    h2.latestPresentObservation shouldEqual Some(order("A", 2))
-    h3.latestPresentObservation shouldEqual Some(order("A", 3))
-    h4.latestPresentObservation shouldEqual Some(order("A", 3))
+    h0.latestPresentState shouldEqual None
+    h1.latestPresentState shouldEqual Some(order("A", 2))
+    h2.latestPresentState shouldEqual Some(order("A", 2))
+    h3.latestPresentState shouldEqual Some(order("A", 3))
+    h4.latestPresentState shouldEqual Some(order("A", 3))
+  }
+
+  test("the latest change event with present order is available as an option") {
+    val h0 = history(observationChange(sec(10)))
+    val h1 = h0.append(observationChange(sec(12), order("A", 2)))
+    val h2 = h1.append(observationChange(sec(14)))
+    val h3 = h2.append(observationChange(sec(15), order("A", 3)))
+    val h4 = h3.append(observationChange(sec(16)))
+    h0.latestPresentChange shouldEqual None
+    h1.latestPresentChange shouldEqual Some(observationChange(sec(12), order("A", 2)))
+    h2.latestPresentChange shouldEqual Some(observationChange(sec(12), order("A", 2)))
+    h3.latestPresentChange shouldEqual Some(observationChange(sec(15), order("A", 3)))
+    h4.latestPresentChange shouldEqual Some(observationChange(sec(15), order("A", 3)))
   }
 
 }

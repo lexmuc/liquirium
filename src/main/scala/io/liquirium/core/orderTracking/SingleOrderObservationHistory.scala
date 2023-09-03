@@ -14,8 +14,10 @@ case class SingleOrderObservationHistory(changes: Seq[ObservationChange]) {
     if (changes.last.order == observationChange.order) this else copy(changes :+ observationChange)
   }
 
-  val latestPresentObservation: Option[Order] = changes.filter(_.order.isDefined).lastOption.flatMap(_.order)
+  val latestPresentChange: Option[ObservationChange] = changes.filter(_.order.isDefined).lastOption
 
-  def hasDisappeared: Boolean = changes.last.order.isEmpty && latestPresentObservation.isDefined
+  val latestPresentState: Option[Order] = latestPresentChange.flatMap(_.order)
+
+  def hasDisappeared: Boolean = changes.last.order.isEmpty && latestPresentState.isDefined
 
 }
