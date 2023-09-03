@@ -6,7 +6,7 @@ import io.liquirium.core.{CandleHistorySegment, ExchangeId, OperationRequest, Op
 import io.liquirium.util.akka._
 import io.liquirium.util.{ApiCredentials, SystemClock}
 
-import java.time.Duration
+import java.time.{Duration, Instant}
 import scala.concurrent.duration.{DurationInt, FiniteDuration}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -86,15 +86,26 @@ package object coinbase {
   )(implicit ec: ExecutionContext) =
     new ExchangeConnector {
 
-      private def makeCandleHistoryStream(tradingPair: TradingPair, candleLength: Duration) = {
-        val segmentLoader: CandleHistorySegmentLoader =
-          new CandleHistorySegmentLoader(
-          batchLoader = start => coinbaseApi.getCandleBatch(tradingPair, candleLength, start),
+      private def makeCandleHistorySegmentLoader(
+        tradingPair: TradingPair,
+        candleLength: Duration,
+      ): CandleHistorySegmentLoader =
+        new CandleHistorySegmentLoader(
+          start => coinbaseApi.getCandleBatch(tradingPair, candleLength, start),
           candleLength = candleLength,
           clock = SystemClock,
         )
+
+      override def loadCandleHistory(
+        tradingPair: TradingPair,
+        duration: Duration,
+        start: Instant,
+      ): Future[CandleHistorySegment] =
+        makeCandleHistorySegmentLoader(tradingPair, duration).loadFrom(start)
+
+      private def makeCandleHistoryStream(tradingPair: TradingPair, candleLength: Duration) = {
         new PollingCandleHistoryStream(
-          segmentLoader = segmentLoader.loadFrom,
+          segmentLoader = makeCandleHistorySegmentLoader(tradingPair, candleLength).loadFrom,
           interval = FiniteDuration(candleLength.getSeconds / 2, "seconds"),
           retryInterval = FiniteDuration(10, "seconds"),
           updateOverlapStrategy = chs => chs.end.minusMillis(2 * candleLength.toMillis),

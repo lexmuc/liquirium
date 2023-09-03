@@ -4,10 +4,13 @@ import akka.NotUsed
 import akka.stream.scaladsl.Source
 import io.liquirium.core._
 
+import java.time.{Duration, Instant}
 import scala.concurrent.Future
 
 
 trait ExchangeConnector {
+
+  def loadCandleHistory(tradingPair: TradingPair, candleLength: Duration, start: Instant): Future[CandleHistorySegment]
 
   def candleHistoryStream(
     tradingPair: TradingPair,

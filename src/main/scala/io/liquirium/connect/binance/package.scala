@@ -3,11 +3,11 @@ package io.liquirium.connect
 import akka.NotUsed
 import akka.stream.scaladsl.Source
 import io.liquirium.connect.binance.BinanceRestApi.BinanceApiRequest
-import io.liquirium.core.{CandleHistorySegment, ExchangeId, Market, Order, TradeHistorySegment, OperationRequest, OperationRequestSuccessResponse, TradingPair}
+import io.liquirium.core.{CandleHistorySegment, ExchangeId, Market, OperationRequest, OperationRequestSuccessResponse, Order, TradeHistorySegment, TradingPair}
 import io.liquirium.util.akka._
 import io.liquirium.util.{ApiCredentials, SystemClock}
 
-import java.time.Duration
+import java.time.{Duration, Instant}
 import scala.concurrent.duration.{DurationInt, FiniteDuration}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -92,6 +92,13 @@ package object binance {
           candleLength = candleLength,
           clock = SystemClock,
         )
+
+      override def loadCandleHistory(
+        tradingPair: TradingPair,
+        duration: Duration,
+        start: Instant,
+      ): Future[CandleHistorySegment] =
+        makeCandleHistorySegmentLoader(tradingPair, duration).loadFrom(start)
 
       private def makeCandleHistoryStream(tradingPair: TradingPair, candleLength: Duration) =
         new PollingCandleHistoryStream(

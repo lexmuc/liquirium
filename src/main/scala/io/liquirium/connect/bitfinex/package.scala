@@ -7,7 +7,7 @@ import io.liquirium.core._
 import io.liquirium.util.akka._
 import io.liquirium.util.{ApiCredentials, MillisecondNonceGenerator, SystemClock}
 
-import java.time.Duration
+import java.time.{Duration, Instant}
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -94,21 +94,32 @@ package object bitfinex {
   )(implicit ec: ExecutionContext) =
     new ExchangeConnector {
 
-      private def makeCandleHistoryStream(tradingPair: TradingPair, candleLength: Duration) = {
-        val segmentLoader: CandleHistorySegmentLoader =
+      private def makeCandleHistorySegmentLoader(
+        tradingPair: TradingPair,
+        candleLength: Duration,
+      ): CandleHistorySegmentLoader =
         new CandleHistorySegmentLoader(
-          batchLoader = start => bitfinexApi.getCandleBatch(tradingPair, candleLength, start),
+          start => bitfinexApi.getCandleBatch(tradingPair, candleLength, start),
           candleLength = candleLength,
           clock = SystemClock,
         )
+
+      private def makeCandleHistoryStream(tradingPair: TradingPair, candleLength: Duration) = {
         new PollingCandleHistoryStream(
-          segmentLoader = segmentLoader.loadFrom,
+          segmentLoader = makeCandleHistorySegmentLoader(tradingPair, candleLength).loadFrom,
           interval = FiniteDuration(candleLength.getSeconds / 2, "seconds"),
           retryInterval = FiniteDuration(10, "seconds"),
           updateOverlapStrategy = chs => chs.end.minusMillis(2 * candleLength.toMillis),
           sourceQueueFactory = concurrencyContext.sourceQueueFactory,
         )
       }
+
+      override def loadCandleHistory(
+        tradingPair: TradingPair,
+        duration: Duration,
+        start: Instant,
+      ): Future[CandleHistorySegment] =
+        makeCandleHistorySegmentLoader(tradingPair, duration).loadFrom(start)
 
       override def candleHistoryStream(
         tradingPair: TradingPair,
