@@ -14,13 +14,17 @@ class StoreBasedCandleHistoryLoaderWithOnDemandUpdate(
   override def loadHistory(start: Instant, inspectionTime: Option[Instant]): Future[CandleHistorySegment] =
     baseStore.loadHistory(start, inspectionTime).flatMap { storedHistory =>
       if (inspectionTime.contains(storedHistory.end)) {
-        Future { storedHistory }
+        Future.successful(storedHistory)
       }
       else {
         val updateStart = storedHistory.dropRight(overlapCandlesCount).end
-        liveSegmentLoader.apply(updateStart).map { liveHistory =>
-          baseStore.updateHistory(liveHistory)
-          storedHistory.extendWith(liveHistory)
+        liveSegmentLoader.apply(updateStart).map { fullLiveHistory =>
+          baseStore.updateHistory(fullLiveHistory)
+          val maybeTruncatedLiveHistory = inspectionTime match {
+            case Some(it) => fullLiveHistory.truncate(it)
+            case None => fullLiveHistory
+          }
+          storedHistory.extendWith(maybeTruncatedLiveHistory)
         }
       }
     }
