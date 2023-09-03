@@ -15,7 +15,7 @@ class CandleHistorySegmentLoader(
 
   def loadFrom(start: Instant): Future[CandleHistorySegment] =
     completeSegment(CandleHistorySegment.empty(start, candleLength))
-      .map(_.padUntil(clock.getTime).cutOff(clock.getTime))
+      .map(_.padUntil(clock.getTime).truncate(clock.getTime))
 
   def completeSegment(historySegment: CandleHistorySegment): Future[CandleHistorySegment] =
       if (historySegment.end.plus(candleLength).isAfter(clock.getTime)) {

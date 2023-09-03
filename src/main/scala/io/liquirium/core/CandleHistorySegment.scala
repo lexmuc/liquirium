@@ -75,14 +75,14 @@ sealed trait CandleHistorySegment
       .dropWhile(_.startTime isBefore start)
       .dropWhile(c => candles.contains(c))
 
-    val unchangedPart = cutOff(newCandles.headOption.map(_.startTime) getOrElse this.end)
-    newCandles.foldLeft(unchangedPart) { (chs, c) => chs.append(c) }.cutOff(other.end)
+    val unchangedPart = truncate(newCandles.headOption.map(_.startTime) getOrElse this.end)
+    newCandles.foldLeft(unchangedPart) { (chs, c) => chs.append(c) }.truncate(other.end)
   }
 
   @tailrec
-  final def cutOff(time: Instant): CandleHistorySegment = this match {
+  final def truncate(time: Instant): CandleHistorySegment = this match {
     case Empty(_, _) => this
-    case s: Increment => if (s.end isAfter time) s.init.cutOff(time) else s
+    case s: Increment => if (s.end isAfter time) s.init.truncate(time) else s
   }
 
   private def assertExtensionCompatibility(other: CandleHistorySegment): Unit = {

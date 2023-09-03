@@ -48,6 +48,14 @@ trait TradeHistorySegment
 
   override def apply(idx: Int): Trade = trades.apply(idx)
 
+  @tailrec
+  final def truncate(instant: Instant): TradeHistorySegment =
+    if (instant isAfter end) this
+    else this match {
+      case _: Empty => this
+      case s: Increment => s.init.truncate(instant)
+    }
+
   def extendWith(other: TradeHistorySegment): TradeHistorySegment = {
     assertExtensionCompatibility(other)
 

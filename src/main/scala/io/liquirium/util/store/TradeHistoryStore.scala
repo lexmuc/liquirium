@@ -1,0 +1,23 @@
+package io.liquirium.util.store
+
+import io.liquirium.core.TradeHistorySegment
+
+import java.time.Instant
+import scala.concurrent.{ExecutionContext, Future}
+
+class TradeHistoryStore(
+  baseStore: TradeStore,
+)(
+  implicit executionContext: ExecutionContext,
+) extends TradeHistoryProvider {
+
+  def loadHistory(start: Instant, inspectionTime: Option[Instant]): Future[TradeHistorySegment] =
+    baseStore.get(from = Some(start), until = inspectionTime) map { tb => tb.toHistorySegment }
+
+  def updateHistory(historySegment: TradeHistorySegment): Future[Unit] =
+    baseStore.deleteFrom(historySegment.start).flatMap { _ =>
+      if (historySegment.nonEmpty) baseStore.add(historySegment)
+      else Future { () }
+    }
+
+}

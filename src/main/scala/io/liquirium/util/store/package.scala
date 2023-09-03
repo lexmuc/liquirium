@@ -42,4 +42,18 @@ package object store {
     )
   }
 
+  def getTradeHistoryProviderWithLiveUpdate(
+    market: Market,
+    connector: ExchangeConnector,
+    overlapDuration: Duration = Duration.ofMinutes(10),
+  ): StoreBasedTradeHistoryProviderWithOnDemandUpdate = {
+    ???
+//    val historyStore = new TradeHistoryStore(h2tradeStoreProvider(Paths.get("data/trades")).getStore(market.exchangeId, market))
+//    new StoreBasedTradeHistoryProviderWithOnDemandUpdate(
+//      baseStore = historyStore,
+//      liveSegmentLoader = start => connector.loadTradeHistory(market.tradingPair, start, None),
+//      overlapDuration = overlapDuration,
+//    )
+  }
+
 }
