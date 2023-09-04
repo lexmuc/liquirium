@@ -51,7 +51,7 @@ class FutureServiceMock[T <: AnyRef, R]
     p
   }
 
-  def enqueueReponse(response: R): Unit = {
+  def enqueueResponse(response: R): Unit = {
     responseQueue = responseQueue :+ response
   }
 
