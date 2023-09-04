@@ -17,14 +17,15 @@ class StoreBasedTradeHistoryLoaderWithOnDemandUpdate(
     baseStore.loadHistory(start, inspectionTime).flatMap { storedHistory =>
       val updateStart = instantMax(storedHistory.end minus overlapDuration, start)
 
-      liveSegmentLoader.apply(updateStart).map { liveSegment =>
-        baseStore.updateHistory(liveSegment)
-        val fullNewSegment = storedHistory.extendWith(liveSegment)
-        inspectionTime match {
-          case Some(it) =>
-            val tt = fullNewSegment.filter(_.time isBefore it)
-            TradeHistorySegment.fromForwardTrades(start, tt)
-          case _ => fullNewSegment
+      liveSegmentLoader.apply(updateStart).flatMap { liveSegment =>
+        baseStore.updateHistory(liveSegment).map { _ =>
+          val fullNewSegment = storedHistory.extendWith(liveSegment)
+          inspectionTime match {
+            case Some(it) =>
+              val tt = fullNewSegment.filter(_.time isBefore it)
+              TradeHistorySegment.fromForwardTrades(start, tt)
+            case _ => fullNewSegment
+          }
         }
       }
     }

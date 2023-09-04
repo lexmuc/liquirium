@@ -12,6 +12,7 @@ import scala.concurrent.Future
 class StoreBasedTradeHistoryLoaderWithOnDemandUpdateTest extends AsyncTestWithControlledTime with TestWithMocks {
 
   private val baseStore = mock[TradeHistoryStore]
+  private val storeUpdate = new FutureServiceMock[TradeHistoryStore, Unit](_.updateHistory(*), Some(baseStore))
   private var overlapDuration = Duration.ofSeconds(0)
   val liveSegmentLoader =
     new FutureServiceMock[Instant => Future[TradeHistorySegment], TradeHistorySegment](_.apply(*))
@@ -48,6 +49,40 @@ class StoreBasedTradeHistoryLoaderWithOnDemandUpdateTest extends AsyncTestWithCo
     liveSegmentLoader.verify.apply(sec(100))
   }
 
+  test("the store is updated with all new trades even if the returned segment is truncated") {
+    overlapDuration = Duration.ofSeconds(5)
+    fakeStoreTrades(sec(100), Some(sec(120)))(
+      trade(sec(110), "A"),
+    )
+    provider.loadHistory(start = sec(100), inspectionTime = Some(sec(120)))
+    val liveSegment =
+      tradeHistorySegment(sec(105))(
+        trade(sec(110), "A"),
+        trade(sec(119), "B"),
+        trade(sec(122), "C"),
+      )
+    liveSegmentLoader.completeNext(liveSegment)
+    storeUpdate.verify.updateHistory(liveSegment)
+  }
+
+  test("it does not return before the store update is complete") {
+    overlapDuration = Duration.ofSeconds(5)
+    fakeStoreTrades(sec(100), Some(sec(120)))(
+      trade(sec(110), "A"),
+    )
+    val f = provider.loadHistory(start = sec(100), inspectionTime = Some(sec(120)))
+    val liveSegment =
+      tradeHistorySegment(sec(105))(
+        trade(sec(110), "A"),
+        trade(sec(119), "B"),
+        trade(sec(122), "C"),
+      )
+    liveSegmentLoader.completeNext(liveSegment)
+    f.value shouldEqual None
+    storeUpdate.completeNext(())
+    f.value.isDefined shouldBe true
+  }
+
   test("it returns the stored segment extended with the live segment") {
     overlapDuration = Duration.ofSeconds(3)
     fakeStoreTrades(sec(100), Some(sec(120)))(
@@ -63,6 +98,7 @@ class StoreBasedTradeHistoryLoaderWithOnDemandUpdateTest extends AsyncTestWithCo
         trade(sec(119), "D"),
       )
     )
+    storeUpdate.completeNext(())
     f.value.get.get shouldEqual tradeHistorySegment(sec(100))(
       trade(sec(110), "A"),
       trade(sec(112), "B"),
@@ -84,6 +120,7 @@ class StoreBasedTradeHistoryLoaderWithOnDemandUpdateTest extends AsyncTestWithCo
         trade(sec(120), "C"),
       )
     )
+    storeUpdate.completeNext(())
     f.value.get.get shouldEqual tradeHistorySegment(sec(100))(
       trade(sec(110), "A"),
       trade(sec(119), "B"),
@@ -103,27 +140,12 @@ class StoreBasedTradeHistoryLoaderWithOnDemandUpdateTest extends AsyncTestWithCo
         trade(sec(120), "C"),
       )
     )
+    storeUpdate.completeNext(())
     f.value.get.get shouldEqual tradeHistorySegment(sec(100))(
       trade(sec(110), "A"),
       trade(sec(119), "B"),
       trade(sec(120), "C"),
     )
-  }
-
-  test("the store is updated with all new trades even if the returned segment is truncated") {
-    overlapDuration = Duration.ofSeconds(5)
-    fakeStoreTrades(sec(100), Some(sec(120)))(
-      trade(sec(110), "A"),
-    )
-    provider.loadHistory(start = sec(100), inspectionTime = Some(sec(120)))
-    val liveSegment =
-      tradeHistorySegment(sec(105))(
-        trade(sec(110), "A"),
-        trade(sec(119), "B"),
-        trade(sec(122), "C"),
-      )
-    liveSegmentLoader.completeNext(liveSegment)
-    verify(baseStore).updateHistory(liveSegment)
   }
 
 }

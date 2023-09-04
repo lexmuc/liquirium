@@ -18,13 +18,14 @@ class StoreBasedCandleHistoryLoaderWithOnDemandUpdate(
       }
       else {
         val updateStart = storedHistory.dropRight(overlapCandlesCount).end
-        liveSegmentLoader.apply(updateStart).map { fullLiveHistory =>
-          baseStore.updateHistory(fullLiveHistory)
-          val maybeTruncatedLiveHistory = inspectionTime match {
-            case Some(it) => fullLiveHistory.truncate(it)
-            case None => fullLiveHistory
+        liveSegmentLoader.apply(updateStart).flatMap { fullLiveHistory =>
+          baseStore.updateHistory(fullLiveHistory).map { _ =>
+            val maybeTruncatedLiveHistory = inspectionTime match {
+              case Some(it) => fullLiveHistory.truncate(it)
+              case None => fullLiveHistory
+            }
+            storedHistory.extendWith(maybeTruncatedLiveHistory)
           }
-          storedHistory.extendWith(maybeTruncatedLiveHistory)
         }
       }
     }

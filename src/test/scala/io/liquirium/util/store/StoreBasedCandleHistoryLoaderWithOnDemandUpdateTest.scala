@@ -12,6 +12,7 @@ import scala.concurrent.Future
 class StoreBasedCandleHistoryLoaderWithOnDemandUpdateTest extends AsyncTestWithControlledTime with TestWithMocks {
 
   private val baseStore = mock[CandleHistoryStore]
+  private val storeUpdate = new FutureServiceMock[CandleHistoryStore, Unit](_.updateHistory(*), Some(baseStore))
   private var overlapCandlesCount = 0
   val liveSegmentLoader =
     new FutureServiceMock[Instant => Future[CandleHistorySegment], CandleHistorySegment](_.apply(*))
@@ -74,6 +75,42 @@ class StoreBasedCandleHistoryLoaderWithOnDemandUpdateTest extends AsyncTestWithC
     liveSegmentLoader.verify.apply(sec(100))
   }
 
+  test("the store is updated with the live candles") {
+    overlapCandlesCount = 2
+    baseStore.loadHistory(sec(100), Some(sec(150))) returns Future.successful(
+      candleHistorySegment(
+        c10(sec(100), 1),
+        c10(sec(110), 1),
+        c10(sec(120), 1),
+      )
+    )
+    provider.loadHistory(start = sec(100), inspectionTime = Some(sec(150)))
+    val liveSegment = candleHistorySegment(
+      c10(sec(110), 1),
+      c10(sec(120), 2),
+      c10(sec(130), 2),
+    )
+    liveSegmentLoader.completeNext(liveSegment)
+    verify(baseStore).updateHistory(liveSegment)
+  }
+
+  test("it does not return before the store update is complete") {
+    overlapCandlesCount = 0
+    baseStore.loadHistory(sec(100), Some(sec(150))) returns Future.successful(
+      candleHistorySegment(
+        c10(sec(100), 1),
+      )
+    )
+    val f = provider.loadHistory(start = sec(100), inspectionTime = Some(sec(150)))
+    val liveSegment = candleHistorySegment(
+      c10(sec(110), 1),
+    )
+    liveSegmentLoader.completeNext(liveSegment)
+    f.value shouldEqual None
+    storeUpdate.completeNext(())
+    f.value.isDefined shouldBe true
+  }
+
   test("the returned segment is extended with the live candles") {
     overlapCandlesCount = 2
     baseStore.loadHistory(sec(100), Some(sec(140))) returns Future.successful(
@@ -91,6 +128,7 @@ class StoreBasedCandleHistoryLoaderWithOnDemandUpdateTest extends AsyncTestWithC
         c10(sec(130), 2),
       )
     )
+    storeUpdate.completeNext(())
     f.value.get.get shouldEqual candleHistorySegment(
       c10(sec(100), 1),
       c10(sec(110), 1),
@@ -114,29 +152,11 @@ class StoreBasedCandleHistoryLoaderWithOnDemandUpdateTest extends AsyncTestWithC
         c10(sec(130), 2),
       )
     )
+    storeUpdate.completeNext(())
     f.value.get.get shouldEqual candleHistorySegment(
       c10(sec(100), 1),
       c10(sec(110), 1),
     )
-  }
-
-  test("the store is updated with the live candles") {
-    overlapCandlesCount = 2
-    baseStore.loadHistory(sec(100), Some(sec(150))) returns Future.successful(
-      candleHistorySegment(
-        c10(sec(100), 1),
-        c10(sec(110), 1),
-        c10(sec(120), 1),
-      )
-    )
-    provider.loadHistory(start = sec(100), inspectionTime = Some(sec(150)))
-    val liveSegment = candleHistorySegment(
-      c10(sec(110), 1),
-      c10(sec(120), 2),
-      c10(sec(130), 2),
-    )
-    liveSegmentLoader.completeNext(liveSegment)
-    verify(baseStore).updateHistory(liveSegment)
   }
 
 }
