@@ -50,6 +50,10 @@ class H2CandleStoreTest extends AsyncTestWithControlledTime {
     Await.ready(store.deleteFrom(start), 3.seconds)
   }
 
+  private def deleteBefore(start: Instant): Unit = {
+    Await.ready(store.deleteBefore(start), 3.seconds)
+  }
+
   private def retrieve(
     start: Option[Instant] = None,
     end: Option[Instant] = None
@@ -114,10 +118,16 @@ class H2CandleStoreTest extends AsyncTestWithControlledTime {
     retrieve() shouldEqual Seq()
   }
 
-  test("test candles can be deleted from a specific start") {
+  test("test candles can be deleted from a specific time") {
     add(c(1), c(2), c(3))
     deleteFrom(sec(2))
     retrieve() shouldEqual Seq(c(1))
+  }
+
+  test("test candles can be deleted before a specific time") {
+    add(c(1), c(2), c(3))
+    deleteBefore(sec(2))
+    retrieve() shouldEqual Seq(c(2), c(3))
   }
 
   test("candles starting before the given start are not deleted") {

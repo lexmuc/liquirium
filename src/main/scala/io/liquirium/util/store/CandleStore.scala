@@ -15,6 +15,8 @@ trait CandleStore {
 
   def clear(): Unit
 
-  def deleteFrom(start: Instant): Future[Unit]
+  def deleteFrom(time: Instant): Future[Unit]
+
+  def deleteBefore(time: Instant): Future[Unit]
 
 }

@@ -75,10 +75,17 @@ class H2CandleStore(
     connection.createStatement().execute("""DELETE FROM CANDLES""")
   }
 
-  override def deleteFrom(start: Instant): Future[Unit] =
+  override def deleteFrom(time: Instant): Future[Unit] =
     Future {
       connection.createStatement().execute(
-        """DELETE FROM CANDLES WHERE startTimestamp >= """ + start.getEpochSecond.toString
+        """DELETE FROM CANDLES WHERE startTimestamp >= """ + time.getEpochSecond.toString
+      )
+    }
+
+  override def deleteBefore(time: Instant): Future[Unit] =
+    Future {
+      connection.createStatement().execute(
+        """DELETE FROM CANDLES WHERE startTimestamp < """ + time.getEpochSecond.toString
       )
     }
 
