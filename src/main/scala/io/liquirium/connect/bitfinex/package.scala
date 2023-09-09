@@ -101,12 +101,12 @@ package object bitfinex {
         new CandleHistorySegmentLoader(
           start => bitfinexApi.getCandleBatch(tradingPair, candleLength, start),
           candleLength = candleLength,
-          clock = SystemClock,
         )
 
       private def makeCandleHistoryStream(tradingPair: TradingPair, candleLength: Duration) = {
         new PollingCandleHistoryStream(
-          segmentLoader = makeCandleHistorySegmentLoader(tradingPair, candleLength).loadFrom,
+          segmentLoader =
+            start => makeCandleHistorySegmentLoader(tradingPair, candleLength).load(start, SystemClock.getTime),
           interval = FiniteDuration(candleLength.getSeconds / 2, "seconds"),
           retryInterval = FiniteDuration(10, "seconds"),
           updateOverlapStrategy = chs => chs.end.minusMillis(2 * candleLength.toMillis),
@@ -119,7 +119,7 @@ package object bitfinex {
         duration: Duration,
         start: Instant,
       ): Future[CandleHistorySegment] =
-        makeCandleHistorySegmentLoader(tradingPair, duration).loadFrom(start)
+        makeCandleHistorySegmentLoader(tradingPair, duration).load(start, SystemClock.getTime)
 
       override def candleHistoryStream(
         tradingPair: TradingPair,

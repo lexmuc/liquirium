@@ -94,7 +94,7 @@ package object bot {
         loader <- candleHistoryLoaderProvider.getHistoryLoader(market, candleLength)
         history <- loader.loadHistory(
           start = startTime.minusSeconds(60 * 60 * 12),
-          inspectionTime = Some(startTime),
+          time = startTime,
         )
       } yield history.lastPrice.get
     }

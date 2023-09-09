@@ -22,21 +22,16 @@ class CandleHistoryStoreTest_LoadHistory extends AsyncTestWithControlledTime wit
 
   private lazy val store = new CandleHistoryStore(baseStoreLoaderPart.instance)
 
-  private def load(start: Instant, inspectionTime: Option[Instant] = None): Future[CandleHistorySegment] =
-    store.loadHistory(start, inspectionTime)
+  private def load(start: Instant, time: Instant): Future[CandleHistorySegment] =
+    store.loadHistory(start, time)
 
-  test("for a given start it requests all candles from this point on from the base store") {
-    load(sec(100))
-    baseStoreLoaderPart.verify.get(from = Some(sec(100)), until = None)
-  }
-
-  test("if an inspection time is given the candles are only requested up to this time") {
-    load(sec(100), Some(sec(200)))
+  test("for a given start and time it requests all candles from the base store from the start up to the time") {
+    load(sec(100), sec(200))
     baseStoreLoaderPart.verify.get(from = Some(sec(100)), until = Some(sec(200)))
   }
 
-  test("the candles are returned as a candle history segment") {
-    val f = load(sec(100))
+  test("the candles are returned as a candle history segment which may be shorter than requested") {
+    val f = load(sec(100), sec(200))
     baseStoreLoaderPart.completeNext(
       Seq(c10(sec(100), 1), c10(sec(110), 2))
     )
@@ -44,19 +39,19 @@ class CandleHistoryStoreTest_LoadHistory extends AsyncTestWithControlledTime wit
   }
 
   test("when there are no candles, the empty segment is returned") {
-    val f = load(sec(100))
+    val f = load(sec(100), sec(200))
     baseStoreLoaderPart.completeNext(Seq())
     f.value.get shouldEqual Success(candleHistorySegment(sec(100), secs(10))())
   }
 
   test("when the first candle ist not the segment start, the empty segment is returned") {
-    val f = load(sec(100))
+    val f = load(sec(100), sec(200))
     baseStoreLoaderPart.completeNext(Seq(c10(sec(110), 1)))
     f.value.get shouldEqual Success(candleHistorySegment(sec(100), secs(10))())
   }
 
   test("an error when getting the candles is passed along") {
-    val f = load(sec(100))
+    val f = load(sec(100), sec(200))
     baseStoreLoaderPart.failNext(ex(123))
     f.value.get shouldEqual Failure(ex(123))
   }

@@ -5,7 +5,6 @@ import io.liquirium.core.helpers.CoreHelpers.{ex, sec, secs}
 import io.liquirium.core.helpers.TestWithMocks
 import io.liquirium.core.helpers.async.{AsyncTestWithControlledTime, FutureServiceMock}
 import io.liquirium.core.{Candle, CandleHistorySegment}
-import io.liquirium.helpers.FakeClock
 
 import java.time.{Duration, Instant}
 import scala.concurrent.Future
@@ -16,19 +15,16 @@ class CandleHistorySegmentLoaderTest extends AsyncTestWithControlledTime with Te
   private val batchLoader =
     new FutureServiceMock[Instant => Future[CandleBatch], CandleBatch](_.apply(*))
 
-  private val clock = FakeClock(sec(0))
-
   private var candleLength = secs(5)
 
   private var resultFuture: Future[CandleHistorySegment] = _
 
-  private def loadSegment(start: Instant): Unit = {
+  private def loadSegment(start: Instant, time: Instant): Unit = {
     val segmentLoader = new CandleHistorySegmentLoader(
       batchLoader = batchLoader.instance,
       candleLength = candleLength,
-      clock = clock,
     )
-    resultFuture = segmentLoader.loadFrom(start)
+    resultFuture = segmentLoader.load(start, time)
   }
 
   private def returnBatch(
@@ -66,27 +62,22 @@ class CandleHistorySegmentLoaderTest extends AsyncTestWithControlledTime with Te
   }
 
   test("if the requested start is in the future it immediately returns an empty segment") {
-    clock.set(sec(100))
-    loadSegment(sec(105))
+    loadSegment(sec(105), time = sec(100))
     expectEmptySegment(sec(105))
   }
 
   test("if the first candle would end in the future it immediately returns an empty segment") {
-    clock.set(sec(104))
-    loadSegment(sec(100))
+    loadSegment(sec(100), time = sec(104))
     expectEmptySegment(sec(100))
   }
 
   test("if the projected first candle end is not in the future it yields a request with the given start") {
-    clock.set(sec(105))
-    loadSegment(sec(100))
+    loadSegment(sec(100), time = sec(105))
     batchLoader.verify.apply(sec(100))
   }
 
-  test("returned candles are included in the result up to current time (when receiving the result)") {
-    clock.set(sec(109))
-    loadSegment(sec(100))
-    clock.set(sec(114))
+  test("returned candles are included in the result up to current time") {
+    loadSegment(sec(100), time = sec(114))
     returnBatch(sec(100), None)(
       c5(sec(100), 1),
       c5(sec(105), 1),
@@ -99,8 +90,7 @@ class CandleHistorySegmentLoaderTest extends AsyncTestWithControlledTime with Te
   }
 
   test("a candle ending exactly at the current time is included in the result") {
-    clock.set(sec(105))
-    loadSegment(sec(100))
+    loadSegment(sec(100), time = sec(105))
     returnBatch(sec(100), None)(
       c5(sec(100), 1),
     )
@@ -110,8 +100,7 @@ class CandleHistorySegmentLoaderTest extends AsyncTestWithControlledTime with Te
   }
 
   test("when there are more batches they are requested and appended") {
-    clock.set(sec(121))
-    loadSegment(sec(100))
+    loadSegment(sec(100), time = sec(121))
     batchLoader.verify.apply(sec(100))
     returnBatch(sec(100), Some(sec(110)))(
       c5(sec(100), 1),
@@ -131,8 +120,7 @@ class CandleHistorySegmentLoaderTest extends AsyncTestWithControlledTime with Te
   }
 
   test("it stops requesting segments when the next batch's first candle would end in the future") {
-    clock.set(sec(114))
-    loadSegment(sec(100))
+    loadSegment(sec(100), time = sec(114))
     batchLoader.verify.apply(sec(100))
     returnBatch(sec(100), Some(sec(110)))(
       c5(sec(100), 1),
@@ -146,9 +134,7 @@ class CandleHistorySegmentLoaderTest extends AsyncTestWithControlledTime with Te
   }
 
   test("when determining if the next batch start is too late it takes into account the current time") {
-    clock.set(sec(114))
-    loadSegment(sec(100))
-    clock.set(sec(115)) // enables another request
+    loadSegment(sec(100), time = sec(115))
     returnBatch(sec(100), Some(sec(110)))(
       c5(sec(100), 1),
       c5(sec(105), 1),
@@ -164,8 +150,7 @@ class CandleHistorySegmentLoaderTest extends AsyncTestWithControlledTime with Te
   }
 
   test("if the latest batch ends before the current time it fills up the segment with empty candles") {
-    clock.set(sec(126))
-    loadSegment(sec(100))
+    loadSegment(sec(100), time = sec(126))
     returnBatch(sec(100), Some(sec(110)))(
       c5(sec(100), 1),
       c5(sec(105), 1),
@@ -183,8 +168,7 @@ class CandleHistorySegmentLoaderTest extends AsyncTestWithControlledTime with Te
   }
 
   test("batches are padded with empty candles if the respective next start is after the latest candle") {
-    clock.set(sec(126))
-    loadSegment(sec(100))
+    loadSegment(sec(100), time = sec(126))
     returnBatch(sec(100), Some(sec(120)))(
       c5(sec(100), 1),
       c5(sec(105), 1),
@@ -203,9 +187,8 @@ class CandleHistorySegmentLoaderTest extends AsyncTestWithControlledTime with Te
   }
 
   test("if one request fails it fails with the same exception") {
-    clock.set(sec(200))
     candleLength = secs(5)
-    loadSegment(sec(10))
+    loadSegment(sec(10), time = sec(200))
     returnBatch(sec(10), nextStart = Some(sec(25)))(
       c5(sec(15), 1),
     )
@@ -214,9 +197,8 @@ class CandleHistorySegmentLoaderTest extends AsyncTestWithControlledTime with Te
   }
 
   test("it fails when the start of a returned batch does not match the expected start") {
-    clock.set(sec(200))
     candleLength = secs(5)
-    loadSegment(sec(10))
+    loadSegment(sec(10), sec(200))
     returnBatch(sec(15), nextStart = Some(sec(25)))(
       c5(sec(15), 1),
     )

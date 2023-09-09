@@ -11,20 +11,16 @@ class StoreBasedCandleHistoryLoaderWithOnDemandUpdate(
   overlapCandlesCount: Int,
 )(implicit ec: ExecutionContext) extends CandleHistoryLoader {
 
-  override def loadHistory(start: Instant, inspectionTime: Option[Instant]): Future[CandleHistorySegment] =
-    baseStore.loadHistory(start, inspectionTime).flatMap { storedHistory =>
-      if (inspectionTime.contains(storedHistory.end)) {
+  override def loadHistory(start: Instant, time: Instant): Future[CandleHistorySegment] =
+    baseStore.loadHistory(start, time).flatMap { storedHistory =>
+      if (time == storedHistory.end) {
         Future.successful(storedHistory)
       }
       else {
         val updateStart = storedHistory.dropRight(overlapCandlesCount).end
         liveSegmentLoader.apply(updateStart).flatMap { fullLiveHistory =>
           baseStore.updateHistory(fullLiveHistory).map { _ =>
-            val maybeTruncatedLiveHistory = inspectionTime match {
-              case Some(it) => fullLiveHistory.truncate(it)
-              case None => fullLiveHistory
-            }
-            storedHistory.extendWith(maybeTruncatedLiveHistory)
+            storedHistory.extendWith(fullLiveHistory.truncate(time))
           }
         }
       }
