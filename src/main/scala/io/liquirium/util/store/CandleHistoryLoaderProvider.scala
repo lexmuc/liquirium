@@ -1,6 +1,6 @@
 package io.liquirium.util.store
 
-import io.liquirium.core.Market
+import io.liquirium.core.{CandleHistoryLoader, Market}
 
 import java.time.Duration
 import scala.concurrent.Future

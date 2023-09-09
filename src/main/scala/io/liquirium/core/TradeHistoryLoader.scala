@@ -1,6 +1,4 @@
-package io.liquirium.util.store
-
-import io.liquirium.core.TradeHistorySegment
+package io.liquirium.core
 
 import java.time.Instant
 import scala.concurrent.Future

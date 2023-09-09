@@ -1,6 +1,6 @@
 package io.liquirium.util.store
 
-import io.liquirium.core.CandleHistorySegment
+import io.liquirium.core.{CandleHistoryLoader, CandleHistorySegment}
 
 import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future}
@@ -11,8 +11,8 @@ class CandleHistoryStore(
   implicit executionContext: ExecutionContext,
 ) extends CandleHistoryLoader {
 
-  def load(start: Instant, time: Instant): Future[CandleHistorySegment] =
-    baseStore.get(from = Some(start), until = Some(time)) map { cc =>
+  def load(start: Instant, end: Instant): Future[CandleHistorySegment] =
+    baseStore.get(from = Some(start), until = Some(end)) map { cc =>
       val es = CandleHistorySegment.empty(start, baseStore.candleLength)
       if (cc.headOption.map(_.startTime) contains start) cc.foldLeft(es)(_.append(_)) else es
     }

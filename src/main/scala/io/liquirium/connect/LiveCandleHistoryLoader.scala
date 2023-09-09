@@ -1,7 +1,6 @@
 package io.liquirium.connect
 
-import io.liquirium.core.CandleHistorySegment
-import io.liquirium.util.store.CandleHistoryLoader
+import io.liquirium.core.{CandleHistoryLoader, CandleHistorySegment}
 
 import java.time.{Duration, Instant}
 import scala.concurrent.{ExecutionContext, Future}
@@ -12,12 +11,12 @@ class LiveCandleHistoryLoader(
   candleLength: Duration,
 )(implicit val executionContext: ExecutionContext) extends CandleHistoryLoader {
 
-  def load(start: Instant, time: Instant): Future[CandleHistorySegment] =
-    completeSegment(CandleHistorySegment.empty(start, candleLength), time)
-      .map(_.padUntil(time).truncate(time))
+  def load(start: Instant, end: Instant): Future[CandleHistorySegment] =
+    completeSegment(CandleHistorySegment.empty(start, candleLength), end)
+      .map(_.padUntil(end).truncate(end))
 
-  private def completeSegment(historySegment: CandleHistorySegment, time: Instant): Future[CandleHistorySegment] =
-      if (historySegment.end.plus(candleLength).isAfter(time)) {
+  private def completeSegment(historySegment: CandleHistorySegment, end: Instant): Future[CandleHistorySegment] =
+      if (historySegment.end.plus(candleLength).isAfter(end)) {
         Future { historySegment }
       }
       else {
@@ -27,7 +26,7 @@ class LiveCandleHistoryLoader(
           val newSegment = historySegment.extendWith(batch.toHistorySegment)
           batch.nextBatchStart match {
             // next batch start is redundant because it equals current end
-            case Some(_) => completeSegment(newSegment, time)
+            case Some(_) => completeSegment(newSegment, end)
             case _ => Future { newSegment }
           }
         }

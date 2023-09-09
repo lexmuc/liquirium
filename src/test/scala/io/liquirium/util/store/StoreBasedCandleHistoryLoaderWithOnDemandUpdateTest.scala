@@ -31,7 +31,7 @@ class StoreBasedCandleHistoryLoaderWithOnDemandUpdateTest extends AsyncTestWithC
         c10(sec(110), 1),
       )
     )
-    val f = provider.load(start = sec(100), time = sec(120))
+    val f = provider.load(start = sec(100), end = sec(120))
     f.value.get.get shouldEqual candleHistorySegment(
       c10(sec(100), 1),
       c10(sec(110), 1),
@@ -47,7 +47,7 @@ class StoreBasedCandleHistoryLoaderWithOnDemandUpdateTest extends AsyncTestWithC
         c10(sec(120), 1),
       )
     )
-    provider.load(start = sec(100), time = sec(150))
+    provider.load(start = sec(100), end = sec(150))
     liveSegmentLoader.verify.apply(sec(110))
   }
 
@@ -58,7 +58,7 @@ class StoreBasedCandleHistoryLoaderWithOnDemandUpdateTest extends AsyncTestWithC
         c10(sec(100), 1),
       )
     )
-    provider.load(start = sec(100), time = sec(150))
+    provider.load(start = sec(100), end = sec(150))
     liveSegmentLoader.verify.apply(sec(100))
   }
 
@@ -71,7 +71,7 @@ class StoreBasedCandleHistoryLoaderWithOnDemandUpdateTest extends AsyncTestWithC
         c10(sec(120), 1),
       )
     )
-    provider.load(start = sec(100), time = sec(150))
+    provider.load(start = sec(100), end = sec(150))
     val liveSegment = candleHistorySegment(
       c10(sec(110), 1),
       c10(sec(120), 2),
@@ -88,7 +88,7 @@ class StoreBasedCandleHistoryLoaderWithOnDemandUpdateTest extends AsyncTestWithC
         c10(sec(100), 1),
       )
     )
-    val f = provider.load(start = sec(100), time = sec(150))
+    val f = provider.load(start = sec(100), end = sec(150))
     val liveSegment = candleHistorySegment(
       c10(sec(110), 1),
     )
@@ -107,7 +107,7 @@ class StoreBasedCandleHistoryLoaderWithOnDemandUpdateTest extends AsyncTestWithC
         c10(sec(120), 1),
       )
     )
-    val f = provider.load(start = sec(100), time = sec(140))
+    val f = provider.load(start = sec(100), end = sec(140))
     liveSegmentLoader.completeNext(
       candleHistorySegment(
         c10(sec(110), 1),
@@ -131,7 +131,7 @@ class StoreBasedCandleHistoryLoaderWithOnDemandUpdateTest extends AsyncTestWithC
         c10(sec(100), 1),
       )
     )
-    val f = provider.load(start = sec(100), time = sec(120))
+    val f = provider.load(start = sec(100), end = sec(120))
     liveSegmentLoader.completeNext(
       candleHistorySegment(
         c10(sec(110), 1),

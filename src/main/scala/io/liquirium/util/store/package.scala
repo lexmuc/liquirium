@@ -3,7 +3,7 @@ package io.liquirium.util
 import io.liquirium.util.akka.DefaultConcurrencyContext
 import _root_.akka.actor.typed.DispatcherSelector
 import io.liquirium.connect.ExchangeConnector
-import io.liquirium.core.{ExchangeId, Market}
+import io.liquirium.core.{CandleHistoryLoader, ExchangeId, Market}
 
 import java.nio.file.{Path, Paths}
 import java.sql.DriverManager

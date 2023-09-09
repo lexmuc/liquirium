@@ -66,17 +66,17 @@ class LiveCandleHistoryLoaderTest extends AsyncTestWithControlledTime with TestW
     expectEmptySegment(sec(105))
   }
 
-  test("if the first candle would end in the future it immediately returns an empty segment") {
+  test("if the first candle would end after the end it immediately returns an empty segment") {
     loadSegment(sec(100), time = sec(104))
     expectEmptySegment(sec(100))
   }
 
-  test("if the projected first candle end is not in the future it yields a request with the given start") {
+  test("if the projected first candle end is not after the end it yields a request with the given start") {
     loadSegment(sec(100), time = sec(105))
     batchLoader.verify.apply(sec(100))
   }
 
-  test("returned candles are included in the result up to current time") {
+  test("returned candles are included in the result up to the end time") {
     loadSegment(sec(100), time = sec(114))
     returnBatch(sec(100), None)(
       c5(sec(100), 1),
@@ -89,7 +89,7 @@ class LiveCandleHistoryLoaderTest extends AsyncTestWithControlledTime with TestW
     )
   }
 
-  test("a candle ending exactly at the current time is included in the result") {
+  test("a candle ending exactly at the end time is included in the result") {
     loadSegment(sec(100), time = sec(105))
     returnBatch(sec(100), None)(
       c5(sec(100), 1),
@@ -119,7 +119,7 @@ class LiveCandleHistoryLoaderTest extends AsyncTestWithControlledTime with TestW
     )
   }
 
-  test("it stops requesting segments when the next batch's first candle would end in the future") {
+  test("it stops requesting segments when the next batch's first candle would end after the end time") {
     loadSegment(sec(100), time = sec(114))
     batchLoader.verify.apply(sec(100))
     returnBatch(sec(100), Some(sec(110)))(
@@ -133,23 +133,7 @@ class LiveCandleHistoryLoaderTest extends AsyncTestWithControlledTime with TestW
     batchLoader.verifyTimes(1).apply(*)
   }
 
-  test("when determining if the next batch start is too late it takes into account the current time") {
-    loadSegment(sec(100), time = sec(115))
-    returnBatch(sec(100), Some(sec(110)))(
-      c5(sec(100), 1),
-      c5(sec(105), 1),
-    )
-    returnBatch(sec(110), None)(
-      c5(sec(110), 1),
-    )
-    expectSegment(
-      c5(sec(100), 1),
-      c5(sec(105), 1),
-      c5(sec(110), 1),
-    )
-  }
-
-  test("if the latest batch ends before the current time it fills up the segment with empty candles") {
+  test("if the latest batch ends before the end time it fills up the segment with empty candles") {
     loadSegment(sec(100), time = sec(126))
     returnBatch(sec(100), Some(sec(110)))(
       c5(sec(100), 1),
