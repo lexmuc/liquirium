@@ -10,7 +10,7 @@ import java.time.{Duration, Instant}
 import scala.concurrent.Future
 import scala.util.Failure
 
-class CandleHistorySegmentLoaderTest extends AsyncTestWithControlledTime with TestWithMocks {
+class LiveCandleHistoryLoaderTest extends AsyncTestWithControlledTime with TestWithMocks {
 
   private val batchLoader =
     new FutureServiceMock[Instant => Future[CandleBatch], CandleBatch](_.apply(*))
@@ -20,7 +20,7 @@ class CandleHistorySegmentLoaderTest extends AsyncTestWithControlledTime with Te
   private var resultFuture: Future[CandleHistorySegment] = _
 
   private def loadSegment(start: Instant, time: Instant): Unit = {
-    val segmentLoader = new CandleHistorySegmentLoader(
+    val segmentLoader = new LiveCandleHistoryLoader(
       batchLoader = batchLoader.instance,
       candleLength = candleLength,
     )
@@ -36,7 +36,7 @@ class CandleHistorySegmentLoaderTest extends AsyncTestWithControlledTime with Te
   ): Unit = {
     batchLoader.completeNext(CandleBatch(
       start = start,
-      candleLength = candleLength.getOrElse(CandleHistorySegmentLoaderTest.this.candleLength),
+      candleLength = candleLength.getOrElse(LiveCandleHistoryLoaderTest.this.candleLength),
       candles = candles,
       nextBatchStart = nextStart,
     ))

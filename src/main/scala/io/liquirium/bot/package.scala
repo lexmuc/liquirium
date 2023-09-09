@@ -92,7 +92,7 @@ package object bot {
     private def getInitialPrice(market: Market, candleLength: Duration, startTime: Instant): Future[BigDecimal] = {
       for {
         loader <- candleHistoryLoaderProvider.getHistoryLoader(market, candleLength)
-        history <- loader.loadHistory(
+        history <- loader.load(
           start = startTime.minusSeconds(60 * 60 * 12),
           time = startTime,
         )

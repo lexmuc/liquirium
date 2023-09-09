@@ -88,8 +88,8 @@ package object poloniex {
       private def makeCandleHistorySegmentLoader(
         tradingPair: TradingPair,
         candleLength: Duration,
-      ): CandleHistorySegmentLoader =
-        new CandleHistorySegmentLoader(
+      ): LiveCandleHistoryLoader =
+        new LiveCandleHistoryLoader(
           start => poloniexApi.getCandleBatch(tradingPair, candleLength, start),
           candleLength = candleLength,
         )

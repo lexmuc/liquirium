@@ -10,7 +10,7 @@ import java.time.Instant
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
-class CandleHistoryStoreTest_LoadHistory extends AsyncTestWithControlledTime with TestWithMocks {
+class CandleHistoryStoreTest_Load extends AsyncTestWithControlledTime with TestWithMocks {
 
   val baseLoader: CandleStore = mock[CandleStore]
   baseLoader.candleLength returns secs(10)
@@ -23,7 +23,7 @@ class CandleHistoryStoreTest_LoadHistory extends AsyncTestWithControlledTime wit
   private lazy val store = new CandleHistoryStore(baseStoreLoaderPart.instance)
 
   private def load(start: Instant, time: Instant): Future[CandleHistorySegment] =
-    store.loadHistory(start, time)
+    store.load(start, time)
 
   test("for a given start and time it requests all candles from the base store from the start up to the time") {
     load(sec(100), sec(200))

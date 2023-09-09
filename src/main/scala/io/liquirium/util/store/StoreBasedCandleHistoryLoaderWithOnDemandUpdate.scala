@@ -11,8 +11,8 @@ class StoreBasedCandleHistoryLoaderWithOnDemandUpdate(
   overlapCandlesCount: Int,
 )(implicit ec: ExecutionContext) extends CandleHistoryLoader {
 
-  override def loadHistory(start: Instant, time: Instant): Future[CandleHistorySegment] =
-    baseStore.loadHistory(start, time).flatMap { storedHistory =>
+  override def load(start: Instant, time: Instant): Future[CandleHistorySegment] =
+    baseStore.load(start, time).flatMap { storedHistory =>
       if (time == storedHistory.end) {
         Future.successful(storedHistory)
       }

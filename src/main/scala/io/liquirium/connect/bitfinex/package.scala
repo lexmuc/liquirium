@@ -97,8 +97,8 @@ package object bitfinex {
       private def makeCandleHistorySegmentLoader(
         tradingPair: TradingPair,
         candleLength: Duration,
-      ): CandleHistorySegmentLoader =
-        new CandleHistorySegmentLoader(
+      ): LiveCandleHistoryLoader =
+        new LiveCandleHistoryLoader(
           start => bitfinexApi.getCandleBatch(tradingPair, candleLength, start),
           candleLength = candleLength,
         )

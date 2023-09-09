@@ -89,8 +89,8 @@ package object coinbase {
       private def makeCandleHistorySegmentLoader(
         tradingPair: TradingPair,
         candleLength: Duration,
-      ): CandleHistorySegmentLoader =
-        new CandleHistorySegmentLoader(
+      ): LiveCandleHistoryLoader =
+        new LiveCandleHistoryLoader(
           start => coinbaseApi.getCandleBatch(tradingPair, candleLength, start),
           candleLength = candleLength,
         )

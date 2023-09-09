@@ -86,8 +86,8 @@ package object binance {
       private def makeCandleHistorySegmentLoader(
         tradingPair: TradingPair,
         candleLength: Duration,
-      ): CandleHistorySegmentLoader =
-        new CandleHistorySegmentLoader(
+      ): LiveCandleHistoryLoader =
+        new LiveCandleHistoryLoader(
           start => binanceApi.getCandleBatch(tradingPair, candleLength, start),
           candleLength = candleLength,
         )

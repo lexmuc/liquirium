@@ -1,15 +1,16 @@
 package io.liquirium.connect
 
 import io.liquirium.core.CandleHistorySegment
+import io.liquirium.util.store.CandleHistoryLoader
 
 import java.time.{Duration, Instant}
 import scala.concurrent.{ExecutionContext, Future}
 
 
-class CandleHistorySegmentLoader(
+class LiveCandleHistoryLoader(
   batchLoader: Instant => Future[CandleBatch],
   candleLength: Duration,
-)(implicit val executionContext: ExecutionContext) {
+)(implicit val executionContext: ExecutionContext) extends CandleHistoryLoader {
 
   def load(start: Instant, time: Instant): Future[CandleHistorySegment] =
     completeSegment(CandleHistorySegment.empty(start, candleLength), time)

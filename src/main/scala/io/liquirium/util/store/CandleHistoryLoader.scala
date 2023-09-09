@@ -7,6 +7,6 @@ import scala.concurrent.Future
 
 trait CandleHistoryLoader {
 
-  def loadHistory(start: Instant, time: Instant): Future[CandleHistorySegment]
+  def load(start: Instant, time: Instant): Future[CandleHistorySegment]
 
 }
