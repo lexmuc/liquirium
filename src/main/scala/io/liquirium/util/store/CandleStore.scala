@@ -13,6 +13,10 @@ trait CandleStore {
 
   def get(from: Option[Instant] = None, until: Option[Instant] = None): Future[Iterable[Candle]]
 
+  def getFirstStart: Future[Option[Instant]]
+
+  def getLatestNonEmptyEnd: Future[Option[Instant]]
+
   def clear(): Unit
 
   def deleteFrom(time: Instant): Future[Unit]

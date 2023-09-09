@@ -1,7 +1,7 @@
 package io.liquirium.util.store
 
 import io.liquirium.core.Candle
-import io.liquirium.core.helpers.CandleHelpers.{candle, ohlc, ohlcCandle}
+import io.liquirium.core.helpers.CandleHelpers.{c5, candle, e5, ohlc, ohlcCandle}
 import io.liquirium.core.helpers.CoreHelpers.{dec, sec, secs}
 import io.liquirium.core.helpers.async.AsyncTestWithControlledTime
 import org.scalatest.Assertion
@@ -54,6 +54,14 @@ class H2CandleStoreTest extends AsyncTestWithControlledTime {
     Await.ready(store.deleteBefore(start), 3.seconds)
   }
 
+  private def getFirstStart: Option[Instant] = {
+    Await.result(store.getFirstStart, 3.seconds)
+  }
+
+  private def getLatestNonEmptyEnd: Option[Instant] = {
+    Await.result(store.getLatestNonEmptyEnd, 3.seconds)
+  }
+
   private def retrieve(
     start: Option[Instant] = None,
     end: Option[Instant] = None
@@ -65,6 +73,7 @@ class H2CandleStoreTest extends AsyncTestWithControlledTime {
 
   def assertCount(table: String, count: Int): Assertion = {
     val query = s"SELECT COUNT(*) FROM $table"
+    //noinspection SqlSourceToSinkFlow
     val rs = connection.createStatement().executeQuery(query)
     rs.next()
     rs.getInt(1) shouldEqual count
@@ -104,6 +113,31 @@ class H2CandleStoreTest extends AsyncTestWithControlledTime {
   test("candles can be filtered by end time where candles starting at the end second are excluded") {
     add(c(1), c(2), c(3))
     retrieve(end = Some(sec(3))) shouldEqual Seq(c(1), c(2))
+  }
+
+  test("the first start time can be obtained and it is empty when there are no candles yet") {
+    getFirstStart shouldEqual None
+    add(c(2), c(3), c(4))
+    getFirstStart shouldEqual Some(c(2).startTime)
+  }
+
+  test("the latest non-empty candle end can be obtained and it is empty when there are no or only empty candles") {
+    candleLength = secs(5)
+    getLatestNonEmptyEnd shouldEqual None
+    add(
+      e5(sec(10)),
+      e5(sec(15)),
+    )
+    getLatestNonEmptyEnd shouldEqual None
+    add(
+      c5(sec(20), 1),
+      c5(sec(25), 1),
+    )
+    getLatestNonEmptyEnd shouldEqual Some(sec(30))
+    add(
+      e5(sec(30)),
+    )
+    getLatestNonEmptyEnd shouldEqual Some(sec(30))
   }
 
   test("candles can be updated simply by adding new candles for the same time") {
