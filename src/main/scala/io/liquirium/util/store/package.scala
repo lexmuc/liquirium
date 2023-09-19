@@ -22,14 +22,14 @@ package object store {
     new H2CandleStore(DriverManager.getConnection(h2DbUrl), candleLength)
   })
 
-  def h2StoredBaseLiveCandleHistoryLoaderProvider(
+  def getCachingCandleHistoryLoaderProvider(
     getConnector: ExchangeId => Future[ExchangeConnector],
   ): CandleHistoryLoaderProvider =
     new CandleHistoryLoaderProvider {
       override def getHistoryLoader(market: Market, resolution: Duration): Future[CandleHistoryLoader] = {
         for {
           connector <- getConnector(market.exchangeId)
-        } yield getCandleHistoryProviderWithLiveUpdate(market, resolution, connector)
+        } yield getCachingCandleHistoryLoader(market, resolution, connector)
       }
     }
 
@@ -38,20 +38,6 @@ package object store {
     val h2DbUrl = s"jdbc:h2:file:$pathString/$id;TRACE_LEVEL_FILE=0"
     new H2TradeStore(DriverManager.getConnection(h2DbUrl), market)
   })
-
-  def getCandleHistoryProviderWithLiveUpdate(
-    market: Market,
-    candleLength: Duration,
-    connector: ExchangeConnector,
-    overlapCandlesCount: Int = 10,
-  ): StoreBasedCandleHistoryLoaderWithOnDemandUpdate = {
-    val historyStore = new CandleHistoryStore(h2candleStoreProvider.getStore(market, candleLength))
-    new StoreBasedCandleHistoryLoaderWithOnDemandUpdate(
-      baseStore = historyStore,
-      liveSegmentLoader = start => connector.loadCandleHistory(market.tradingPair, candleLength, start),
-      overlapCandlesCount = overlapCandlesCount,
-    )
-  }
 
   def getCachingCandleHistoryLoader(
     market: Market,
