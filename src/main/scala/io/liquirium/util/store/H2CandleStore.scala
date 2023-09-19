@@ -89,18 +89,33 @@ class H2CandleStore(
       )
     }
 
-  override def getFirstStart: Future[Option[Instant]] = Future {
-    val rs = connection.createStatement().executeQuery(
-      """SELECT startTimestamp FROM CANDLES ORDER BY startTimestamp ASC LIMIT 1"""
-    )
-    if (rs.next()) Some(Instant.ofEpochSecond(rs.getInt("startTimestamp"))) else None
-  }
+  private def getFirstStart: Future[Option[Instant]] =
+    Future {
+      val rs = connection.createStatement().executeQuery(
+        """SELECT startTimestamp FROM CANDLES ORDER BY startTimestamp ASC LIMIT 1"""
+      )
+      if (rs.next()) Some(Instant.ofEpochSecond(rs.getInt("startTimestamp"))) else None
+    }
 
-  override def getLatestNonEmptyEnd: Future[Option[Instant]] = Future {
-    val rs = connection.createStatement().executeQuery(
-      """SELECT startTimestamp FROM CANDLES WHERE open <> '0' ORDER BY startTimestamp DESC LIMIT 1"""
-    )
-    if (rs.next()) Some(Instant.ofEpochSecond(rs.getInt("startTimestamp")) plus candleLength) else None
-  }
+  private def getLastEnd: Future[Option[Instant]] =
+    Future {
+      val rs = connection.createStatement().executeQuery(
+        """SELECT startTimestamp FROM CANDLES ORDER BY startTimestamp DESC LIMIT 1"""
+      )
+      if (rs.next()) Some(Instant.ofEpochSecond(rs.getInt("startTimestamp")) plus candleLength) else None
+    }
+
+  override def getFirstStartAndLastEnd: Future[Option[(Instant, Instant)]] =
+    for {
+      maybeFirstStart <- getFirstStart
+      maybeLastEnd <- getLastEnd
+    } yield {
+      for {
+        firstStart <- maybeFirstStart
+        lastEnd <- maybeLastEnd
+      } yield {
+        (firstStart, lastEnd)
+      }
+    }
 
 }

@@ -3,11 +3,11 @@ package io.liquirium.util
 import io.liquirium.util.akka.DefaultConcurrencyContext
 import _root_.akka.actor.typed.DispatcherSelector
 import io.liquirium.connect.ExchangeConnector
-import io.liquirium.core.{CandleHistoryLoader, ExchangeId, Market}
+import io.liquirium.core.{CachingCandleHistoryLoader, CandleHistoryCache, CandleHistoryLoader, CandleHistorySegment, ExchangeId, Market}
 
 import java.nio.file.{Path, Paths}
 import java.sql.DriverManager
-import java.time.Duration
+import java.time.{Duration, Instant}
 import scala.concurrent.{ExecutionContext, Future}
 
 package object store {
@@ -51,6 +51,21 @@ package object store {
       liveSegmentLoader = start => connector.loadCandleHistory(market.tradingPair, candleLength, start),
       overlapCandlesCount = overlapCandlesCount,
     )
+  }
+
+  def getCachingCandleHistoryLoader(
+    market: Market,
+    candleLength: Duration,
+    connector: ExchangeConnector,
+  ): CandleHistoryLoader = {
+    val cache = new CandleHistoryCache(h2candleStoreProvider.getStore(market, candleLength))
+    val loader = new CandleHistoryLoader {
+      override def load(start: Instant, end: Instant): Future[CandleHistorySegment] =
+        connector.loadCandleHistory(market.tradingPair, candleLength, start)
+          .map(_.takeWhile(_.startTime.isBefore(end)))
+          .map(cc => CandleHistorySegment.fromCandles(cc))
+    }
+    new CachingCandleHistoryLoader(candleLength, loader, cache)
   }
 
   def getTradeHistoryProviderWithLiveUpdate(
