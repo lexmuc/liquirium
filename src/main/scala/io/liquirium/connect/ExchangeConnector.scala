@@ -14,6 +14,7 @@ trait ExchangeConnector {
     tradingPair: TradingPair,
     candleLength: Duration,
     start: Instant,
+    end: Instant,
   ): Future[CandleHistorySegment]
 
   def loadTradeHistory(tradingPair: TradingPair, start: Instant): Future[TradeHistorySegment]

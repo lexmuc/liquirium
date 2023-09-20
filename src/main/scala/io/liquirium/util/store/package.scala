@@ -47,9 +47,7 @@ package object store {
     val cache = new CandleHistoryCache(h2candleStoreProvider.getStore(market, candleLength))
     val loader = new CandleHistoryLoader {
       override def load(start: Instant, end: Instant): Future[CandleHistorySegment] =
-        connector.loadCandleHistory(market.tradingPair, candleLength, start)
-          .map(_.takeWhile(_.startTime.isBefore(end)))
-          .map(cc => CandleHistorySegment.fromCandles(cc))
+        connector.loadCandleHistory(market.tradingPair, candleLength, start, end)
     }
     new CachingCandleHistoryLoader(candleLength, loader, cache)
   }

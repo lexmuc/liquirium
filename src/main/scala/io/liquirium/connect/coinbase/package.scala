@@ -99,8 +99,9 @@ package object coinbase {
         tradingPair: TradingPair,
         duration: Duration,
         start: Instant,
+        end: Instant,
       ): Future[CandleHistorySegment] =
-        makeCandleHistorySegmentLoader(tradingPair, duration).load(start, SystemClock.getTime)
+        makeCandleHistorySegmentLoader(tradingPair, duration).load(start, end)
 
       private def makeCandleHistoryStream(tradingPair: TradingPair, candleLength: Duration) = {
         new PollingCandleHistoryStream(

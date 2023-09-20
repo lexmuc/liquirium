@@ -118,8 +118,9 @@ package object bitfinex {
         tradingPair: TradingPair,
         duration: Duration,
         start: Instant,
+        end: Instant,
       ): Future[CandleHistorySegment] =
-        makeCandleHistorySegmentLoader(tradingPair, duration).load(start, SystemClock.getTime)
+        makeCandleHistorySegmentLoader(tradingPair, duration).load(start, end)
 
       override def candleHistoryStream(
         tradingPair: TradingPair,
