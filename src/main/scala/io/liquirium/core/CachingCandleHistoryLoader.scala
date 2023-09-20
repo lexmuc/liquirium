@@ -6,7 +6,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class CachingCandleHistoryLoader(
   candleLength: Duration,
   baseLoader: CandleHistoryLoader,
-  cache: CandleHistoryCache,
+  val cache: CandleHistoryCache,
 )(
   implicit ec: ExecutionContext
 ) extends CandleHistoryLoader {

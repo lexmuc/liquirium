@@ -43,7 +43,7 @@ package object store {
     market: Market,
     candleLength: Duration,
     connector: ExchangeConnector,
-  ): CandleHistoryLoader = {
+  ): CachingCandleHistoryLoader = {
     val cache = new CandleHistoryCache(h2candleStoreProvider.getStore(market, candleLength))
     val loader = new CandleHistoryLoader {
       override def load(start: Instant, end: Instant): Future[CandleHistorySegment] =
