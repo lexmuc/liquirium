@@ -49,6 +49,10 @@ class H2TradeStoreTest extends AsyncTestWithControlledTime {
     assertCount("TRADES", 2)
   }
 
+  test("it immediately returns when adding an empty batch") {
+    add() shouldEqual ()
+  }
+
   test("trades are stored with id, quantity, price and timestamp") {
     add(t(id = "123", quantity = dec(12), price = dec(34), time = milli(123)))
     val tradesById = retrieve().groupBy(_.id.toString).mapValues(_.head)

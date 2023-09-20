@@ -3,7 +3,7 @@ package io.liquirium.core
 import io.liquirium.core.CandleHistoryCache.IncoherentCandleHistoryException
 import io.liquirium.util.store.CandleStore
 
-import java.time.{Duration, Instant}
+import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future}
 
 
