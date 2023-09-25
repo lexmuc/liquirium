@@ -42,6 +42,13 @@ trait TradeHistorySegment
     case s: Increment => if (n == 0) s else s.init.dropRight(n - 1)
   }
 
+  def takeFrom(time: Instant): TradeHistorySegment =
+    if (time isBefore start)
+      throw new RuntimeException(s"Attempted to take trades from $time but segment only starts at $start")
+    else if (time isAfter start)
+      TradeHistorySegment.fromForwardTrades(time, trades.dropWhile(_.time isBefore time))
+    else this
+
   override def length: Int = trades.size
 
   override def iterator: Iterator[Trade] = trades.iterator

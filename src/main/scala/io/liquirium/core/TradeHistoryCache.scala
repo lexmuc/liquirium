@@ -8,7 +8,9 @@ import scala.concurrent.{ExecutionContext, Future}
 class TradeHistoryCache(
   tradeStore: TradeStore,
   startStore: TradeSegmentStartStore,
-)(implicit ec: ExecutionContext) {
+)(
+  implicit ec: ExecutionContext,
+) {
 
   def read(): Future[Option[TradeHistorySegment]] =
     startStore.readStart.flatMap {
