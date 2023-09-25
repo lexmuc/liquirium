@@ -11,8 +11,8 @@ class TradeHistoryStore(
   implicit executionContext: ExecutionContext,
 ) extends TradeHistoryLoader {
 
-  def loadHistory(start: Instant, inspectionTime: Option[Instant]): Future[TradeHistorySegment] =
-    baseStore.get(from = Some(start), until = inspectionTime) map { tb => tb.toHistorySegment }
+  def loadHistory(start: Instant, maybeEnd: Option[Instant]): Future[TradeHistorySegment] =
+    baseStore.get(from = Some(start), until = maybeEnd) map { tb => tb.toHistorySegment }
 
   def updateHistory(historySegment: TradeHistorySegment): Future[Unit] =
     baseStore.deleteFrom(historySegment.start).flatMap { _ =>

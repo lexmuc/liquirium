@@ -13,14 +13,14 @@ class StoreBasedTradeHistoryLoaderWithOnDemandUpdate(
   implicit ec: ExecutionContext,
 ) extends TradeHistoryLoader {
 
-  override def loadHistory(start: Instant, inspectionTime: Option[Instant]): Future[TradeHistorySegment] =
-    baseStore.loadHistory(start, inspectionTime).flatMap { storedHistory =>
+  override def loadHistory(start: Instant, maybeEnd: Option[Instant]): Future[TradeHistorySegment] =
+    baseStore.loadHistory(start, maybeEnd).flatMap { storedHistory =>
       val updateStart = instantMax(storedHistory.end minus overlapDuration, start)
 
       liveSegmentLoader.apply(updateStart).flatMap { liveSegment =>
         baseStore.updateHistory(liveSegment).map { _ =>
           val fullNewSegment = storedHistory.extendWith(liveSegment)
-          inspectionTime match {
+          maybeEnd match {
             case Some(it) =>
               val tt = fullNewSegment.filter(_.time isBefore it)
               TradeHistorySegment.fromForwardTrades(start, tt)

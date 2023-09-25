@@ -5,6 +5,6 @@ import scala.concurrent.Future
 
 trait TradeHistoryLoader {
 
-  def loadHistory(start: Instant, inspectionTime: Option[Instant]): Future[TradeHistorySegment]
+  def loadHistory(start: Instant, maybeEnd: Option[Instant]): Future[TradeHistorySegment]
 
 }

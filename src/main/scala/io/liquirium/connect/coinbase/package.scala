@@ -2,7 +2,7 @@ package io.liquirium.connect
 
 import akka.NotUsed
 import akka.stream.scaladsl.Source
-import io.liquirium.core.{CandleHistorySegment, ExchangeId, OperationRequest, OperationRequestSuccessResponse, Order, TradeHistorySegment, TradingPair}
+import io.liquirium.core.{CandleHistorySegment, ExchangeId, OperationRequest, OperationRequestSuccessResponse, Order, TradeHistoryLoader, TradeHistorySegment, TradingPair}
 import io.liquirium.util.akka._
 import io.liquirium.util.{ApiCredentials, SystemClock}
 
@@ -121,10 +121,10 @@ package object coinbase {
         makeCandleHistoryStream(tradingPair, initialSegment.candleLength).source(initialSegment)
 
       private def makeTradeHistorySegmentLoader(pair: TradingPair) =
-        new TradeHistorySegmentLoader(start => coinbaseApi.getTradeBatch(pair, start))
+        new BatchBasedTradeHistoryLoader(start => coinbaseApi.getTradeBatch(pair, start))
 
-      override def loadTradeHistory(tradingPair: TradingPair, start: Instant): Future[TradeHistorySegment] =
-        makeTradeHistorySegmentLoader(tradingPair).loadFrom(start)
+//      override def loadTradeHistory(tradingPair: TradingPair, start: Instant): Future[TradeHistorySegment] =
+//        makeTradeHistorySegmentLoader(tradingPair).loadFrom(start)
 
       private def makeTradeHistoryStream(tradingPair: TradingPair) = ???
 
@@ -138,6 +138,7 @@ package object coinbase {
 
       override def openOrdersStream(tradingPair: TradingPair): Source[Set[Order], NotUsed] = ???
 
+      override def getTradeHistoryLoader(tradingPair: TradingPair): TradeHistoryLoader = ???
     }
 
 }

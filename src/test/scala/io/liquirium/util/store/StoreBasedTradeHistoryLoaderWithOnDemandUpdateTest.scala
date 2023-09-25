@@ -35,7 +35,7 @@ class StoreBasedTradeHistoryLoaderWithOnDemandUpdateTest extends AsyncTestWithCo
       trade(sec(110), "A"),
       trade(sec(112), "B"),
     )
-    provider.loadHistory(start = sec(100), inspectionTime = Some(sec(120)))
+    provider.loadHistory(start = sec(100), maybeEnd = Some(sec(120)))
     liveSegmentLoader.verify.apply(sec(108))
   }
 
@@ -45,7 +45,7 @@ class StoreBasedTradeHistoryLoaderWithOnDemandUpdateTest extends AsyncTestWithCo
       trade(sec(110), "A"),
       trade(sec(112), "B"),
     )
-    provider.loadHistory(start = sec(100), inspectionTime = Some(sec(120)))
+    provider.loadHistory(start = sec(100), maybeEnd = Some(sec(120)))
     liveSegmentLoader.verify.apply(sec(100))
   }
 
@@ -54,7 +54,7 @@ class StoreBasedTradeHistoryLoaderWithOnDemandUpdateTest extends AsyncTestWithCo
     fakeStoreTrades(sec(100), Some(sec(120)))(
       trade(sec(110), "A"),
     )
-    provider.loadHistory(start = sec(100), inspectionTime = Some(sec(120)))
+    provider.loadHistory(start = sec(100), maybeEnd = Some(sec(120)))
     val liveSegment =
       tradeHistorySegment(sec(105))(
         trade(sec(110), "A"),
@@ -70,7 +70,7 @@ class StoreBasedTradeHistoryLoaderWithOnDemandUpdateTest extends AsyncTestWithCo
     fakeStoreTrades(sec(100), Some(sec(120)))(
       trade(sec(110), "A"),
     )
-    val f = provider.loadHistory(start = sec(100), inspectionTime = Some(sec(120)))
+    val f = provider.loadHistory(start = sec(100), maybeEnd = Some(sec(120)))
     val liveSegment =
       tradeHistorySegment(sec(105))(
         trade(sec(110), "A"),
@@ -90,7 +90,7 @@ class StoreBasedTradeHistoryLoaderWithOnDemandUpdateTest extends AsyncTestWithCo
       trade(sec(112), "B"),
       trade(sec(114), "C"),
     )
-    val f = provider.loadHistory(start = sec(100), inspectionTime = Some(sec(120)))
+    val f = provider.loadHistory(start = sec(100), maybeEnd = Some(sec(120)))
     liveSegmentLoader.completeNext(
       tradeHistorySegment(sec(111))(
         trade(sec(112), "B"),
@@ -112,7 +112,7 @@ class StoreBasedTradeHistoryLoaderWithOnDemandUpdateTest extends AsyncTestWithCo
     fakeStoreTrades(sec(100), Some(sec(120)))(
       trade(sec(110), "A"),
     )
-    val f = provider.loadHistory(start = sec(100), inspectionTime = Some(sec(120)))
+    val f = provider.loadHistory(start = sec(100), maybeEnd = Some(sec(120)))
     liveSegmentLoader.completeNext(
       tradeHistorySegment(sec(105))(
         trade(sec(110), "A"),
@@ -132,7 +132,7 @@ class StoreBasedTradeHistoryLoaderWithOnDemandUpdateTest extends AsyncTestWithCo
     fakeStoreTrades(sec(100), None)(
       trade(sec(110), "A"),
     )
-    val f = provider.loadHistory(start = sec(100), inspectionTime = None)
+    val f = provider.loadHistory(start = sec(100), maybeEnd = None)
     liveSegmentLoader.completeNext(
       tradeHistorySegment(sec(105))(
         trade(sec(110), "A"),

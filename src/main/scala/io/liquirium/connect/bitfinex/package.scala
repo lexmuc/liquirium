@@ -128,20 +128,16 @@ package object bitfinex {
       ): Source[CandleHistorySegment, NotUsed] =
         makeCandleHistoryStream(tradingPair, initialSegment.candleLength).source(initialSegment)
 
-      private def makeTradeHistorySegmentLoader(pair: TradingPair) =
-        new TradeHistorySegmentLoader(start => bitfinexApi.getTradeBatch(pair, start))
-
-      private def makeTradeHistoryStream(tradingPair: TradingPair) =
+      private def makeTradeHistoryStream(tradingPair: TradingPair) = {
+        val tradeHistoryLoader = getTradeHistoryLoader(tradingPair)
         new PollingTradeHistoryStream(
-          segmentLoader = makeTradeHistorySegmentLoader(tradingPair).loadFrom,
+          segmentLoader = start => tradeHistoryLoader.loadHistory(start, maybeEnd = None),
           interval = FiniteDuration(30, "seconds"),
           retryInterval = FiniteDuration(10, "seconds"),
           updateOverlapStrategy = TradeUpdateOverlapStrategy.fixedOverlap(Duration.ofMinutes(5)),
           sourceQueueFactory = concurrencyContext.sourceQueueFactory,
         )
-
-      override def loadTradeHistory(tradingPair: TradingPair, start: Instant): Future[TradeHistorySegment] =
-        makeTradeHistorySegmentLoader(tradingPair).loadFrom(start)
+      }
 
       def tradeHistoryStream(
         tradingPair: TradingPair,
@@ -154,6 +150,8 @@ package object bitfinex {
 
       override def openOrdersStream(tradingPair: TradingPair): Source[Set[Order], NotUsed] = ???
 
+      override def getTradeHistoryLoader(tradingPair: TradingPair): TradeHistoryLoader =
+        new BatchBasedTradeHistoryLoader(start => bitfinexApi.getTradeBatch(tradingPair, start))
     }
 
 }

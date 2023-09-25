@@ -52,17 +52,17 @@ package object store {
     new CachingCandleHistoryLoader(candleLength, loader, cache)
   }
 
-  def getTradeHistoryProviderWithLiveUpdate(
-    market: Market,
-    connector: ExchangeConnector,
-    overlapDuration: Duration = Duration.ofMinutes(10),
-  ): StoreBasedTradeHistoryLoaderWithOnDemandUpdate = {
-    val historyStore = new TradeHistoryStore(h2tradeStoreProvider(Paths.get("data/trades")).getStore(market))
-    new StoreBasedTradeHistoryLoaderWithOnDemandUpdate(
-      baseStore = historyStore,
-      liveSegmentLoader = start => connector.loadTradeHistory(market.tradingPair, start),
-      overlapDuration = overlapDuration,
-    )
-  }
+//  def getTradeHistoryProviderWithLiveUpdate(
+//    market: Market,
+//    connector: ExchangeConnector,
+//    overlapDuration: Duration = Duration.ofMinutes(10),
+//  ): StoreBasedTradeHistoryLoaderWithOnDemandUpdate = {
+//    val historyStore = new TradeHistoryStore(h2tradeStoreProvider(Paths.get("data/trades")).getStore(market))
+//    new StoreBasedTradeHistoryLoaderWithOnDemandUpdate(
+//      baseStore = historyStore,
+//      liveSegmentLoader = start => connector.loadTradeHistory(market.tradingPair, start),
+//      overlapDuration = overlapDuration,
+//    )
+//  }
 
 }

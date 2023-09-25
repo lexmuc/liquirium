@@ -3,7 +3,7 @@ package io.liquirium.connect
 import akka.NotUsed
 import akka.stream.scaladsl.Source
 import io.liquirium.connect.binance.BinanceRestApi.BinanceApiRequest
-import io.liquirium.core.{CandleHistorySegment, ExchangeId, Market, OperationRequest, OperationRequestSuccessResponse, Order, TradeHistorySegment, TradingPair}
+import io.liquirium.core.{CandleHistorySegment, ExchangeId, Market, OperationRequest, OperationRequestSuccessResponse, Order, TradeHistoryLoader, TradeHistorySegment, TradingPair}
 import io.liquirium.util.akka._
 import io.liquirium.util.{ApiCredentials, SystemClock}
 
@@ -118,20 +118,16 @@ package object binance {
 
       // trades
 
-      private def makeTradeHistorySegmentLoader(tradingPair: TradingPair): TradeHistorySegmentLoader =
-        new TradeHistorySegmentLoader(start => binanceApi.getTradeBatch(tradingPair, start))
-
-      override def loadTradeHistory(tradingPair: TradingPair, start: Instant): Future[TradeHistorySegment] =
-        makeTradeHistorySegmentLoader(tradingPair).loadFrom(start)
-
-      private def makeTradeHistoryStream(tradingPair: TradingPair) =
+      private def makeTradeHistoryStream(tradingPair: TradingPair) = {
+        val tradeHistoryLoader = getTradeHistoryLoader(tradingPair)
         new PollingTradeHistoryStream(
-          segmentLoader = makeTradeHistorySegmentLoader(tradingPair).loadFrom,
+          segmentLoader = start => tradeHistoryLoader.loadHistory(start, maybeEnd = None),
           interval = FiniteDuration(30, "seconds"),
           retryInterval = FiniteDuration(10, "seconds"),
           updateOverlapStrategy = TradeUpdateOverlapStrategy.fixedOverlap(Duration.ofMinutes(5)),
           sourceQueueFactory = concurrencyContext.sourceQueueFactory,
         )
+      }
 
       def tradeHistoryStream(
         tradingPair: TradingPair,
@@ -150,6 +146,9 @@ package object binance {
           apiLogger
         ).map(_.openOrders)
       }
+
+      override def getTradeHistoryLoader(tradingPair: TradingPair): TradeHistoryLoader =
+        new BatchBasedTradeHistoryLoader(start => binanceApi.getTradeBatch(tradingPair, start))
 
     }
 

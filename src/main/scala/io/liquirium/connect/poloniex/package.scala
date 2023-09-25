@@ -120,10 +120,10 @@ package object poloniex {
         makeCandleHistoryStream(tradingPair, initialSegment.candleLength).source(initialSegment)
 
       private def makeTradeHistorySegmentLoader(pair: TradingPair) =
-        new TradeHistorySegmentLoader(start => poloniexApi.getTradeBatch(pair, start))
+        new BatchBasedTradeHistoryLoader(start => poloniexApi.getTradeBatch(pair, start))
 
-      override def loadTradeHistory(tradingPair: TradingPair, start: Instant): Future[TradeHistorySegment] =
-        makeTradeHistorySegmentLoader(tradingPair).loadFrom(start)
+//      override def loadTradeHistory(tradingPair: TradingPair, start: Instant): Future[TradeHistorySegment] =
+//        makeTradeHistorySegmentLoader(tradingPair).loadFrom(start)
 
       private def makeTradeHistoryStream(tradingPair: TradingPair) = ???
 
@@ -136,6 +136,8 @@ package object poloniex {
         poloniexApi.sendTradeRequest(request)
 
       override def openOrdersStream(tradingPair: TradingPair): Source[Set[Order], NotUsed] = ???
+
+      override def getTradeHistoryLoader(tradingPair: TradingPair): TradeHistoryLoader = ???
 
     }
 
