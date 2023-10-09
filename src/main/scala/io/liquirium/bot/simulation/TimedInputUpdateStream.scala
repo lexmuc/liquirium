@@ -2,11 +2,31 @@ package io.liquirium.bot.simulation
 
 import io.liquirium.bot.BotInput
 import io.liquirium.bot.BotInput.TimeInput
-import io.liquirium.core.{Candle, CandleHistorySegment}
+import io.liquirium.core.{Candle, CandleHistorySegment, Trade, TradeHistorySegment}
 
 import java.time.Instant
 
 object TimedInputUpdateStream {
+
+  def forTradeHistory(
+    thi: BotInput.TradeHistoryInput,
+    trades: Iterable[Trade],
+  ): Stream[(Instant, TradeHistorySegment)] = {
+    case class State(ths: TradeHistorySegment, rest: List[Trade]) {
+      def next: State = {
+        val nextTrades = rest.takeWhile(_.time == rest.head.time)
+        val nextSegment = nextTrades.foldLeft(ths) { case (ths, trade) => ths.append(trade) }
+        State(nextSegment, rest.drop(nextTrades.size))
+      }
+    }
+
+    def stateStream(s: State): Stream[State] = s #:: (if (s.rest.isEmpty) Stream.empty else stateStream(s.next))
+
+    val emptySegmentState = State(TradeHistorySegment.empty(thi.start), trades.toList)
+    val initState = if (trades.headOption.map(_.time).contains(thi.start)) emptySegmentState.next
+    else emptySegmentState
+    stateStream(initState).map { state => state.ths.end -> state.ths }
+  }
 
   def forCandleHistory(
     history: BotInput.CandleHistoryInput,
