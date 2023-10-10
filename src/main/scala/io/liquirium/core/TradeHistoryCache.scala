@@ -35,10 +35,7 @@ class TradeHistoryCache(
       case Some(start) if extension.start == start => replaceFrom(start, extension)
       case Some(start) if extension.start isAfter start =>
         tradeStore.get(from = Some(extension.start), until = None) flatMap { tt =>
-          println(tt)
           if (tt.trades.isEmpty)
-            throw new RuntimeException("Cannot extend with a segment that does not overlap at the end")
-          else if (tt.trades.head.time != extension.start)
             throw new RuntimeException("Cannot extend with a segment that does not overlap at the end")
           replaceFrom(extension.start, extension)
         }

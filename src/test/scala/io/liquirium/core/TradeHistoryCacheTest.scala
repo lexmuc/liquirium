@@ -181,21 +181,6 @@ class TradeHistoryCacheTest extends AsyncTestWithControlledTime with TestWithMoc
     f.value.get.failed.get shouldBe a [RuntimeException]
   }
 
-  test("an exception is thrown when only later trades are found at a later extension start") {
-    val f = cache.extendWith(
-      tradeHistorySegment(sec(123))(
-        trade(sec(150), "A"),
-        trade(sec(170), "B"),
-      )
-    )
-    startStoreReadStart.completeNext(Some(sec(100)))
-    tradeStoreGet.completeNext(tradeBatch(sec(123))(
-      trade(sec(150), "X"),
-      trade(sec(151), "X"),
-    ))
-    f.value.get.failed.get shouldBe a[RuntimeException]
-  }
-
   test("it throws an exception when the extension start is before the start") {
     val f = cache.extendWith(
       tradeHistorySegment(sec(99))(
@@ -206,7 +191,6 @@ class TradeHistoryCacheTest extends AsyncTestWithControlledTime with TestWithMoc
     startStoreReadStart.completeNext(Some(sec(100)))
     f.value.get.failed.get shouldBe a[RuntimeException]
   }
-
 
   test("extending a segment only returns after the trades have been added") {
     val f = cache.extendWith(
