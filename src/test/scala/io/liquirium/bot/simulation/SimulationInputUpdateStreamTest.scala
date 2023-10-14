@@ -12,7 +12,7 @@ class SimulationInputUpdateStreamTest extends TestWithMocks {
 
   private var timedInputStreams: Map[Input[_], Stream[(Instant, Any)]] = Map()
 
-  private val streamProvider: SingleInputStreamProvider = mock[SingleInputStreamProvider]
+  private val streamProvider: SingleInputUpdateStreamProvider = mock[SingleInputUpdateStreamProvider]
 
   private def updateStream(): SimulationInputUpdateStream = SimulationInputUpdateStream(
     timedInputStreams = timedInputStreams,

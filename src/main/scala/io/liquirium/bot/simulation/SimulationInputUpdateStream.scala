@@ -6,7 +6,7 @@ import java.time.Instant
 
 case class SimulationInputUpdateStream(
   timedInputStreams: Map[Input[_], Stream[(Instant, Any)]],
-  singleInputStreamProvider: SingleInputStreamProvider,
+  singleInputStreamProvider: SingleInputUpdateStreamProvider,
 ) {
 
   private val nonEmptyStreams = timedInputStreams.filter(_._2.nonEmpty)
@@ -51,6 +51,7 @@ case class SimulationInputUpdateStream(
       else {
         throw UnknownInputsException(unknownInputs)
       }
+
   }
 
   private def addStream(i: Input[_], s: Stream[(Instant, Any)]) = copy(
