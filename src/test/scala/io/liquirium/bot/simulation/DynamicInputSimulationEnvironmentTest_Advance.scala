@@ -7,7 +7,7 @@ class DynamicInputSimulationEnvironmentTest_Advance extends DynamicInputSimulati
 
   test("advancing advances the input update stream and fills orders with the updated context") {
     val nextInputUpdateStream = mock[SimulationInputUpdateStream]
-    nextInputUpdateStream.nextInputUpdate returns Some(inputUpdate(input(2) -> 2, input(3) -> 3))
+    nextInputUpdateStream.currentInputUpdate returns Some(inputUpdate(input(2) -> 2, input(3) -> 3))
     firstInputUpdateStream.advance returns nextInputUpdateStream
     val inputContext = fakeContextWithInputs(input(1) -> 1)
     val intermediateContext = fakeContextWithInputs(
@@ -25,7 +25,7 @@ class DynamicInputSimulationEnvironmentTest_Advance extends DynamicInputSimulati
 
   test("input requests are resolved against the stream until the marketplaces can be advanced") {
     val nextInputUpdateStream = mock[SimulationInputUpdateStream]
-    nextInputUpdateStream.nextInputUpdate returns Some(inputUpdate(input(1) -> 11))
+    nextInputUpdateStream.currentInputUpdate returns Some(inputUpdate(input(1) -> 11))
     firstInputUpdateStream.advance returns nextInputUpdateStream
     latestFakeInputStream = nextInputUpdateStream
 
@@ -50,7 +50,7 @@ class DynamicInputSimulationEnvironmentTest_Advance extends DynamicInputSimulati
 
   test("the context is not updated when there are no more input updates") {
     val nextInputUpdateStream = mock[SimulationInputUpdateStream]
-    nextInputUpdateStream.nextInputUpdate returns None
+    nextInputUpdateStream.currentInputUpdate returns None
     firstInputUpdateStream.advance returns nextInputUpdateStream
     val context = fakeContextWithInputs(input(1) -> 1)
     val (newContext, newEnvironment) = environment.advance(context)
@@ -60,8 +60,8 @@ class DynamicInputSimulationEnvironmentTest_Advance extends DynamicInputSimulati
 
   test("the simulation is only complete when the input update stream is empty") {
     val nextInputUpdateStream = mock[SimulationInputUpdateStream]
-    nextInputUpdateStream.nextInputUpdate returns None
-    firstInputUpdateStream.nextInputUpdate returns Some(inputUpdate(input(1) -> 11))
+    nextInputUpdateStream.currentInputUpdate returns None
+    firstInputUpdateStream.currentInputUpdate returns Some(inputUpdate(input(1) -> 11))
     firstInputUpdateStream.advance returns nextInputUpdateStream
     val context = fakeContextWithInputs(input(1) -> 1)
     val e = environment

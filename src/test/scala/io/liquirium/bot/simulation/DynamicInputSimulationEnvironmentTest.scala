@@ -24,7 +24,7 @@ class DynamicInputSimulationEnvironmentTest extends TestWithMocks {
 
   protected def fakeInputStreamTransition(requestedInputs: Input[_]*)(pairs: (Input[_], _)*): Unit = {
     val newStream = mock[SimulationInputUpdateStream]
-    newStream.nextInputUpdate returns Some(inputUpdate(pairs: _*))
+    newStream.currentInputUpdate returns Some(inputUpdate(pairs: _*))
     latestFakeInputStream.processInputRequest(inputRequest(requestedInputs: _*)) returns newStream
     latestFakeInputStream = newStream
   }

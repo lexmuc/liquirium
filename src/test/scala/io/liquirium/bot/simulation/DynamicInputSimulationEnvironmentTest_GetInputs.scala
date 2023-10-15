@@ -7,7 +7,7 @@ import io.liquirium.eval.helpers.EvalHelpers.{input, inputRequest}
 class DynamicInputSimulationEnvironmentTest_GetInputs extends DynamicInputSimulationEnvironmentTest {
 
   protected def fakeNextInputUpdate(updates: (Input[_], Any)*): Unit = {
-    firstInputUpdateStream.nextInputUpdate returns Some(inputUpdate(updates: _*))
+    firstInputUpdateStream.currentInputUpdate returns Some(inputUpdate(updates: _*))
   }
 
   test("it requests inputs from the stream, then it returns the updated context") {

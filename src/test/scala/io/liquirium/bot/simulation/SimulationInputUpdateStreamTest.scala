@@ -10,111 +10,218 @@ import java.time.Instant
 
 class SimulationInputUpdateStreamTest extends TestWithMocks {
 
-  private var timedInputStreams: Map[Input[_], Stream[(Instant, Any)]] = Map()
-
   private val streamProvider: SingleInputUpdateStreamProvider = mock[SingleInputUpdateStreamProvider]
 
-  private def updateStream(): SimulationInputUpdateStream = SimulationInputUpdateStream(
-    timedInputStreams = timedInputStreams,
+  private def stream(start: Instant, end: Instant) = SimulationInputUpdateStream(
+    start = start,
     singleInputStreamProvider = streamProvider,
   )
 
-  private def fakeProvidedStream(i: Input[_], t: Instant)(elements: (Instant, Any)*) = {
-    streamProvider.getInputStream(i, t) returns Some(elements.toStream)
+  private def fakeProvidedStream(i: Input[_], start: Instant)(elements: (Instant, Any)*) = {
+    streamProvider.getInputStream(i, start) returns Some(elements.toStream)
   }
 
   private def fakeNoProvidedStream(i: Input[_], t: Instant) = {
     streamProvider.getInputStream(i, t) returns None
   }
 
-  test("when there are no input streams the next input update is None") {
-    timedInputStreams = Map()
-    updateStream().nextInputUpdate shouldEqual None
+  test("when the stream has just been created it has a current input update that is is empty") {
+    stream(start = sec(10), end = sec(100)).currentInputUpdate shouldEqual Some(inputUpdate())
   }
 
-  test("when all streams are depleted the next input update is None") {
-    timedInputStreams = Map(
-      input(1) -> List().toStream,
-      input(2) -> List().toStream,
-    )
-    updateStream().nextInputUpdate shouldEqual None
+  test("a new stream may be advanced once then it is depleted") {
+    val s = stream(start = sec(10), end = sec(100))
+    s.advance.currentInputUpdate shouldBe None
   }
 
-  test("when there are streams the next input update consists of all inputs of the earliest heads of the streams") {
-    timedInputStreams = Map(
-      input(1) -> List(sec(2) -> 12, sec(3) -> 99).toStream,
-      input(2) -> List(sec(1) -> 21, sec(3) -> 99).toStream,
-      input(3) -> List(sec(1) -> 31).toStream,
+  test("the current input update of a new stream is updated with the first update of a merged stream") {
+    fakeProvidedStream(input(1), sec(10))(
+      sec(10) -> 110,
+      sec(11) -> 111,
     )
-    updateStream().nextInputUpdate.get shouldEqual inputUpdate(
-      input(2) -> 21,
-      input(3) -> 31,
-    )
+    stream(start = sec(10), end = sec(100))
+      .processInputRequest(inputRequest(input(1)))
+      .currentInputUpdate shouldEqual Some(inputUpdate(
+      input(1) -> 110,
+    ))
   }
 
-  test("there is still an update when part of the streams are depleted") {
-    timedInputStreams = Map(
-      input(1) -> List().toStream,
-      input(2) -> List(sec(1) -> 21, sec(3) -> 99).toStream,
+  test("a stream based on a single input stream contains all the updates of the stream") {
+    fakeProvidedStream(input(1), sec(10))(
+      sec(10) -> 110,
+      sec(11) -> 111,
+      sec(12) -> 112,
     )
-    updateStream().nextInputUpdate.get shouldEqual inputUpdate(
-      input(2) -> 21,
-    )
+    val s =
+      stream(start = sec(10), end = sec(100))
+        .processInputRequest(inputRequest(input(1)))
+    s.currentInputUpdate shouldEqual Some(inputUpdate(input(1) -> 110))
+    s.advance.currentInputUpdate shouldEqual Some(inputUpdate(input(1) -> 111))
+    s.advance.advance.currentInputUpdate shouldEqual Some(inputUpdate(input(1) -> 112))
   }
 
-  test("after advancing the stream the next input update changes to the respectively next timestamp") {
-    timedInputStreams = Map(
-      input(1) -> List(sec(2) -> 12, sec(3) -> 99).toStream,
-      input(2) -> List(sec(1) -> 21, sec(2) -> 22).toStream,
-      input(3) -> List(sec(1) -> 31, sec(3) -> 33).toStream,
+  test("when several input streams are requested their updates are combined or interleaved respectively") {
+    fakeProvidedStream(input(1), sec(10))(
+      sec(10) -> 110,
+      sec(12) -> 112,
     )
-    updateStream().advance.nextInputUpdate.get shouldEqual inputUpdate(
-      input(1) -> 12,
-      input(2) -> 22,
+    fakeProvidedStream(input(2), sec(10))(
+      sec(10) -> 210,
+      sec(11) -> 211,
+      sec(12) -> 212,
     )
+    val s = stream(start = sec(10), end = sec(100)).processInputRequest(inputRequest(input(1), input(2)))
+    s.currentInputUpdate shouldEqual Some(inputUpdate(
+      input(1) -> 110,
+      input(2) -> 210,
+    ))
+    s.advance.currentInputUpdate shouldEqual Some(inputUpdate(
+      input(2) -> 211,
+    ))
+    s.advance.advance.currentInputUpdate shouldEqual Some(inputUpdate(
+      input(1) -> 112,
+      input(2) -> 212,
+    ))
   }
 
-  test("an exception is thrown when trying to advance and there are no more updates") {
-    timedInputStreams = Map(
-      input(1) -> List().toStream,
+  test("when the last stream ends the current input update is none") {
+    fakeProvidedStream(input(1), sec(10))(
+      sec(10) -> 110,
+      sec(12) -> 112,
     )
-    an[Exception] shouldBe thrownBy(updateStream().advance)
+    fakeProvidedStream(input(2), sec(10))(
+      sec(10) -> 210,
+      sec(13) -> 213,
+    )
+    val s = stream(start = sec(10), end = sec(100)).processInputRequest(inputRequest(input(1), input(2)))
+    s.advance.advance.currentInputUpdate shouldEqual Some(inputUpdate(
+      input(2) -> 213,
+    ))
+    s.advance.advance.advance.currentInputUpdate shouldBe None
   }
 
-  test("an exception is thrown when trying to process inputs in an empty stream") {
-    timedInputStreams = Map(
-      input(1) -> List().toStream,
+  test("new input streams are properly merged in an advanced stream from the respective time") {
+    fakeProvidedStream(input(1), sec(10))(
+      sec(10) -> 110,
+      sec(11) -> 111,
+      sec(12) -> 112,
     )
-    an[Exception] shouldBe thrownBy(updateStream().processInputRequest(inputRequest(input(1))))
+    fakeProvidedStream(input(2), sec(11))(
+      sec(11) -> 211,
+      sec(13) -> 213,
+    )
+    fakeProvidedStream(input(3), sec(11))(
+      sec(11) -> 311,
+      sec(12) -> 312,
+      sec(13) -> 313,
+    )
+    val s0 =
+      stream(start = sec(10), end = sec(100))
+        .processInputRequest(inputRequest(input(1)))
+        .advance
+    val s = s0.processInputRequest(inputRequest(input(2), input(3)))
+    s.currentInputUpdate shouldEqual Some(inputUpdate(
+      input(1) -> 111,
+      input(2) -> 211,
+      input(3) -> 311,
+    ))
+    s.advance.currentInputUpdate shouldEqual Some(inputUpdate(
+      input(1) -> 112,
+      input(3) -> 312,
+    ))
+    s.advance.advance.currentInputUpdate shouldEqual Some(inputUpdate(
+      input(2) -> 213,
+      input(3) -> 313,
+    ))
+    s.advance.advance.advance.currentInputUpdate shouldBe None
   }
 
-  test("the stream is extended via the input stream provider upon an input request (next time is start)") {
-    timedInputStreams = Map(
-      input(1) -> List(sec(10) -> 10).toStream,
+  test("when all streams are depleted an exception is thrown when trying to advance the stream further") {
+    fakeProvidedStream(input(1), sec(10))(
+      sec(10) -> 110,
+      sec(12) -> 112,
     )
-    val ir = inputRequest(input(2), input(3))
-    fakeProvidedStream(input(2), sec(10))(sec(11) -> 211, sec(12) -> 212)
-    fakeProvidedStream(input(3), sec(10))(sec(10) -> 310)
-    updateStream().processInputRequest(ir) shouldEqual SimulationInputUpdateStream(
-      timedInputStreams = Map(
-        input(1) -> List(sec(10) -> 10).toStream,
-        input(2) -> List(sec(11) -> 211, sec(12) -> 212).toStream,
-        input(3) -> List(sec(10) -> 310).toStream,
-      ),
-      singleInputStreamProvider = streamProvider,
+    fakeProvidedStream(input(2), sec(10))(
+      sec(10) -> 210,
     )
+    val s = stream(start = sec(10), end = sec(100)).processInputRequest(inputRequest(input(1), input(2)))
+    val depletedStream = s.advance.advance
+    a[RuntimeException] shouldBe thrownBy(depletedStream.advance)
   }
 
   test("an unknown input exception is raised when streams for some inputs cannot be supplied by the provider") {
-    timedInputStreams = Map(
-      input(1) -> List(sec(10) -> 10).toStream,
-    )
     val ir = inputRequest(input(2), input(3), input(4))
     fakeProvidedStream(input(2), sec(10))(sec(11) -> 211)
     fakeNoProvidedStream(input(3), sec(10))
     fakeNoProvidedStream(input(4), sec(10))
-    val thrownException = the [UnknownInputsException] thrownBy updateStream().processInputRequest(ir)
+    val s = stream(start = sec(10), end = sec(100))
+    val thrownException = the[UnknownInputsException] thrownBy s.processInputRequest(ir)
     thrownException shouldEqual unknownInputsException(input(3), input(4))
+  }
+
+  test("an exception is thrown when trying to process inputs in a depleted stream") {
+    fakeProvidedStream(input(1), sec(10))(
+      sec(10) -> 110,
+    )
+    fakeProvidedStream(input(1), sec(11))(
+      sec(10) -> 210,
+    )
+    val s = stream(start = sec(10), end = sec(100)).processInputRequest(inputRequest(input(1)))
+    an[Exception] shouldBe thrownBy(s.advance.advance.processInputRequest(inputRequest(input(2))))
+  }
+
+  test("a runtime exception is thrown when the first merged stream does not start at the given start") {
+    fakeProvidedStream(input(1), sec(10))(
+      sec(11) -> 111,
+    )
+    a[RuntimeException] shouldBe thrownBy(
+      stream(start = sec(10), end = sec(100)).processInputRequest(inputRequest(input(1)))
+    )
+  }
+
+  test("a runtime exception is thrown when a stream does not start at the current start of an advanced stream") {
+    fakeProvidedStream(input(1), sec(10))(
+      sec(10) -> 110,
+      sec(11) -> 111,
+    )
+    fakeProvidedStream(input(2), sec(11))(
+      sec(12) -> 111,
+    )
+    val s =
+      stream(start = sec(10), end = sec(100))
+        .processInputRequest(inputRequest(input(1)))
+        .advance
+    a[RuntimeException] shouldBe thrownBy(
+      s.processInputRequest(inputRequest(input(2)))
+    )
+  }
+
+  test("a runtime exception is thrown when a merged stream is empty") {
+    fakeProvidedStream(input(1), sec(10))()
+    a[RuntimeException] shouldBe thrownBy(
+      stream(start = sec(10), end = sec(100)).processInputRequest(inputRequest(input(1)))
+    )
+  }
+
+  test("a stream with a single element is properly merged") {
+    fakeProvidedStream(input(1), sec(10))(
+      sec(10) -> 110,
+      sec(11) -> 111,
+    )
+    fakeProvidedStream(input(2), sec(10))(
+      sec(10) -> 210,
+    )
+    val s =
+      stream(start = sec(10), end = sec(100))
+        .processInputRequest(inputRequest(input(1), input(2)))
+    s.currentInputUpdate shouldEqual Some(inputUpdate(
+      input(1) -> 110,
+      input(2) -> 210,
+    ))
+    s.advance.currentInputUpdate shouldEqual Some(inputUpdate(
+      input(1) -> 111,
+    ))
+    s.advance.advance.currentInputUpdate shouldBe None
   }
 
 }
