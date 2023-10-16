@@ -20,16 +20,19 @@ object SimulationInputUpdateStream {
 
   def apply(
     start: Instant,
+    end: Instant,
     singleInputStreamProvider: SingleInputUpdateStreamProvider,
   ): SimulationInputUpdateStream = Impl(
     nextInputUpdateWithTime = Some((start, InputUpdate(Map()))),
     timedInputStreamsByInput = Map(),
+    end = end,
     singleInputStreamProvider = singleInputStreamProvider,
   )
 
   private case class Impl(
     nextInputUpdateWithTime: Option[(Instant, InputUpdate)],
     timedInputStreamsByInput: Map[Input[_], Stream[(Instant, Any)]],
+    end: Instant,
     singleInputStreamProvider: SingleInputUpdateStreamProvider,
   ) extends SimulationInputUpdateStream {
 
@@ -75,7 +78,7 @@ object SimulationInputUpdateStream {
 
       case Some(t) =>
         val suppliedStreams = inputRequest.inputs.map { i =>
-          (i, singleInputStreamProvider.getInputStream(i, t))
+          (i, singleInputStreamProvider.getInputStream(i, start = t, end = end))
         }
         val unknownInputs = suppliedStreams.filter(_._2.isEmpty).map(_._1)
         if (unknownInputs.isEmpty) {

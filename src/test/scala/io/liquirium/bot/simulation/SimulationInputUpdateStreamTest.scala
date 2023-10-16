@@ -14,15 +14,16 @@ class SimulationInputUpdateStreamTest extends TestWithMocks {
 
   private def stream(start: Instant, end: Instant) = SimulationInputUpdateStream(
     start = start,
+    end = end,
     singleInputStreamProvider = streamProvider,
   )
 
-  private def fakeProvidedStream(i: Input[_], start: Instant)(elements: (Instant, Any)*) = {
-    streamProvider.getInputStream(i, start) returns Some(elements.toStream)
+  private def fakeProvidedStream(i: Input[_], start: Instant, end: Instant)(elements: (Instant, Any)*) = {
+    streamProvider.getInputStream(i, start = start, end = end) returns Some(elements.toStream)
   }
 
-  private def fakeNoProvidedStream(i: Input[_], t: Instant) = {
-    streamProvider.getInputStream(i, t) returns None
+  private def fakeNoProvidedStream(i: Input[_], start: Instant, end: Instant) = {
+    streamProvider.getInputStream(i, start = start, end = end) returns None
   }
 
   test("when the stream has just been created it has a current input update that is is empty") {
@@ -35,7 +36,7 @@ class SimulationInputUpdateStreamTest extends TestWithMocks {
   }
 
   test("the current input update of a new stream is updated with the first update of a merged stream") {
-    fakeProvidedStream(input(1), sec(10))(
+    fakeProvidedStream(input(1), start = sec(10), end = sec(100))(
       sec(10) -> 110,
       sec(11) -> 111,
     )
@@ -47,7 +48,7 @@ class SimulationInputUpdateStreamTest extends TestWithMocks {
   }
 
   test("a stream based on a single input stream contains all the updates of the stream") {
-    fakeProvidedStream(input(1), sec(10))(
+    fakeProvidedStream(input(1), sec(10), end = sec(100))(
       sec(10) -> 110,
       sec(11) -> 111,
       sec(12) -> 112,
@@ -61,11 +62,11 @@ class SimulationInputUpdateStreamTest extends TestWithMocks {
   }
 
   test("when several input streams are requested their updates are combined or interleaved respectively") {
-    fakeProvidedStream(input(1), sec(10))(
+    fakeProvidedStream(input(1), sec(10), end = sec(100))(
       sec(10) -> 110,
       sec(12) -> 112,
     )
-    fakeProvidedStream(input(2), sec(10))(
+    fakeProvidedStream(input(2), sec(10), end = sec(100))(
       sec(10) -> 210,
       sec(11) -> 211,
       sec(12) -> 212,
@@ -85,11 +86,11 @@ class SimulationInputUpdateStreamTest extends TestWithMocks {
   }
 
   test("when the last stream ends the current input update is none") {
-    fakeProvidedStream(input(1), sec(10))(
+    fakeProvidedStream(input(1), sec(10), end = sec(100))(
       sec(10) -> 110,
       sec(12) -> 112,
     )
-    fakeProvidedStream(input(2), sec(10))(
+    fakeProvidedStream(input(2), sec(10), end = sec(100))(
       sec(10) -> 210,
       sec(13) -> 213,
     )
@@ -101,16 +102,16 @@ class SimulationInputUpdateStreamTest extends TestWithMocks {
   }
 
   test("new input streams are properly merged in an advanced stream from the respective time") {
-    fakeProvidedStream(input(1), sec(10))(
+    fakeProvidedStream(input(1), sec(10), end = sec(100))(
       sec(10) -> 110,
       sec(11) -> 111,
       sec(12) -> 112,
     )
-    fakeProvidedStream(input(2), sec(11))(
+    fakeProvidedStream(input(2), sec(11), end = sec(100))(
       sec(11) -> 211,
       sec(13) -> 213,
     )
-    fakeProvidedStream(input(3), sec(11))(
+    fakeProvidedStream(input(3), sec(11), end = sec(100))(
       sec(11) -> 311,
       sec(12) -> 312,
       sec(13) -> 313,
@@ -137,11 +138,11 @@ class SimulationInputUpdateStreamTest extends TestWithMocks {
   }
 
   test("when all streams are depleted an exception is thrown when trying to advance the stream further") {
-    fakeProvidedStream(input(1), sec(10))(
+    fakeProvidedStream(input(1), sec(10), end = sec(100))(
       sec(10) -> 110,
       sec(12) -> 112,
     )
-    fakeProvidedStream(input(2), sec(10))(
+    fakeProvidedStream(input(2), sec(10), end = sec(100))(
       sec(10) -> 210,
     )
     val s = stream(start = sec(10), end = sec(100)).processInputRequest(inputRequest(input(1), input(2)))
@@ -151,19 +152,19 @@ class SimulationInputUpdateStreamTest extends TestWithMocks {
 
   test("an unknown input exception is raised when streams for some inputs cannot be supplied by the provider") {
     val ir = inputRequest(input(2), input(3), input(4))
-    fakeProvidedStream(input(2), sec(10))(sec(11) -> 211)
-    fakeNoProvidedStream(input(3), sec(10))
-    fakeNoProvidedStream(input(4), sec(10))
+    fakeProvidedStream(input(2), sec(10), end = sec(100))(sec(11) -> 211)
+    fakeNoProvidedStream(input(3), sec(10), end = sec(100))
+    fakeNoProvidedStream(input(4), sec(10), end = sec(100))
     val s = stream(start = sec(10), end = sec(100))
     val thrownException = the[UnknownInputsException] thrownBy s.processInputRequest(ir)
     thrownException shouldEqual unknownInputsException(input(3), input(4))
   }
 
   test("an exception is thrown when trying to process inputs in a depleted stream") {
-    fakeProvidedStream(input(1), sec(10))(
+    fakeProvidedStream(input(1), sec(10), end = sec(100))(
       sec(10) -> 110,
     )
-    fakeProvidedStream(input(1), sec(11))(
+    fakeProvidedStream(input(1), sec(11), end = sec(100))(
       sec(10) -> 210,
     )
     val s = stream(start = sec(10), end = sec(100)).processInputRequest(inputRequest(input(1)))
@@ -171,7 +172,7 @@ class SimulationInputUpdateStreamTest extends TestWithMocks {
   }
 
   test("a runtime exception is thrown when the first merged stream does not start at the given start") {
-    fakeProvidedStream(input(1), sec(10))(
+    fakeProvidedStream(input(1), sec(10), end = sec(100))(
       sec(11) -> 111,
     )
     a[RuntimeException] shouldBe thrownBy(
@@ -180,11 +181,11 @@ class SimulationInputUpdateStreamTest extends TestWithMocks {
   }
 
   test("a runtime exception is thrown when a stream does not start at the current start of an advanced stream") {
-    fakeProvidedStream(input(1), sec(10))(
+    fakeProvidedStream(input(1), sec(10), end = sec(100))(
       sec(10) -> 110,
       sec(11) -> 111,
     )
-    fakeProvidedStream(input(2), sec(11))(
+    fakeProvidedStream(input(2), sec(11), end = sec(100))(
       sec(12) -> 111,
     )
     val s =
@@ -197,18 +198,18 @@ class SimulationInputUpdateStreamTest extends TestWithMocks {
   }
 
   test("a runtime exception is thrown when a merged stream is empty") {
-    fakeProvidedStream(input(1), sec(10))()
+    fakeProvidedStream(input(1), sec(10), end = sec(100))()
     a[RuntimeException] shouldBe thrownBy(
       stream(start = sec(10), end = sec(100)).processInputRequest(inputRequest(input(1)))
     )
   }
 
   test("a stream with a single element is properly merged") {
-    fakeProvidedStream(input(1), sec(10))(
+    fakeProvidedStream(input(1), sec(10), end = sec(100))(
       sec(10) -> 110,
       sec(11) -> 111,
     )
-    fakeProvidedStream(input(2), sec(10))(
+    fakeProvidedStream(input(2), sec(10), end = sec(100))(
       sec(10) -> 210,
     )
     val s =
