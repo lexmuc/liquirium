@@ -6,6 +6,6 @@ import java.time.Instant
 
 trait SimulationMarketplaceFactory {
 
-    def apply(market: Market, simulationStart: Instant): SimulationMarketplace
+  def apply(market: Market, simulationStart: Instant): SimulationMarketplace
 
 }
