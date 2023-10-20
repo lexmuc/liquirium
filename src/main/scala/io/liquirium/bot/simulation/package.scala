@@ -12,40 +12,45 @@ import io.liquirium.connect.binance.{exchangeId => binanceExchangeId}
 
 package object simulation {
 
-  def singleMarketVisualizationLogger(
-    market: Market,
+  def aggregateVisualizationLogger(
+    markets: Seq[Market],
     startTime: Instant,
-    additionalCandleStartMetrics: Map[String, Eval[BigDecimal]] = Map.empty,
-    additionalCandleEndMetrics: Map[String, Eval[BigDecimal]] = Map.empty,
+    additionalCandleStartMetricsByMarket: Market => Map[String, Eval[BigDecimal]] = _ => Map.empty,
+    additionalCandleEndMetricsByMarket: Market => Map[String, Eval[BigDecimal]] = _ => Map.empty,
     basicCandleLength: Duration,
     aggregateCandleLength: Duration,
-  ): VisualizationLogger = {
-//    val startTime = bot.runConfiguration.startTime
-    // load more candles since indicators need some candle history
-    val candlesForIndicatorsEval =
-      InputEval(CandleHistoryInput(market, basicCandleLength, startTime.minusSeconds(3600 * 10)))
+  ): AggregateSimulationLogger[VisualizationLogger] = {
 
-    val lastPriceEval = candlesForIndicatorsEval.map(_.lastPrice.get)
-
-    val visualizationCandlesEval =
+    def visualizationCandlesEval(m: Market) =
       CandleAggregationFold.aggregate(
-        InputEval(CandleHistoryInput(market, basicCandleLength, startTime)),
+        InputEval(CandleHistoryInput(m, basicCandleLength, startTime)),
         aggregateCandleLength,
       )
 
-    val tradeHistoryEval = InputEval(TradeHistoryInput(market, startTime))
+    // load more candles since indicators need some candle history
+    def candlesForIndicatorsEval(m: Market) =
+      InputEval(CandleHistoryInput(m, basicCandleLength, startTime.minusSeconds(3600 * 10)))
 
-    VisualizationLogger(
-      candlesEval = visualizationCandlesEval,
-      candleStartEvals = Map(
-        "lastPrice" -> lastPriceEval,
-        "lowestSell" -> LowestSellEval(market, fallback = lastPriceEval),
-        "highestBuy" -> HighestBuyEval(market, fallback = lastPriceEval),
-      ) ++ additionalCandleStartMetrics,
-      candleEndEvals = Map(
-        "ownTradeVolume" -> LatestCandleTradeVolumeEval(visualizationCandlesEval, tradeHistoryEval),
-      ) ++ additionalCandleEndMetrics,
+    def lastPriceEval(m: Market) = candlesForIndicatorsEval(m).map(_.lastPrice.get)
+
+    def tradeHistoryEval(m: Market) = InputEval(TradeHistoryInput(m, startTime))
+
+    def defaultStartEvals(m: Market): Map[String, Eval[BigDecimal]] = Map(
+      "lastPrice" -> lastPriceEval(m),
+      "lowestSell" -> LowestSellEval(m, fallback = lastPriceEval(m)),
+      "highestBuy" -> HighestBuyEval(m, fallback = lastPriceEval(m)),
     )
+
+    def visualizationLogger(m: Market): VisualizationLogger =
+      VisualizationLogger(
+        candlesEval = visualizationCandlesEval(m),
+        candleStartEvals = defaultStartEvals(m) ++ additionalCandleStartMetricsByMarket(m),
+        candleEndEvals = Map(
+          "ownTradeVolume" -> LatestCandleTradeVolumeEval(visualizationCandlesEval(m), tradeHistoryEval(m)),
+        ) ++ additionalCandleEndMetricsByMarket(m),
+      )
+
+    AggregateSimulationLogger(markets.map (m => visualizationLogger(m)))
   }
 
   def simulationSingleInputUpdateStreamProvider(
