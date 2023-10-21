@@ -1,6 +1,7 @@
 package io.liquirium.core.helpers
 
-import io.liquirium.core.Asset
+import io.liquirium.core.{Asset, ExchangeId, LedgerRef}
+
 import java.time.{Duration, Instant}
 
 
@@ -29,5 +30,15 @@ object CoreHelpers {
   def milli(epochMilli: Long): Instant = Instant.ofEpochMilli(epochMilli)
 
   def millis(l: Long): Duration = Duration.ofMillis(l)
+
+  def exchangeId(n: Int): ExchangeId = ExchangeId(n.toString)
+
+  def exchangeId(s: String): ExchangeId = ExchangeId(s)
+
+  def ledgerRef(n: Int): LedgerRef = LedgerRef(exchangeId(n), n.toString)
+
+  def ledgerRef(s: String): LedgerRef = LedgerRef(exchangeId(s), s)
+
+  def ledgerRef(exchangeId: ExchangeId, asset: String): LedgerRef = LedgerRef(exchangeId, asset)
 
 }
