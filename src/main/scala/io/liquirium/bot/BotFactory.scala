@@ -1,18 +1,16 @@
 package io.liquirium.bot
 
-import io.liquirium.core.Market
+import io.liquirium.bot.simulation.BotWithSimulationInfo
 
 import java.time.Instant
 import scala.concurrent.Future
 
-trait SingleMarketBotFactory {
+trait BotFactory {
 
   def makeBot(
-    strategy: SingleMarketStrategy,
-    market: Market,
     startTime: Instant,
     endTimeOption: Option[Instant],
     totalValue: BigDecimal,
-  ): Future[SingleMarketStrategyBot]
+  ): Future[BotWithSimulationInfo]
 
 }

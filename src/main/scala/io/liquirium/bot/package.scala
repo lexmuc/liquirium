@@ -1,6 +1,7 @@
 package io.liquirium
 
 import io.liquirium.bot.BotInput._
+import io.liquirium.bot.simulation.{BotWithSimulationInfo, VisualizationMetric}
 import io.liquirium.core.OperationIntent.OrderIntent
 import io.liquirium.core.orderTracking._
 import io.liquirium.core.{BotId, Market, OrderConstraints}
@@ -53,17 +54,18 @@ package object bot {
   def singleMarketStrategyBotFactoryForSimulation(
     candleHistoryLoaderProvider: CandleHistoryLoaderProvider,
     orderConstraints: OrderConstraints,
+    strategy: SingleMarketStrategy,
+    market: Market,
+    metricsFactory: SingleMarketStrategyBot => Map[String, VisualizationMetric],
   )(
     implicit executionContext: ExecutionContext,
-  ): SingleMarketBotFactory = new SingleMarketBotFactory {
+  ): BotFactory = new BotFactory {
 
     def makeBot(
-      strategy: SingleMarketStrategy,
-      market: Market,
       startTime: Instant,
       endTimeOption: Option[Instant],
       totalValue: BigDecimal,
-    ): Future[SingleMarketStrategyBot] =
+    ): Future[BotWithSimulationInfo] =
       for {
         p <- getInitialPrice(market, strategy.candleLength, startTime)
       } yield {
@@ -77,7 +79,7 @@ package object bot {
             initialPrice = p,
           ),
         )
-        SingleMarketStrategyBot(
+        val coreBot = SingleMarketStrategyBot(
           strategy = strategy,
           runConfiguration = runConfiguration,
           orderIntentConveyorEval = io.liquirium.bot.getSimpleOrderIntentConveyorEval(
@@ -87,6 +89,13 @@ package object bot {
             syncInterval = Duration.ofSeconds(150),
           ),
         )
+        new BotWithSimulationInfo {
+          override def basicCandleLength: Duration = coreBot.strategy.candleLength
+
+          override def metrics: Map[String, VisualizationMetric] = metricsFactory.apply(coreBot)
+
+          override def eval: Eval[Iterable[BotOutput]] = coreBot.eval
+        }
       }
 
     private def getInitialPrice(market: Market, candleLength: Duration, startTime: Instant): Future[BigDecimal] = {
