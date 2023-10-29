@@ -40,7 +40,7 @@ package object simulation {
               end = end,
             )
           } yield history
-          val candles = Await.result(candlesFuture, 30.seconds)
+          val candles = Await.result(candlesFuture, 3000.seconds)
           Some(TimedInputUpdateStream.forCandleHistory(chi, candles).dropWhile(_._1.isBefore(start)))
 
         case thi: TradeHistoryInput =>
@@ -51,7 +51,7 @@ package object simulation {
               maybeEnd = Some(end),
             )
           } yield history
-          val trades = Await.result(tradesFuture, 30.seconds)
+          val trades = Await.result(tradesFuture, 300.seconds)
           Some(TimedInputUpdateStream.forTradeHistory(thi, trades).dropWhile(_._1.isBefore(start)))
 
         case _ => None

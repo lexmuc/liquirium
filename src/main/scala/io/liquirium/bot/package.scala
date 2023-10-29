@@ -94,6 +94,8 @@ package object bot {
 
           override def metrics: Map[String, VisualizationMetric] = metricsFactory.apply(coreBot)
 
+          override def markets: Seq[Market] = Seq(market)
+
           override def eval: Eval[Iterable[BotOutput]] = coreBot.eval
         }
       }
