@@ -68,7 +68,7 @@ class CandleSimulatorMarketplaceTest_ProcessPriceUpdate extends CandleSimulatorM
     expectInputRequest(TradeHistoryInput(defaultMarket, sec(5)))
   }
 
-  test("the order history is extended with all new order sets and the proper times") {
+  test("the order history and simulated open orders are extended with all new order sets and the proper times") {
     def t(n: Int) = TradeHelpers.trade(sec(n), n.toString)
     simulationStartTime = sec(5)
     fakeTradeHistory()
@@ -84,6 +84,7 @@ class CandleSimulatorMarketplaceTest_ProcessPriceUpdate extends CandleSimulatorM
       openOrdersSnapshot(orders(2), sec(6)),
       openOrdersSnapshot(orders(3), sec(7)),
     )
+    assertSimulatedOpenOrders(orders(3))
   }
 
   test("it returns an input request when the order history is missing") {

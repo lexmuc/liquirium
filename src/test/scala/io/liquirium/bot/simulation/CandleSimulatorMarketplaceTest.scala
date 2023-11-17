@@ -1,6 +1,6 @@
 package io.liquirium.bot.simulation
 
-import io.liquirium.bot.BotInput.{CompletedOperationRequest, CompletedOperationRequestsInSession, OrderSnapshotHistoryInput, TradeHistoryInput}
+import io.liquirium.bot.BotInput.{CompletedOperationRequest, CompletedOperationRequestsInSession, OrderSnapshotHistoryInput, SimulatedOpenOrdersInput, TradeHistoryInput}
 import io.liquirium.bot.simulation.helpers.FakeCandleSimulator
 import io.liquirium.core._
 import io.liquirium.core.helpers.CoreHelpers.{sec, secs}
@@ -29,6 +29,7 @@ class CandleSimulatorMarketplaceTest extends TestWithMocks {
 
   protected def completeTradeHistoryInput: TradeHistoryInput = TradeHistoryInput(defaultMarket, simulationStartTime)
   protected def orderHistoryInput: OrderSnapshotHistoryInput = OrderSnapshotHistoryInput(defaultMarket)
+  protected def simulatedOpenOrdersInput: SimulatedOpenOrdersInput = SimulatedOpenOrdersInput(defaultMarket)
 
   protected def makeInitialMarketplace(): CandleSimulatorMarketplace =
     CandleSimulatorMarketplace(
@@ -95,6 +96,10 @@ class CandleSimulatorMarketplaceTest extends TestWithMocks {
   def assertOrderHistory(snapshots: OpenOrdersSnapshot*): Unit = {
     currentContext.evaluate(InputEval(orderHistoryInput))._1 shouldEqual
       Value(openOrdersHistory(snapshots: _*))
+  }
+
+  def assertSimulatedOpenOrders(orders: Set[Order]): Unit = {
+    currentContext.evaluate(InputEval(simulatedOpenOrdersInput))._1 shouldEqual Value(orders)
   }
 
   def assertCompletedTradeRequests(ctr: CompletedOperationRequest*): Unit = {

@@ -22,6 +22,8 @@ object BotInput {
 
   case class TradeHistoryInput(market: Market, start: Instant) extends BotInput[TradeHistorySegment]
 
+  case class SimulatedOpenOrdersInput(market: Market) extends BotInput[Set[Order]]
+
   case class TimeInput(resolution: Duration) extends BotInput[Instant]
 
   case class KeyboardInputEvent(line: String, time: Instant)

@@ -50,6 +50,7 @@ object CandleSimulatorMarketplace {
   ) extends CandleSimulatorMarketplace {
 
     private val orderHistoryInput: OrderSnapshotHistoryInput = OrderSnapshotHistoryInput(market)
+    private val simulatedOpenOrdersInput: SimulatedOpenOrdersInput = SimulatedOpenOrdersInput(market)
 
     override def processOperationRequest(
       requestMessage: OperationRequestMessage,
@@ -113,6 +114,7 @@ object CandleSimulatorMarketplace {
       val newCompletedRequest = CompletedOperationRequest(time, requestMessage, Right(confirmation))
       val inputUpdate: InputUpdate = InputUpdate(Map(
         orderHistoryInput -> newOrderHistory,
+        simulatedOpenOrdersInput -> newOrderSet,
         CompletedOperationRequestsInSession -> completedOperationRequests.inc(newCompletedRequest),
       ))
       (inputUpdate, newState)
@@ -135,6 +137,7 @@ object CandleSimulatorMarketplace {
           val newCompletedRequest = CompletedOperationRequest(time, requestMessage, Right(confirmation))
           val inputUpdate = InputUpdate(Map(
             orderHistoryInput -> newOrderHistory,
+            simulatedOpenOrdersInput -> newOrderSet,
             CompletedOperationRequestsInSession -> completedOperationRequests.inc(newCompletedRequest),
           ))
           (inputUpdate, copy())
@@ -175,6 +178,7 @@ object CandleSimulatorMarketplace {
               InputUpdate(
                 getTradeHistoryUpdates(tradeHistory, allNewTrades)
                   .updated(orderHistoryInput, finalOrderHistory)
+                  .updated(simulatedOpenOrdersInput, finalOrderHistory.lastSnapshot.orders)
               )
             }
           Right((context.update(inputUpdate), newState))

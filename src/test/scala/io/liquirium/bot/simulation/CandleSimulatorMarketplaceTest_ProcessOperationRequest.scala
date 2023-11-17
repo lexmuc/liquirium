@@ -41,7 +41,7 @@ class CandleSimulatorMarketplaceTest_ProcessOperationRequest extends CandleSimul
     currentMarketplace.processOperationRequest(trm, currentContext) shouldEqual Left(ir)
   }
 
-  test("the update of the order set is appended to the order snapshot and time is taken from the candles") {
+  test("upon an order request the simulated orders and order history are updated and time is taken from the candles") {
     orderIds = List("A", "B").toStream
     simulationStartTime = sec(777)
     fakeCandles(c(100), c(101))
@@ -55,6 +55,7 @@ class CandleSimulatorMarketplaceTest_ProcessOperationRequest extends CandleSimul
       openOrdersSnapshot(sec(100), order(42)),
       openOrdersSnapshot(sec(102), order(42), expectedNewOrder)
     )
+    assertSimulatedOpenOrders(Set(order(42), expectedNewOrder))
   }
 
   test("it yields an input request if the order history is missing") {
@@ -91,7 +92,7 @@ class CandleSimulatorMarketplaceTest_ProcessOperationRequest extends CandleSimul
     expectInputRequestUponProcess(msg(1, orderRequest(123)))(inputRequest(CompletedOperationRequestsInSession))
   }
 
-  test("a cancel request removes the respective order if present") {
+  test("a cancel request removes the respective order from history and simulated orders if present") {
     fakeCandles(c(100), c(101))
     fakeOrderHistory(
       openOrdersSnapshot(sec(100), order(42), order(43)),
@@ -102,6 +103,7 @@ class CandleSimulatorMarketplaceTest_ProcessOperationRequest extends CandleSimul
       openOrdersSnapshot(sec(100), order(42), order(43)),
       openOrdersSnapshot(sec(102), order(43)),
     )
+    assertSimulatedOpenOrders(Set(order(43)))
   }
 
   test("upon cancel the completed requests are extended with a cancel request with the correct rest quantity") {

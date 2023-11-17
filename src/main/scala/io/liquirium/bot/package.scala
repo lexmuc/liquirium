@@ -2,7 +2,6 @@ package io.liquirium
 
 import io.liquirium.bot.BotInput._
 import io.liquirium.bot.simulation.{BotWithSimulationInfo, VisualizationMetric}
-import io.liquirium.core.OperationIntent.OrderIntent
 import io.liquirium.core.orderTracking._
 import io.liquirium.core.{BotId, Market, OrderConstraints}
 import io.liquirium.eval.IncrementalFoldHelpers.IncrementalEval
@@ -51,6 +50,26 @@ package object bot {
         nextMessageIdsEval = NextRequestIdsEval(Constant(BotId("")), InputEval(BotOutputHistory)),
       )
     }
+  }
+
+  class SimulationOrderIntentConveyorFactory() extends OrderIntentConveyorFactory {
+
+    override def apply(
+      market: Market,
+      orderConstraints: OrderConstraints,
+      startTime: Instant,
+    ): Eval[OrderIntentConveyor] = {
+      OrderIntentConveyor(
+        market = market,
+        orderConstraintsEval = Constant(orderConstraints),
+        orderIntentSyncer = Constant(SimpleOrderIntentSyncer(OrderMatcher.ExactMatcher)),
+        openOrdersEval = InputEval(SimulatedOpenOrdersInput(market)),
+        isInSyncEval = Constant(true),
+        hasOpenRequestsEval = Constant(false),
+        nextMessageIdsEval = NextRequestIdsEval(Constant(BotId("")), InputEval(BotOutputHistory)),
+      )
+    }
+
   }
 
   def singleMarketStrategyBotFactoryForSimulation(
