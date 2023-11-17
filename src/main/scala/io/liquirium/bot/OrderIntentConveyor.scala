@@ -5,6 +5,7 @@ import io.liquirium.core.Order.BasicOrderData
 import io.liquirium.core.{Market, OperationIntent, OperationRequestId, Order, OrderConstraints}
 import io.liquirium.eval.Eval
 
+trait OrderIntentConveyor extends (Seq[OrderIntent] => Iterable[BotOutput])
 
 object OrderIntentConveyor {
 
@@ -16,7 +17,7 @@ object OrderIntentConveyor {
     isInSyncEval: Eval[Boolean],
     hasOpenRequestsEval: Eval[Boolean],
     nextMessageIdsEval: Eval[Stream[OperationRequestId]],
-  ): Eval[Seq[OrderIntent] => Iterable[BotOutput]] =
+  ): Eval[OrderIntentConveyor] =
     for {
       orderSyncer <- orderIntentSyncer
       orderConstraints <- orderConstraintsEval

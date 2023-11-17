@@ -14,41 +14,43 @@ import scala.concurrent.{ExecutionContext, Future}
 
 package object bot {
 
-  def getSimpleOrderIntentConveyorEval(
-    market: Market,
-    orderConstraints: OrderConstraints,
-    start: Instant,
+  class ProductionOrderIntentConveyorFactory(
     syncInterval: Duration,
-  ): Eval[Seq[OrderIntent] => Iterable[BotOutput]] = {
+  ) extends OrderIntentConveyorFactory {
+    def apply(
+      market: Market,
+      orderConstraints: OrderConstraints,
+      start: Instant,
+    ): Eval[OrderIntentConveyor] = {
+      val orderStatesByIdEval = BasicOrderTrackingStateByIdEval(
+        trades = InputEval(TradeHistoryInput(market, start)),
+        openOrdersHistory = InputEval(OrderSnapshotHistoryInput(market)),
+        successfulOperations = SuccessfulTradeRequestEvents(market),
+      )
 
-    val orderStatesByIdEval = BasicOrderTrackingStateByIdEval(
-      trades = InputEval(TradeHistoryInput(market, start)),
-      openOrdersHistory = InputEval(OrderSnapshotHistoryInput(market)),
-      successfulOperations = SuccessfulTradeRequestEvents(market),
-    )
+      val isInSyncEval: Eval[Boolean] = IsInSyncEval(
+        statesByIdEval = orderStatesByIdEval,
+        maxSyncDurationEval = Constant(Duration.ofSeconds(60)),
+        currentTimeEval = InputEval(TimeInput(syncInterval)),
+      )
 
-    val isInSyncEval: Eval[Boolean] = IsInSyncEval(
-      statesByIdEval = orderStatesByIdEval,
-      maxSyncDurationEval = Constant(Duration.ofSeconds(60)),
-      currentTimeEval = InputEval(TimeInput(syncInterval)),
-    )
+      val hasOpenRequestsEval: Eval[Boolean] = OpenOperationRequestsEval(
+        allOperationRequestsEval = InputEval(BotOutputHistory).collectIncremental {
+          case orm: OperationRequestMessage => orm
+        },
+        completedOperationRequestsEval = InputEval(CompletedOperationRequestsInSession),
+      ).map(_.nonEmpty)
 
-    val hasOpenRequestsEval: Eval[Boolean] = OpenOperationRequestsEval(
-      allOperationRequestsEval = InputEval(BotOutputHistory).collectIncremental {
-        case orm: OperationRequestMessage => orm
-      },
-      completedOperationRequestsEval = InputEval(CompletedOperationRequestsInSession),
-    ).map(_.nonEmpty)
-
-    OrderIntentConveyor(
-      market = market,
-      orderConstraintsEval = Constant(orderConstraints),
-      orderIntentSyncer = Constant(SimpleOrderIntentSyncer(OrderMatcher.ExactMatcher)),
-      openOrdersEval = OpenOrdersBasedOnTrackingStates(orderStatesByIdEval),
-      isInSyncEval = isInSyncEval,
-      hasOpenRequestsEval = hasOpenRequestsEval,
-      nextMessageIdsEval = NextRequestIdsEval(Constant(BotId("")), InputEval(BotOutputHistory)),
-    )
+      OrderIntentConveyor(
+        market = market,
+        orderConstraintsEval = Constant(orderConstraints),
+        orderIntentSyncer = Constant(SimpleOrderIntentSyncer(OrderMatcher.ExactMatcher)),
+        openOrdersEval = OpenOrdersBasedOnTrackingStates(orderStatesByIdEval),
+        isInSyncEval = isInSyncEval,
+        hasOpenRequestsEval = hasOpenRequestsEval,
+        nextMessageIdsEval = NextRequestIdsEval(Constant(BotId("")), InputEval(BotOutputHistory)),
+      )
+    }
   }
 
   def singleMarketStrategyBotFactoryForSimulation(
@@ -79,14 +81,16 @@ package object bot {
             initialPrice = p,
           ),
         )
+        val orderIntentConveyorFactory = new ProductionOrderIntentConveyorFactory(
+          syncInterval = Duration.ofSeconds(150),
+        )
         val coreBot = SingleMarketStrategyBot(
           strategy = strategy,
           runConfiguration = runConfiguration,
-          orderIntentConveyorEval = io.liquirium.bot.getSimpleOrderIntentConveyorEval(
+          orderIntentConveyorEval = orderIntentConveyorFactory.apply(
             market = market,
             orderConstraints = orderConstraints,
             start = startTime,
-            syncInterval = Duration.ofSeconds(150),
           ),
         )
         new BotWithSimulationInfo {
