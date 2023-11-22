@@ -2,10 +2,8 @@
 *.class
 *.log
 
-#sbt
-project/project/
-project/target/
-target/
+#mill
+out/
 
 #IDE
 .bsp
