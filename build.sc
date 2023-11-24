@@ -1,9 +1,11 @@
-import mill._, scalalib._
+import mill._, scalalib._, publish._
 
-object liquirium extends SbtModule with ScalaModule {
+object liquirium extends SbtModule with ScalaModule with PublishModule {
   def scalaVersion = "2.12.12"
+
   val akkaVersion = "2.6.10"
-  def ivyDeps = Agg(
+
+  override def ivyDeps = Agg(
     ivy"org.joda:joda-convert:1.8.3",
     ivy"com.typesafe.play::play-json:2.6.3",
     ivy"org.scalaj::scalaj-http:2.4.1",
@@ -13,27 +15,29 @@ object liquirium extends SbtModule with ScalaModule {
     ivy"com.typesafe.scala-logging::scala-logging:3.9.0",
     ivy"ch.qos.logback:logback-classic:1.2.3",
     ivy"com.h2database:h2:2.2.222",
-    ivy"com.typesafe.akka::akka-actor:${akkaVersion}",
-    ivy"com.typesafe.akka::akka-actor-typed:${akkaVersion}",
-    ivy"com.typesafe.akka::akka-stream:${akkaVersion}",
-    ivy"com.typesafe.akka::akka-stream-typed:${akkaVersion}",
-    ivy"com.typesafe.akka::akka-stream-testkit:${akkaVersion}",
-    ivy"com.typesafe.akka::akka-actor-testkit-typed:${akkaVersion}",
-    ivy"com.typesafe.akka::akka-slf4j:${akkaVersion}",
+    ivy"com.typesafe.akka::akka-actor:$akkaVersion",
+    ivy"com.typesafe.akka::akka-actor-typed:$akkaVersion",
+    ivy"com.typesafe.akka::akka-stream:$akkaVersion",
+    ivy"com.typesafe.akka::akka-stream-typed:$akkaVersion",
+    ivy"com.typesafe.akka::akka-stream-testkit:$akkaVersion",
+    ivy"com.typesafe.akka::akka-actor-testkit-typed:$akkaVersion",
+    ivy"com.typesafe.akka::akka-slf4j:$akkaVersion",
     ivy"com.typesafe.akka::akka-http:10.2.2",
   )
 
-  def sources = T.sources {
-    super.sources() ++ Seq(PathRef(millSourcePath / os.up / os.up / "src" / "main" / "scala"))
-  }
+  override def publishVersion = "0.1.1"
 
-  object test extends ScalaTests with TestModule.ScalaTest {
-//    println(millSourcePath / os.up)
-    def sources = T.sources {
-      super.sources() ++ Seq(PathRef(millSourcePath / os.up / os.up / "src" / "test" /"scala"))
-    }
-//    println(Seq(PathRef(millSourcePath / os.up / os.up/ "src" / "test" / "scala")))
-    def testFrameworks = Seq("org.scalatest.tools.Framework")
-  }
-  
+  override def mainClass: T[Option[String]] = Some("io.liquirium.bot.BotRunner")
+
+  override def pomSettings = PomSettings(
+    description = "Functional framework for automated trading.",
+    organization = "io.liquirium",
+    url = "https://github.com/lexmuc/liquirium",
+    licenses = Seq(License.`Apache-2.0`),
+    versionControl = VersionControl.github(owner = "lexmuc", repo = "liquirium"),
+    developers = Seq(Developer(id = "lexmuc", name = "Alexander Steinhoff", url = "https://github.com/lexmuc")),
+  )
+
+  object test extends ScalaTests with TestModule.ScalaTest
+
 }
