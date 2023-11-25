@@ -32,7 +32,7 @@ object liquirium extends ScalaModule with PublishModule {
     developers = Seq(Developer(id = "lexmuc", name = "Alexander Steinhoff", url = "https://github.com/lexmuc")),
   )
 
-  object test extends ScalaTests with TestModule.ScalaTest {
+  object test extends ScalaTests with TestModule.ScalaTest with PublishModule {
     override def ivyDeps = Agg(
       ivy"org.scalactic::scalactic:3.0.0",
       ivy"org.scalatest::scalatest:3.0.0",
@@ -40,6 +40,21 @@ object liquirium extends ScalaModule with PublishModule {
       ivy"com.typesafe.akka::akka-stream-testkit:$akkaVersion",
       ivy"com.typesafe.akka::akka-actor-testkit-typed:$akkaVersion",
     )
+
+    // this module is published to make the test helpers available in other projects
+    override def pomSettings = PomSettings(
+      description = "Liquirium test helpers.",
+      organization = "io.liquirium",
+      url = "https://github.com/lexmuc/liquirium",
+      licenses = Seq(License.`Apache-2.0`),
+      versionControl = VersionControl.github(owner = "lexmuc", repo = "liquirium"),
+      developers = Seq(Developer(id = "lexmuc", name = "Alexander Steinhoff", url = "https://github.com/lexmuc")),
+    )
+
+    override def publishVersion = "0.1.1"
+
+    override def artifactName: T[String] = "liquirium-test"
+
   }
 
 }
