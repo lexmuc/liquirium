@@ -1,6 +1,6 @@
 import mill._, scalalib._, publish._
 
-object liquirium extends SbtModule with ScalaModule with PublishModule {
+object liquirium extends ScalaModule with PublishModule {
 
   def scalaVersion = "2.12.12"
 
@@ -41,5 +41,13 @@ object liquirium extends SbtModule with ScalaModule with PublishModule {
       ivy"com.typesafe.akka::akka-actor-testkit-typed:$akkaVersion",
     )
   }
+
+}
+
+object `liquirium-examples` extends ScalaModule {
+
+  def scalaVersion = "2.12.12"
+
+  override def moduleDeps = Seq(liquirium)
 
 }
