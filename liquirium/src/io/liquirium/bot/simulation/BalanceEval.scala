@@ -1,20 +1,21 @@
 package io.liquirium.bot.simulation
+
 import io.liquirium.bot.BotInput.TradeHistoryInput
 import io.liquirium.core.{LedgerRef, Market}
 import io.liquirium.eval.IncrementalFoldHelpers.IncrementalEval
-import io.liquirium.eval.{Eval, InputEval}
+import io.liquirium.eval.{CaseEval, Eval, InputEval}
 
 import java.time.Instant
 
 
-object BalanceEval {
+case class BalanceEval(
+  ledgerRef: LedgerRef,
+  startTime: Instant,
+  initialBalance: BigDecimal,
+  tradeMarkets: Iterable[Market],
+) extends CaseEval[BigDecimal] {
 
-  def apply(
-    ledgerRef: LedgerRef,
-    startTime: Instant,
-    initialBalance: BigDecimal,
-    tradeMarkets: Iterable[Market],
-  ): Eval[BigDecimal] = {
+  override protected def baseEval: Eval[BigDecimal] = {
     val tradeHistoryEvals = tradeMarkets.map { market =>
       InputEval(TradeHistoryInput(market, startTime))
     }

@@ -89,4 +89,13 @@ class BalanceEvalTest extends EvalTest {
     evaluate(balanceEval(usdLedger, markets, "10000.0")).get shouldEqual dec("8990")
   }
 
+  test("two balance evals can be compared for equality") {
+    val markets = Seq(btcUsd)
+    val be1a = balanceEval(btcLedger, markets, initialBalance = "1.0")
+    val be1b = balanceEval(btcLedger, markets, initialBalance = "1.0")
+    val be2 = balanceEval(btcLedger, markets, initialBalance = "2.0")
+    be1a shouldEqual be1b
+    be1a should not equal be2
+  }
+
 }
