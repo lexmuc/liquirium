@@ -1,14 +1,14 @@
 package io.liquirium.bot
 
 import io.liquirium.core.{CandleHistorySegment, TradeHistorySegment}
-import io.liquirium.eval.Eval
+import io.liquirium.eval.{CaseEval, Eval}
 
-object LatestCandleTradeVolumeEval {
+case class LatestCandleTradeVolumeEval (
+  candlesEval: Eval[CandleHistorySegment],
+  tradeHistoryEval: Eval[TradeHistorySegment],
+) extends CaseEval[BigDecimal] {
 
-  def apply(
-    candlesEval: Eval[CandleHistorySegment],
-    tradeHistoryEval: Eval[TradeHistorySegment],
-  ): Eval[BigDecimal] =
+  override protected val baseEval: Eval[BigDecimal] =
     Eval.map2(candlesEval, tradeHistoryEval) {
       (candles, tradeHistory) =>
         candles.lastOption match {
