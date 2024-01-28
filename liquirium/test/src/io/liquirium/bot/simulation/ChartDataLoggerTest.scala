@@ -1,5 +1,6 @@
 package io.liquirium.bot.simulation
 
+import io.liquirium.bot.simulation.helpers.SimulationHelpers.makeDataSeriesConfig
 import io.liquirium.core.{Candle, CandleHistorySegment}
 import io.liquirium.core.helpers.CandleHelpers.{c5, candleHistorySegment}
 import io.liquirium.core.helpers.CoreHelpers.{dec, sec, secs}
@@ -18,6 +19,7 @@ class ChartDataLoggerTest extends EvalBasedSimulationLoggerTest[ChartDataLogger]
 
   var candleStartEvals: Map[String, Eval[BigDecimal]] = Map()
   var candleEndEvals: Map[String, Eval[BigDecimal]] = Map()
+  var dataSeriesConfigsByKey: Map[String, DataSeriesConfig] = Map()
 
   val candlesEval: Eval[CandleHistorySegment] = testEval(1)
   val mA: Eval[BigDecimal] = testEval(2)
@@ -30,6 +32,7 @@ class ChartDataLoggerTest extends EvalBasedSimulationLoggerTest[ChartDataLogger]
       candlesEval = candlesEval,
       candleStartEvals = candleStartEvals,
       candleEndEvals = candleEndEvals,
+      dataSeriesConfigsByKey = dataSeriesConfigsByKey,
     )
 
   private def assertCandles(cc: Candle*) = {
@@ -142,6 +145,16 @@ class ChartDataLoggerTest extends EvalBasedSimulationLoggerTest[ChartDataLogger]
       Map("mA" -> dec(1), "mB" -> dec(2), "mC" -> dec(3), "mD" -> dec(4)),
       Map("mA" -> dec(5), "mB" -> dec(6), "mC" -> dec(7), "mD" -> dec(8)),
     )
+  }
+
+  test("the data series configs are made available via the logger") {
+    val candles0 = candleHistorySegment(start = sec(100), candleLength = secs(5))()
+    val candles1 = candles0.append(c5(sec(100), 1))
+    dataSeriesConfigsByKey = Map("someKey" -> makeDataSeriesConfig(123))
+    initLogger()
+    fakeValuesAndLog(candlesEval -> candles0)
+    fakeValuesAndLog(candlesEval -> candles1)
+    lastLogger.dataSeriesConfigsByKey shouldEqual dataSeriesConfigsByKey
   }
 
 }

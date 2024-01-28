@@ -11,6 +11,8 @@ trait ChartDataLogger extends SimulationLogger[ChartDataLogger] {
 
   def chartDataUpdates: Iterable[ChartDataUpdate]
 
+  def dataSeriesConfigsByKey: Map[String, DataSeriesConfig]
+
   protected def config: ChartConfig
 
 }
@@ -21,14 +23,15 @@ object ChartDataLogger {
     candlesEval: Eval[CandleHistorySegment],
     candleStartEvals: Map[String, Eval[BigDecimal]],
     candleEndEvals: Map[String, Eval[BigDecimal]],
+    dataSeriesConfigsByKey: Map[String, DataSeriesConfig],
   ) {
 
     private def toMapEval(mapOfEvals: Map[String, Eval[BigDecimal]]) = Eval.sequence(
       mapOfEvals.map { case (k, v) => v.map(x => (k, x)) }
     ).map(_.toMap)
 
-    val candleStartMapEval: Eval[Map[String, BigDecimal]] = toMapEval(candleStartEvals)
-    val candleEndMapEval: Eval[Map[String, BigDecimal]] = toMapEval(candleEndEvals)
+    private val candleStartMapEval: Eval[Map[String, BigDecimal]] = toMapEval(candleStartEvals)
+    private val candleEndMapEval: Eval[Map[String, BigDecimal]] = toMapEval(candleEndEvals)
 
     val candlesAndValuesEval: Eval[(CandleHistorySegment, Map[String, BigDecimal], Map[String, BigDecimal])] = for {
       candles <- candlesEval
@@ -42,12 +45,14 @@ object ChartDataLogger {
     candlesEval: Eval[CandleHistorySegment],
     candleStartEvals: Map[String, Eval[BigDecimal]],
     candleEndEvals: Map[String, Eval[BigDecimal]],
+    dataSeriesConfigsByKey: Map[String, DataSeriesConfig],
   ): ChartDataLogger =
     Impl(
       config = ChartConfig(
         candlesEval = candlesEval,
         candleStartEvals = candleStartEvals,
         candleEndEvals = candleEndEvals,
+        dataSeriesConfigsByKey = dataSeriesConfigsByKey,
       ),
       lastCandles = None,
       chartDataUpdates = Vector(),
@@ -104,6 +109,9 @@ object ChartDataLogger {
           (mappedResult, newContext)
       }
     }
+
+    override def dataSeriesConfigsByKey: Map[String, DataSeriesConfig] = config.dataSeriesConfigsByKey
+
   }
 
 }

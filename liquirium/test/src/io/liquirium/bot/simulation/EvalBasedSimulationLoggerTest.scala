@@ -19,6 +19,8 @@ abstract class EvalBasedSimulationLoggerTest [L <: SimulationLogger[L]] extends 
 
   protected var lastLoggingResult: Option[(EvalResult[L], UpdatableContext)] = None
 
+  protected def lastLogger: L = lastLoggingResult.get._1.get
+
   protected def initLogger(): Unit = {
     logger = initialLogger()
   }
