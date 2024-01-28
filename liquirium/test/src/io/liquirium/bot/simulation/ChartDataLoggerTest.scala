@@ -1,5 +1,6 @@
 package io.liquirium.bot.simulation
 
+import io.liquirium.bot.simulation.ChartDataSeriesConfig.SnapshotTime
 import io.liquirium.bot.simulation.helpers.SimulationHelpers.makeDataSeriesConfig
 import io.liquirium.core.{Candle, CandleHistorySegment}
 import io.liquirium.core.helpers.CandleHelpers.{c5, candleHistorySegment}
@@ -14,12 +15,14 @@ class ChartDataLoggerTest extends EvalBasedSimulationLoggerTest[ChartDataLogger]
 
     def candles: Iterable[Candle] = updates.map(_.candle)
 
-    def dataPoints: Iterable[Map[String, BigDecimal]] = updates.map(_.namedDataPoints)
+    def dataPoints: Iterable[Map[Int, BigDecimal]] = updates.map(_.namedDataPoints)
   }
 
-  var candleStartEvals: Map[String, Eval[BigDecimal]] = Map()
-  var candleEndEvals: Map[String, Eval[BigDecimal]] = Map()
-  var dataSeriesConfigsByKey: Map[String, DataSeriesConfig] = Map()
+  var dataSeriesConfigsWithEvals: Seq[(ChartDataSeriesConfig, Eval[BigDecimal])] = Seq()
+
+  private def addSeriesConfigWithEval(config: ChartDataSeriesConfig, eval: Eval[BigDecimal]): Unit = {
+    dataSeriesConfigsWithEvals = dataSeriesConfigsWithEvals :+ (config, eval)
+  }
 
   val candlesEval: Eval[CandleHistorySegment] = testEval(1)
   val mA: Eval[BigDecimal] = testEval(2)
@@ -30,16 +33,14 @@ class ChartDataLoggerTest extends EvalBasedSimulationLoggerTest[ChartDataLogger]
   override def initialLogger(): ChartDataLogger =
     ChartDataLogger(
       candlesEval = candlesEval,
-      candleStartEvals = candleStartEvals,
-      candleEndEvals = candleEndEvals,
-      dataSeriesConfigsByKey = dataSeriesConfigsByKey,
+      dataSeriesConfigsWithEvals = dataSeriesConfigsWithEvals,
     )
 
   private def assertCandles(cc: Candle*) = {
     lastLoggingResult.get._1.get.candles shouldEqual cc
   }
 
-  private def assertDataPoints(dp: Map[String, BigDecimal]*) = {
+  private def assertDataPoints(dp: Map[Int, BigDecimal]*) = {
     lastLoggingResult.get._1.get.dataPoints shouldEqual dp
   }
 
@@ -98,7 +99,7 @@ class ChartDataLoggerTest extends EvalBasedSimulationLoggerTest[ChartDataLogger]
     val candles0 = candleHistorySegment(start = sec(100), candleLength = secs(5))()
     val candles1 = candles0.append(c5(sec(100), 1))
     val candles2 = candles1.append(c5(sec(105), 1))
-    candleStartEvals = Map("mA" -> mA)
+    addSeriesConfigWithEval(makeDataSeriesConfig(123).copy(snapshotTime = SnapshotTime.CandleStart), mA)
     initLogger()
     fakeValuesAndLog(candlesEval -> candles0, mA -> dec(1))
     fakeValuesAndLog(candlesEval -> candles0, mA -> dec(2))
@@ -107,8 +108,8 @@ class ChartDataLoggerTest extends EvalBasedSimulationLoggerTest[ChartDataLogger]
     fakeValuesAndLog(candlesEval -> candles2, mA -> dec(5))
 
     assertDataPoints(
-      Map("mA" -> dec(1)),
-      Map("mA" -> dec(3)),
+      Map(0 -> dec(1)),
+      Map(0 -> dec(3)),
     )
   }
 
@@ -116,7 +117,7 @@ class ChartDataLoggerTest extends EvalBasedSimulationLoggerTest[ChartDataLogger]
     val candles0 = candleHistorySegment(start = sec(100), candleLength = secs(5))()
     val candles1 = candles0.append(c5(sec(100), 1))
     val candles2 = candles1.append(c5(sec(105), 1))
-    candleEndEvals = Map("mB" -> mB)
+    addSeriesConfigWithEval(makeDataSeriesConfig(123).copy(snapshotTime = SnapshotTime.CandleEnd), mB)
     initLogger()
     fakeValuesAndLog(candlesEval -> candles0, mB -> dec(1))
     fakeValuesAndLog(candlesEval -> candles0, mB -> dec(2))
@@ -125,8 +126,8 @@ class ChartDataLoggerTest extends EvalBasedSimulationLoggerTest[ChartDataLogger]
     fakeValuesAndLog(candlesEval -> candles2, mB -> dec(5))
 
     assertDataPoints(
-      Map("mB" -> dec(3)),
-      Map("mB" -> dec(5)),
+      Map(0 -> dec(3)),
+      Map(0 -> dec(5)),
     )
   }
 
@@ -134,27 +135,34 @@ class ChartDataLoggerTest extends EvalBasedSimulationLoggerTest[ChartDataLogger]
     val candles0 = candleHistorySegment(start = sec(100), candleLength = secs(5))()
     val candles1 = candles0.append(c5(sec(100), 1))
     val candles2 = candles1.append(c5(sec(105), 1))
-    candleStartEvals = Map("mA" -> mA, "mB" -> mB)
-    candleEndEvals = Map("mC" -> mC, "mD" -> mD)
+
+    addSeriesConfigWithEval(makeDataSeriesConfig(0).copy(snapshotTime = SnapshotTime.CandleStart), mA)
+    addSeriesConfigWithEval(makeDataSeriesConfig(1).copy(snapshotTime = SnapshotTime.CandleStart), mB)
+    addSeriesConfigWithEval(makeDataSeriesConfig(2).copy(snapshotTime = SnapshotTime.CandleEnd), mC)
+    addSeriesConfigWithEval(makeDataSeriesConfig(3).copy(snapshotTime = SnapshotTime.CandleEnd), mD)
+
     initLogger()
     fakeValuesAndLog(candlesEval -> candles0, mA -> dec(1), mB -> dec(2), mC -> dec(0), mD -> dec(0))
     fakeValuesAndLog(candlesEval -> candles1, mA -> dec(5), mB -> dec(6), mC -> dec(3), mD -> dec(4))
     fakeValuesAndLog(candlesEval -> candles2, mA -> dec(0), mB -> dec(0), mC -> dec(7), mD -> dec(8))
 
     assertDataPoints(
-      Map("mA" -> dec(1), "mB" -> dec(2), "mC" -> dec(3), "mD" -> dec(4)),
-      Map("mA" -> dec(5), "mB" -> dec(6), "mC" -> dec(7), "mD" -> dec(8)),
+      Map(0 -> dec(1), 1 -> dec(2), 2 -> dec(3), 3 -> dec(4)),
+      Map(0 -> dec(5), 1 -> dec(6), 2 -> dec(7), 3 -> dec(8)),
     )
   }
 
   test("the data series configs are made available via the logger") {
     val candles0 = candleHistorySegment(start = sec(100), candleLength = secs(5))()
     val candles1 = candles0.append(c5(sec(100), 1))
-    dataSeriesConfigsByKey = Map("someKey" -> makeDataSeriesConfig(123))
+    val config0 = makeDataSeriesConfig(0)
+    val config1 = makeDataSeriesConfig(1)
+    addSeriesConfigWithEval(config0, mA)
+    addSeriesConfigWithEval(config1, mB)
     initLogger()
-    fakeValuesAndLog(candlesEval -> candles0)
-    fakeValuesAndLog(candlesEval -> candles1)
-    lastLogger.dataSeriesConfigsByKey shouldEqual dataSeriesConfigsByKey
+    fakeValuesAndLog(candlesEval -> candles0, mA -> dec(1), mB -> dec(1))
+    fakeValuesAndLog(candlesEval -> candles1, mA -> dec(1), mB -> dec(1))
+    lastLogger.dataSeriesConfigs shouldEqual Seq(config0, config1)
   }
 
 }

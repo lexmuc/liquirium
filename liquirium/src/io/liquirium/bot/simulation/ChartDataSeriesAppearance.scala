@@ -1,13 +1,13 @@
 package io.liquirium.bot.simulation
 
-sealed trait DataSeriesAppearance
+sealed trait ChartDataSeriesAppearance
 
 case class HistogramAppearance(
   color: String,
-) extends DataSeriesAppearance
+) extends ChartDataSeriesAppearance
 
 case class LineAppearance(
   lineWidth: Int,
   color: String,
   overlay: Boolean,
-) extends DataSeriesAppearance
+) extends ChartDataSeriesAppearance

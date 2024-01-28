@@ -1,6 +1,7 @@
 package io.liquirium.bot.simulation
 
 import io.liquirium.bot.simulation.ChartDataLogger.ChartConfig
+import io.liquirium.bot.simulation.ChartDataSeriesConfig.SnapshotTime
 import io.liquirium.core.{Candle, CandleHistorySegment}
 import io.liquirium.eval.{Eval, EvalResult, UpdatableContext}
 
@@ -11,7 +12,7 @@ trait ChartDataLogger extends SimulationLogger[ChartDataLogger] {
 
   def chartDataUpdates: Iterable[ChartDataUpdate]
 
-  def dataSeriesConfigsByKey: Map[String, DataSeriesConfig]
+  def dataSeriesConfigs: Seq[ChartDataSeriesConfig]
 
   protected def config: ChartConfig
 
@@ -21,19 +22,29 @@ object ChartDataLogger {
 
   protected case class ChartConfig(
     candlesEval: Eval[CandleHistorySegment],
-    candleStartEvals: Map[String, Eval[BigDecimal]],
-    candleEndEvals: Map[String, Eval[BigDecimal]],
-    dataSeriesConfigsByKey: Map[String, DataSeriesConfig],
+    dataSeriesConfigsWithEvals: Seq[(ChartDataSeriesConfig, Eval[BigDecimal])],
   ) {
 
-    private def toMapEval(mapOfEvals: Map[String, Eval[BigDecimal]]) = Eval.sequence(
+    private def toMapEval(mapOfEvals: Map[Int, Eval[BigDecimal]]) = Eval.sequence(
       mapOfEvals.map { case (k, v) => v.map(x => (k, x)) }
     ).map(_.toMap)
 
-    private val candleStartMapEval: Eval[Map[String, BigDecimal]] = toMapEval(candleStartEvals)
-    private val candleEndMapEval: Eval[Map[String, BigDecimal]] = toMapEval(candleEndEvals)
+    private val candleStartEvals: Map[Int, Eval[BigDecimal]] = dataSeriesConfigsWithEvals.zipWithIndex
+      .filter(_._1._1.snapshotTime == SnapshotTime.CandleStart).map {
+      case ((_, eval), index) =>
+          index -> eval
+    }.toMap
 
-    val candlesAndValuesEval: Eval[(CandleHistorySegment, Map[String, BigDecimal], Map[String, BigDecimal])] = for {
+    private val candleEndEvals: Map[Int, Eval[BigDecimal]] = dataSeriesConfigsWithEvals.zipWithIndex
+      .filter(_._1._1.snapshotTime == SnapshotTime.CandleEnd).map {
+        case ((_, eval), index) =>
+          index -> eval
+      }.toMap
+
+    private val candleStartMapEval: Eval[Map[Int, BigDecimal]] = toMapEval(candleStartEvals)
+    private val candleEndMapEval: Eval[Map[Int, BigDecimal]] = toMapEval(candleEndEvals)
+
+    val candlesAndValuesEval: Eval[(CandleHistorySegment, Map[Int, BigDecimal], Map[Int, BigDecimal])] = for {
       candles <- candlesEval
       startValues <- candleStartMapEval
       endValues <- candleEndMapEval
@@ -43,33 +54,29 @@ object ChartDataLogger {
 
   def apply(
     candlesEval: Eval[CandleHistorySegment],
-    candleStartEvals: Map[String, Eval[BigDecimal]],
-    candleEndEvals: Map[String, Eval[BigDecimal]],
-    dataSeriesConfigsByKey: Map[String, DataSeriesConfig],
+    dataSeriesConfigsWithEvals: Seq[(ChartDataSeriesConfig, Eval[BigDecimal])],
   ): ChartDataLogger =
     Impl(
       config = ChartConfig(
         candlesEval = candlesEval,
-        candleStartEvals = candleStartEvals,
-        candleEndEvals = candleEndEvals,
-        dataSeriesConfigsByKey = dataSeriesConfigsByKey,
+        dataSeriesConfigsWithEvals = dataSeriesConfigsWithEvals,
       ),
       lastCandles = None,
       chartDataUpdates = Vector(),
-      candleStartValues = Map[String, BigDecimal](),
+      candleStartValues = Map[Int, BigDecimal](),
     )
 
   private case class Impl(
     config: ChartConfig,
     lastCandles: Option[CandleHistorySegment],
     chartDataUpdates: Vector[ChartDataUpdate],
-    candleStartValues: Map[String, BigDecimal],
+    candleStartValues: Map[Int, BigDecimal],
   ) extends ChartDataLogger {
 
     private def logCandle(
       candle: Candle,
-      startValues: Map[String, BigDecimal],
-      endValues: Map[String, BigDecimal],
+      startValues: Map[Int, BigDecimal],
+      endValues: Map[Int, BigDecimal],
     ) = copy(
       candleStartValues = startValues,
       chartDataUpdates = chartDataUpdates :+ ChartDataUpdate(candle, candleStartValues ++ endValues)
@@ -80,7 +87,6 @@ object ChartDataLogger {
         case (evalResult, newContext) =>
           val mappedResult = evalResult.map {
             case (candles, startValues, endValues) =>
-
               if (lastCandles.isDefined) {
                 if (candles != lastCandles.get) {
                   val newCandles = candles.incrementsAfter(lastCandles.get)
@@ -92,7 +98,6 @@ object ChartDataLogger {
                   logCandle(newCandles.head, startValues, endValues).copy(lastCandles = Some(candles))
                 } else this
               }
-
               else {
                 if (candles.nonEmpty) {
                   throw new RuntimeException(
@@ -104,13 +109,12 @@ object ChartDataLogger {
                   candleStartValues = startValues,
                 )
               }
-
           }
           (mappedResult, newContext)
       }
     }
 
-    override def dataSeriesConfigsByKey: Map[String, DataSeriesConfig] = config.dataSeriesConfigsByKey
+    override def dataSeriesConfigs: Seq[ChartDataSeriesConfig] = config.dataSeriesConfigsWithEvals.map(_._1)
 
   }
 

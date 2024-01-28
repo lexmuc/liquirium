@@ -9,7 +9,7 @@ trait BotWithSimulationInfo extends EvalBot {
 
   def basicCandleLength: Duration
 
-  def metrics: Map[String, ChartMetric]
+  def chartDataSeriesConfigs: Seq[ChartDataSeriesConfig]
 
   def markets: Seq[Market]
 

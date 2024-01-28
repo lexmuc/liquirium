@@ -1,7 +1,7 @@
 package io.liquirium
 
 import io.liquirium.bot.BotInput._
-import io.liquirium.bot.simulation.{BotWithSimulationInfo, ChartMetric}
+import io.liquirium.bot.simulation.{BotWithSimulationInfo, ChartDataSeriesConfig, ChartMetric}
 import io.liquirium.core.orderTracking._
 import io.liquirium.core.{BotId, Market, OrderConstraints}
 import io.liquirium.eval.IncrementalFoldHelpers.IncrementalEval
@@ -77,7 +77,7 @@ package object bot {
     orderConstraints: OrderConstraints,
     strategy: SingleMarketStrategy,
     market: Market,
-    metricsFactory: SingleMarketStrategyBot => Map[String, ChartMetric],
+    metricsFactory: SingleMarketStrategyBot => Seq[ChartDataSeriesConfig],
   )(
     implicit executionContext: ExecutionContext,
   ): BotFactory = new BotFactory {
@@ -115,11 +115,11 @@ package object bot {
         new BotWithSimulationInfo {
           override def basicCandleLength: Duration = coreBot.strategy.candleLength
 
-          override def metrics: Map[String, ChartMetric] = metricsFactory.apply(coreBot)
-
           override def markets: Seq[Market] = Seq(market)
 
           override def eval: Eval[Iterable[BotOutput]] = coreBot.eval
+
+          override def chartDataSeriesConfigs: Seq[ChartDataSeriesConfig] = metricsFactory.apply(coreBot)
         }
       }
 

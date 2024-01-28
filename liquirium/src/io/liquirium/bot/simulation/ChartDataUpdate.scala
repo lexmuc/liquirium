@@ -4,5 +4,5 @@ import io.liquirium.core.Candle
 
 case class ChartDataUpdate(
   candle: Candle,
-  namedDataPoints: Map[String, BigDecimal]
+  namedDataPoints: Map[Int, BigDecimal]
 )
