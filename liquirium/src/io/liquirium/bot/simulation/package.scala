@@ -12,11 +12,11 @@ import io.liquirium.connect.binance.{exchangeId => binanceExchangeId}
 
 package object simulation {
 
-  def aggregateVisualizationLogger(
+  def aggregateChartDataLogger(
     markets: Seq[Market],
     startTime: Instant,
-    loggerFactory: VisualizationLoggerFactory,
-  ): AggregateSimulationLogger[VisualizationLogger] = {
+    loggerFactory: ChartDataLoggerFactory,
+  ): AggregateSimulationLogger[ChartDataLogger] = {
     AggregateSimulationLogger(markets.map (m => loggerFactory.getLogger(m, startTime)))
   }
 

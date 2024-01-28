@@ -7,7 +7,7 @@ import io.liquirium.eval.{Eval, InputEval}
 
 import java.time.Instant
 
-trait VisualizationMetric {
+trait ChartMetric {
 
   def getEval(
     market: Market,
@@ -18,11 +18,11 @@ trait VisualizationMetric {
 }
 
 
-object VisualizationMetric {
+object ChartMetric {
 
   //noinspection ConvertExpressionToSAM
-  def marketIndependentMetric(eval: Eval[BigDecimal]): VisualizationMetric =
-    new VisualizationMetric {
+  def marketIndependentMetric(eval: Eval[BigDecimal]): ChartMetric =
+    new ChartMetric {
       override def getEval(
         market: Market,
         startTime: Instant,
@@ -34,8 +34,8 @@ object VisualizationMetric {
   def baseBalanceMetric(
     tradeMarkets: Iterable[Market],
     initialBalances: Map[LedgerRef, BigDecimal],
-  ): VisualizationMetric =
-    new VisualizationMetric {
+  ): ChartMetric =
+    new ChartMetric {
       override def getEval(
         market: Market,
         startTime: Instant,
@@ -53,8 +53,8 @@ object VisualizationMetric {
   def quoteBalanceMetric(
     tradeMarkets: Iterable[Market],
     initialBalances: Map[LedgerRef, BigDecimal],
-  ): VisualizationMetric =
-    new VisualizationMetric {
+  ): ChartMetric =
+    new ChartMetric {
       override def getEval(
         market: Market,
         startTime: Instant,
@@ -70,7 +70,7 @@ object VisualizationMetric {
 
   //noinspection ConvertExpressionToSAM
   def latestCandleTradeVolumeMetric(
-  ): VisualizationMetric = new VisualizationMetric {
+  ): ChartMetric = new ChartMetric {
     override def getEval(
       market: Market,
       startTime: Instant,

@@ -9,11 +9,11 @@ import io.liquirium.core.helpers.MarketHelpers.market
 import io.liquirium.eval.{Eval, InputEval}
 import io.liquirium.eval.helpers.EvalHelpers.testEval
 
-class VisualizationMetricTest extends BasicTest {
+class ChartMetricTest extends BasicTest {
 
   test("a market independent metric can be created from an eval") {
     val eval = Eval.unit(dec(123))
-    val m = VisualizationMetric.marketIndependentMetric(eval)
+    val m = ChartMetric.marketIndependentMetric(eval)
     m.getEval(
       market = market(123),
       startTime = sec(123),
@@ -25,7 +25,7 @@ class VisualizationMetricTest extends BasicTest {
     val metricMarket = market(exchangeId(1), "base", "quote")
     val otherMarket = market(exchangeId(1), "quote", "other")
     val initialBalances = Map(metricMarket.baseLedger -> dec(1001))
-    VisualizationMetric.baseBalanceMetric(
+    ChartMetric.baseBalanceMetric(
       tradeMarkets = Seq(metricMarket, otherMarket),
       initialBalances = initialBalances,
     ).getEval(
@@ -44,7 +44,7 @@ class VisualizationMetricTest extends BasicTest {
     val metricMarket = market(exchangeId(1), "base", "quote")
     val otherMarket = market(exchangeId(1), "base", "other")
     val initialBalances = Map(metricMarket.quoteLedger -> dec(1002))
-    VisualizationMetric.quoteBalanceMetric(
+    ChartMetric.quoteBalanceMetric(
       tradeMarkets = Seq(metricMarket, otherMarket),
       initialBalances = initialBalances,
     ).getEval(
@@ -61,7 +61,7 @@ class VisualizationMetricTest extends BasicTest {
 
   test("a latest candle trade volume metric can be created from a market") {
     val metricMarket = market(123)
-    VisualizationMetric.latestCandleTradeVolumeMetric().getEval(
+    ChartMetric.latestCandleTradeVolumeMetric().getEval(
       market = metricMarket,
       startTime = sec(123),
       chartCandlesEval = testEval[CandleHistorySegment](123),

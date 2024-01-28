@@ -1,23 +1,23 @@
 package io.liquirium.bot.simulation
 
-import io.liquirium.bot.simulation.VisualizationLogger.VisualizationConfig
+import io.liquirium.bot.simulation.ChartDataLogger.ChartConfig
 import io.liquirium.core.{Candle, CandleHistorySegment}
 import io.liquirium.eval.{Eval, EvalResult, UpdatableContext}
 
 
-trait VisualizationLogger extends SimulationLogger[VisualizationLogger] {
+trait ChartDataLogger extends SimulationLogger[ChartDataLogger] {
 
-  override def log(context: UpdatableContext): (EvalResult[VisualizationLogger], UpdatableContext)
+  override def log(context: UpdatableContext): (EvalResult[ChartDataLogger], UpdatableContext)
 
-  def visualizationUpdates: Iterable[VisualizationUpdate]
+  def chartDataUpdates: Iterable[ChartDataUpdate]
 
-  protected def config: VisualizationConfig
+  protected def config: ChartConfig
 
 }
 
-object VisualizationLogger {
+object ChartDataLogger {
 
-  protected case class VisualizationConfig(
+  protected case class ChartConfig(
     candlesEval: Eval[CandleHistorySegment],
     candleStartEvals: Map[String, Eval[BigDecimal]],
     candleEndEvals: Map[String, Eval[BigDecimal]],
@@ -42,24 +42,24 @@ object VisualizationLogger {
     candlesEval: Eval[CandleHistorySegment],
     candleStartEvals: Map[String, Eval[BigDecimal]],
     candleEndEvals: Map[String, Eval[BigDecimal]],
-  ): VisualizationLogger =
+  ): ChartDataLogger =
     Impl(
-      config = VisualizationConfig(
+      config = ChartConfig(
         candlesEval = candlesEval,
         candleStartEvals = candleStartEvals,
         candleEndEvals = candleEndEvals,
       ),
       lastCandles = None,
-      visualizationUpdates = Vector(),
+      chartDataUpdates = Vector(),
       candleStartValues = Map[String, BigDecimal](),
     )
 
   private case class Impl(
-    config: VisualizationConfig,
+    config: ChartConfig,
     lastCandles: Option[CandleHistorySegment],
-    visualizationUpdates: Vector[VisualizationUpdate],
+    chartDataUpdates: Vector[ChartDataUpdate],
     candleStartValues: Map[String, BigDecimal],
-  ) extends VisualizationLogger {
+  ) extends ChartDataLogger {
 
     private def logCandle(
       candle: Candle,
@@ -67,10 +67,10 @@ object VisualizationLogger {
       endValues: Map[String, BigDecimal],
     ) = copy(
       candleStartValues = startValues,
-      visualizationUpdates = visualizationUpdates :+ VisualizationUpdate(candle, candleStartValues ++ endValues)
+      chartDataUpdates = chartDataUpdates :+ ChartDataUpdate(candle, candleStartValues ++ endValues)
     )
 
-    override def log(context: UpdatableContext): (EvalResult[VisualizationLogger], UpdatableContext) = {
+    override def log(context: UpdatableContext): (EvalResult[ChartDataLogger], UpdatableContext) = {
       context.evaluate(config.candlesAndValuesEval) match {
         case (evalResult, newContext) =>
           val mappedResult = evalResult.map {
@@ -81,7 +81,7 @@ object VisualizationLogger {
                   val newCandles = candles.incrementsAfter(lastCandles.get)
                   if (newCandles.size != 1) {
                     throw new RuntimeException(
-                      "VisualizationLogger expected exactly 1 new candle but was " + newCandles.size
+                      "ChartDataLogger expected exactly 1 new candle but was " + newCandles.size
                     )
                   }
                   logCandle(newCandles.head, startValues, endValues).copy(lastCandles = Some(candles))
@@ -91,7 +91,7 @@ object VisualizationLogger {
               else {
                 if (candles.nonEmpty) {
                   throw new RuntimeException(
-                    s"VisualizationLogger was called for the first time but there are already ${candles.size} candle(s)"
+                    s"ChartDataLogger was called for the first time but there are already ${candles.size} candle(s)"
                   )
                 }
                 copy(

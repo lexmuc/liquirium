@@ -6,10 +6,10 @@ import io.liquirium.core.helpers.CoreHelpers.{dec, sec, secs}
 import io.liquirium.eval.Eval
 import io.liquirium.eval.helpers.EvalHelpers.testEval
 
-class VisualizationLoggerTest extends EvalBasedSimulationLoggerTest[VisualizationLogger] {
+class ChartDataLoggerTest extends EvalBasedSimulationLoggerTest[ChartDataLogger] {
 
-  implicit class ResultAccessors(vl: VisualizationLogger) {
-    private def updates = vl.visualizationUpdates
+  implicit class ResultAccessors(vl: ChartDataLogger) {
+    private def updates = vl.chartDataUpdates
 
     def candles: Iterable[Candle] = updates.map(_.candle)
 
@@ -25,8 +25,8 @@ class VisualizationLoggerTest extends EvalBasedSimulationLoggerTest[Visualizatio
   val mC: Eval[BigDecimal] = testEval(4)
   val mD: Eval[BigDecimal] = testEval(5)
 
-  override def initialLogger(): VisualizationLogger =
-    VisualizationLogger(
+  override def initialLogger(): ChartDataLogger =
+    ChartDataLogger(
       candlesEval = candlesEval,
       candleStartEvals = candleStartEvals,
       candleEndEvals = candleEndEvals,

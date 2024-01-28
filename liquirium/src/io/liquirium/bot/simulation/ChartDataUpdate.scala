@@ -2,7 +2,7 @@ package io.liquirium.bot.simulation
 
 import io.liquirium.core.Candle
 
-case class VisualizationUpdate(
+case class ChartDataUpdate(
   candle: Candle,
   namedDataPoints: Map[String, BigDecimal]
 )
