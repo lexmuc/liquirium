@@ -1,7 +1,7 @@
 package io.liquirium.bot
 
 import io.liquirium.bot.BotInput.CandleHistoryInput
-import io.liquirium.bot.simulation.ChartDataSeriesConfig.SnapshotTime
+import io.liquirium.bot.simulation.ChartDataSeriesConfig.{SnapshotTime, simpleLineSeriesConfig}
 import io.liquirium.bot.simulation.{ChartDataSeriesConfig, ChartMetric, HistogramAppearance, LineAppearance}
 import io.liquirium.bot.simulation.ChartMetric.marketIndependentMetric
 import io.liquirium.core.{CandleHistorySegment, LedgerRef, Market}
@@ -54,22 +54,6 @@ object SingleMarketStrategyBotUtils {
 
     val markets = Seq(coreBot.runConfiguration.market)
 
-    def simpleLineSeriesConfig(
-      caption: String,
-      color: String,
-      metric: ChartMetric,
-    ): ChartDataSeriesConfig = ChartDataSeriesConfig(
-      precision = 8,
-      caption = caption,
-      appearance = LineAppearance(
-        lineWidth = 1,
-        color = color,
-        overlay = true,
-      ),
-      snapshotTime = SnapshotTime.CandleEnd,
-      metric = metric,
-    )
-
     val lowestSellConfig = ChartDataSeriesConfig(
       precision = 8,
       caption = "Lowest Sell",
@@ -101,16 +85,19 @@ object SingleMarketStrategyBotUtils {
     )
 
     Seq(
-      simpleLineSeriesConfig("Total value", "black", marketIndependentMetric(totalValueEval)),
-      simpleLineSeriesConfig("Benchmark", "orange", marketIndependentMetric(benchmarkEval)),
-      simpleLineSeriesConfig("Benchmark ratio", "brown", marketIndependentMetric(
-        Eval.map2(totalValueEval, benchmarkEval)(_ / _))
+      simpleLineSeriesConfig("Total value", marketIndependentMetric(totalValueEval)),
+      simpleLineSeriesConfig("Benchmark", marketIndependentMetric(benchmarkEval), color = "orange"),
+      simpleLineSeriesConfig(
+        "Benchmark ratio",
+        marketIndependentMetric(Eval.map2(totalValueEval, benchmarkEval)(_ / _)),
+        color = "brown",
       ),
-      simpleLineSeriesConfig("Base balance", "blue", ChartMetric.baseBalanceMetric(
+      simpleLineSeriesConfig(
+        "Base balance", ChartMetric.baseBalanceMetric(
         tradeMarkets = markets,
         initialBalances = initialBalances,
-      )),
-      simpleLineSeriesConfig("Quote balance", "black", ChartMetric.quoteBalanceMetric(
+      ), color = "blue"),
+      simpleLineSeriesConfig("Quote balance", ChartMetric.quoteBalanceMetric(
         tradeMarkets = markets,
         initialBalances = initialBalances,
       )),
