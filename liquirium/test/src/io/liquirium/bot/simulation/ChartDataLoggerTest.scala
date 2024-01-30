@@ -1,7 +1,7 @@
 package io.liquirium.bot.simulation
 
 import io.liquirium.bot.simulation.ChartDataSeriesConfig.SnapshotTime
-import io.liquirium.bot.simulation.helpers.SimulationHelpers.makeDataSeriesConfig
+import io.liquirium.bot.simulation.helpers.SimulationHelpers.makeChartDataSeriesConfig
 import io.liquirium.core.{Candle, CandleHistorySegment}
 import io.liquirium.core.helpers.CandleHelpers.{c5, candleHistorySegment}
 import io.liquirium.core.helpers.CoreHelpers.{dec, sec, secs}
@@ -99,7 +99,7 @@ class ChartDataLoggerTest extends EvalBasedSimulationLoggerTest[ChartDataLogger]
     val candles0 = candleHistorySegment(start = sec(100), candleLength = secs(5))()
     val candles1 = candles0.append(c5(sec(100), 1))
     val candles2 = candles1.append(c5(sec(105), 1))
-    addSeriesConfigWithEval(makeDataSeriesConfig(123).copy(snapshotTime = SnapshotTime.CandleStart), mA)
+    addSeriesConfigWithEval(makeChartDataSeriesConfig(123).copy(snapshotTime = SnapshotTime.CandleStart), mA)
     initLogger()
     fakeValuesAndLog(candlesEval -> candles0, mA -> dec(1))
     fakeValuesAndLog(candlesEval -> candles0, mA -> dec(2))
@@ -117,7 +117,7 @@ class ChartDataLoggerTest extends EvalBasedSimulationLoggerTest[ChartDataLogger]
     val candles0 = candleHistorySegment(start = sec(100), candleLength = secs(5))()
     val candles1 = candles0.append(c5(sec(100), 1))
     val candles2 = candles1.append(c5(sec(105), 1))
-    addSeriesConfigWithEval(makeDataSeriesConfig(123).copy(snapshotTime = SnapshotTime.CandleEnd), mB)
+    addSeriesConfigWithEval(makeChartDataSeriesConfig(123).copy(snapshotTime = SnapshotTime.CandleEnd), mB)
     initLogger()
     fakeValuesAndLog(candlesEval -> candles0, mB -> dec(1))
     fakeValuesAndLog(candlesEval -> candles0, mB -> dec(2))
@@ -136,10 +136,10 @@ class ChartDataLoggerTest extends EvalBasedSimulationLoggerTest[ChartDataLogger]
     val candles1 = candles0.append(c5(sec(100), 1))
     val candles2 = candles1.append(c5(sec(105), 1))
 
-    addSeriesConfigWithEval(makeDataSeriesConfig(0).copy(snapshotTime = SnapshotTime.CandleStart), mA)
-    addSeriesConfigWithEval(makeDataSeriesConfig(1).copy(snapshotTime = SnapshotTime.CandleStart), mB)
-    addSeriesConfigWithEval(makeDataSeriesConfig(2).copy(snapshotTime = SnapshotTime.CandleEnd), mC)
-    addSeriesConfigWithEval(makeDataSeriesConfig(3).copy(snapshotTime = SnapshotTime.CandleEnd), mD)
+    addSeriesConfigWithEval(makeChartDataSeriesConfig(0).copy(snapshotTime = SnapshotTime.CandleStart), mA)
+    addSeriesConfigWithEval(makeChartDataSeriesConfig(1).copy(snapshotTime = SnapshotTime.CandleStart), mB)
+    addSeriesConfigWithEval(makeChartDataSeriesConfig(2).copy(snapshotTime = SnapshotTime.CandleEnd), mC)
+    addSeriesConfigWithEval(makeChartDataSeriesConfig(3).copy(snapshotTime = SnapshotTime.CandleEnd), mD)
 
     initLogger()
     fakeValuesAndLog(candlesEval -> candles0, mA -> dec(1), mB -> dec(2), mC -> dec(0), mD -> dec(0))
@@ -155,8 +155,8 @@ class ChartDataLoggerTest extends EvalBasedSimulationLoggerTest[ChartDataLogger]
   test("the data series configs are made available via the logger") {
     val candles0 = candleHistorySegment(start = sec(100), candleLength = secs(5))()
     val candles1 = candles0.append(c5(sec(100), 1))
-    val config0 = makeDataSeriesConfig(0)
-    val config1 = makeDataSeriesConfig(1)
+    val config0 = makeChartDataSeriesConfig(0)
+    val config1 = makeChartDataSeriesConfig(1)
     addSeriesConfigWithEval(config0, mA)
     addSeriesConfigWithEval(config1, mB)
     initLogger()
