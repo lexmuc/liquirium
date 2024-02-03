@@ -34,4 +34,28 @@ class ChartDataSeriesConfigTest extends TestWithMocks {
     )
   }
 
+  test("there is a default histogram series for onw trade volume (in the respective market)") {
+    val seriesConfig = ChartDataSeriesConfig.ownTradeVolumeInMarketSeriesConfig()
+    seriesConfig shouldEqual ChartDataSeriesConfig(
+      precision = 8,
+      caption = "Own trade volume",
+      appearance = HistogramAppearance(
+        color = "rgba(76, 175, 80, 0.5)",
+      ),
+      snapshotTime = ChartDataSeriesConfig.SnapshotTime.CandleEnd,
+      metric = ChartMetric.latestCandleTradeVolumeMetric,
+    )
+  }
+
+  test("some properties of the default histogram series for own trade volume can be overridden") {
+    val seriesConfig = ChartDataSeriesConfig.ownTradeVolumeInMarketSeriesConfig(
+      caption = "other caption",
+      color = "blue",
+      precision = 2,
+    )
+    seriesConfig.caption shouldEqual "other caption"
+    seriesConfig.appearance.asInstanceOf[HistogramAppearance].color shouldEqual "blue"
+    seriesConfig.precision shouldEqual 2
+  }
+
 }

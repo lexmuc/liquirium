@@ -59,9 +59,9 @@ class ChartMetricTest extends BasicTest {
     )
   }
 
-  test("a latest candle trade volume metric can be created from a market") {
+  test("an eval can be derived from the latestCandleTradeVolume metric") {
     val metricMarket = market(123)
-    ChartMetric.latestCandleTradeVolumeMetric().getEval(
+    ChartMetric.latestCandleTradeVolumeMetric.getEval(
       market = metricMarket,
       startTime = sec(123),
       chartCandlesEval = testEval[CandleHistorySegment](123),

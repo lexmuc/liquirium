@@ -28,6 +28,20 @@ object ChartDataSeriesConfig {
     metric = metric,
   )
 
+  def ownTradeVolumeInMarketSeriesConfig(
+    caption: String = "Own trade volume",
+    color: String = "rgba(76, 175, 80, 0.5)",
+    precision: Int = 8,
+  ): ChartDataSeriesConfig = ChartDataSeriesConfig(
+    precision = precision,
+    caption = caption,
+    appearance = HistogramAppearance(
+      color = color,
+    ),
+    snapshotTime = SnapshotTime.CandleEnd,
+    metric = ChartMetric.latestCandleTradeVolumeMetric,
+  )
+
 }
 
 case class ChartDataSeriesConfig(

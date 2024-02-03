@@ -69,8 +69,7 @@ object ChartMetric {
     }
 
   //noinspection ConvertExpressionToSAM
-  def latestCandleTradeVolumeMetric(
-  ): ChartMetric = new ChartMetric {
+  val latestCandleTradeVolumeMetric: ChartMetric = new ChartMetric {
     override def getEval(
       market: Market,
       startTime: Instant,

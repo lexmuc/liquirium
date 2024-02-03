@@ -1,7 +1,7 @@
 package io.liquirium.bot
 
 import io.liquirium.bot.BotInput.CandleHistoryInput
-import io.liquirium.bot.simulation.ChartDataSeriesConfig.{SnapshotTime, simpleLineSeriesConfig}
+import io.liquirium.bot.simulation.ChartDataSeriesConfig.{SnapshotTime, ownTradeVolumeInMarketSeriesConfig, simpleLineSeriesConfig}
 import io.liquirium.bot.simulation.{ChartDataSeriesConfig, ChartMetric, HistogramAppearance, LineAppearance}
 import io.liquirium.bot.simulation.ChartMetric.marketIndependentMetric
 import io.liquirium.core.{CandleHistorySegment, LedgerRef, Market}
@@ -103,15 +103,7 @@ object SingleMarketStrategyBotUtils {
       )),
       lowestSellConfig,
       highestBuyConfig,
-      ChartDataSeriesConfig(
-        precision = 8,
-        caption = "Own trade volume",
-        appearance = HistogramAppearance(
-          color = "rgba(76, 175, 80, 0.5)",
-        ),
-        snapshotTime = SnapshotTime.CandleEnd,
-        metric = ChartMetric.latestCandleTradeVolumeMetric(),
-      ),
+      ownTradeVolumeInMarketSeriesConfig(),
     )
   }
 
