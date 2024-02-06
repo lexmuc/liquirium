@@ -1,36 +1,30 @@
 package io.liquirium.bot.simulation
 
-import io.liquirium.bot.simulation.helpers.SimulationHelpers
+import io.liquirium.bot.simulation.helpers.SimulationHelpers.makeChartDataSeriesConfig
+import io.liquirium.core.Market
 import io.liquirium.core.helpers.CoreHelpers.{dec, sec}
 import io.liquirium.core.helpers.{CandleHelpers, MarketHelpers, TestWithMocks}
-import play.api.libs.json.Json
+import io.liquirium.util.JsonSerializer
+import io.liquirium.util.helpers.{FakeJsonSerializer, JsonSerializerTest}
+import play.api.libs.json.{JsString, JsValue}
 
-class ChartDataJsonSerializerTest extends TestWithMocks {
+class ChartDataJsonSerializerTest extends JsonSerializerTest[Map[Market, ChartDataLogger]] with TestWithMocks {
+
+  var configMappings: Seq[(ChartDataSeriesConfig, JsValue)] = Seq[(ChartDataSeriesConfig, JsValue)]()
+
+  override def buildSerializer(): JsonSerializer[Map[Market, ChartDataLogger]] =
+    new ChartDataJsonSerializer(
+      FakeJsonSerializer[ChartDataSeriesConfig](configMappings: _*)
+    )
 
   test("it serializes chart data for a single market with candles and data series, market is serialized with dashes") {
-    val chartDataJsonSerializer = new ChartDataJsonSerializer()
-
     val market = MarketHelpers.market(MarketHelpers.exchangeId("EX123"), "BASE1", "QUOTE1")
-
+    val dataSeriesConfig1 = makeChartDataSeriesConfig(caption = "config1")
+    val dataSeriesConfig2 = makeChartDataSeriesConfig(caption = "config2")
+    configMappings = configMappings :+ (dataSeriesConfig1, JsString("config1"))
+    configMappings = configMappings :+ (dataSeriesConfig2, JsString("config2"))
     val fakeLogger = mock[ChartDataLogger]
-    fakeLogger.dataSeriesConfigs returns Seq(
-      SimulationHelpers.makeChartDataSeriesConfig(
-        caption = "TotalValue",
-        precision = 8,
-        appearance = LineAppearance(
-          lineWidth = 3,
-          color = "black",
-          overlay = true,
-        ),
-      ),
-      SimulationHelpers.makeChartDataSeriesConfig(
-        caption = "Benchmark",
-        precision = 2,
-        appearance = HistogramAppearance(
-          color = "blue",
-        ),
-      ),
-    )
+    fakeLogger.dataSeriesConfigs returns Seq(dataSeriesConfig1, dataSeriesConfig2)
     fakeLogger.chartDataUpdates returns Seq(
       ChartDataUpdate(
         candle = CandleHelpers.candle(
@@ -82,30 +76,14 @@ class ChartDataJsonSerializerTest extends TestWithMocks {
         |    ],
         |    "dataSeries": [
         |      {
-        |        "config": {
-        |          "precision": 8,
-        |          "caption": "TotalValue",
-        |          "appearance": {
-        |            "type": "line",
-        |            "lineWidth": 3,
-        |            "color": "black",
-        |            "overlay": true
-        |          }
-        |        },
+        |        "config": "config1",
         |        "data": [
         |          1.1,
         |          1.2
         |        ]
         |      },
         |      {
-        |        "config": {
-        |          "precision": 2,
-        |          "caption": "Benchmark",
-        |          "appearance": {
-        |            "type": "histogram",
-        |            "color": "blue"
-        |          }
-        |        },
+        |        "config": "config2",
         |        "data": [
         |          2.1,
         |          2.2
@@ -116,16 +94,10 @@ class ChartDataJsonSerializerTest extends TestWithMocks {
         |}
         |""".stripMargin
 
-    println(expectedResultAsString)
-
-    val actualJson = chartDataJsonSerializer.serialize(Map(market -> fakeLogger))
-    Json.prettyPrint(actualJson) shouldEqual Json.prettyPrint(Json.parse(expectedResultAsString))
+    assertSerialization(Map(market -> fakeLogger), expectedResultAsString)
   }
 
   test("it can serialize multiple markets at once") {
-
-    val chartDataJsonSerializer = new ChartDataJsonSerializer()
-
     val market1 = MarketHelpers.market(MarketHelpers.exchangeId("EX123"), "BASE1", "QUOTE1")
     val market2 = MarketHelpers.market(MarketHelpers.exchangeId("EX123"), "BASE2", "QUOTE2")
 
@@ -189,10 +161,7 @@ class ChartDataJsonSerializerTest extends TestWithMocks {
         |}
         |""".stripMargin
 
-    println(expectedResultAsString)
-
-    val actualJson = chartDataJsonSerializer.serialize(Map(market1 -> fakeLogger1, market2 -> fakeLogger2))
-    Json.prettyPrint(actualJson) shouldEqual Json.prettyPrint(Json.parse(expectedResultAsString))
+    assertSerialization(Map(market1 -> fakeLogger1, market2 -> fakeLogger2), expectedResultAsString)
   }
 
 }

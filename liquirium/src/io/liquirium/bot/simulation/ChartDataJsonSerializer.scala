@@ -1,9 +1,12 @@
 package io.liquirium.bot.simulation
 
 import io.liquirium.core.Market
+import io.liquirium.util.JsonSerializer
 import play.api.libs.json.{JsArray, JsBoolean, JsNumber, JsObject, JsString, JsValue}
 
-class ChartDataJsonSerializer {
+class ChartDataJsonSerializer(
+  dataSeriesConfigSerializer: JsonSerializer[ChartDataSeriesConfig],
+) extends JsonSerializer[Map[Market, ChartDataLogger]]{
 
   def serialize(chartDataByMarket: Map[Market, ChartDataLogger]): JsValue =
     JsObject(
@@ -18,37 +21,37 @@ class ChartDataJsonSerializer {
 
   private def marketName(m: Market) = m.exchangeId.value + "-" + m.tradingPair.base + "-" + m.tradingPair.quote
 
-  private def serializeDataSeriesConfig(c: ChartDataSeriesConfig): JsObject = {
-    JsObject(Map(
-      "precision" -> JsNumber(c.precision),
-      "caption" -> JsString(c.caption),
-      "appearance" -> serializeAppearance(c.appearance),
-    ))
-  }
-
-  private def serializeAppearance(a: ChartDataSeriesAppearance): JsObject = {
-    a match {
-      case l: LineAppearance =>
-        JsObject(Map(
-          "type" -> JsString("line"),
-          "lineWidth" -> JsNumber(l.lineWidth),
-          "color" -> JsString(l.color),
-          "overlay" -> JsBoolean(l.overlay),
-        ))
-      case h: HistogramAppearance =>
-        JsObject(Map(
-          "type" -> JsString("histogram"),
-          "color" -> JsString(h.color),
-        ))
-    }
-  }
+//  private def serializeDataSeriesConfig(c: ChartDataSeriesConfig): JsObject = {
+//    JsObject(Map(
+//      "precision" -> JsNumber(c.precision),
+//      "caption" -> JsString(c.caption),
+//      "appearance" -> serializeAppearance(c.appearance),
+//    ))
+//  }
+//
+//  private def serializeAppearance(a: ChartDataSeriesAppearance): JsObject = {
+//    a match {
+//      case l: LineAppearance =>
+//        JsObject(Map(
+//          "type" -> JsString("line"),
+//          "lineWidth" -> JsNumber(l.lineWidth),
+//          "color" -> JsString(l.color),
+//          "overlay" -> JsBoolean(l.overlay),
+//        ))
+//      case h: HistogramAppearance =>
+//        JsObject(Map(
+//          "type" -> JsString("histogram"),
+//          "color" -> JsString(h.color),
+//        ))
+//    }
+//  }
 
   private def getDataSeriesJson(logger: ChartDataLogger): JsArray =
     JsArray(logger.dataSeriesConfigs.zipWithIndex.map {
       case (config, index) =>
         val seriesData = logger.chartDataUpdates.map(u => JsNumber(u.namedDataPoints(index))).toSeq
         JsObject(Map(
-          "config" -> serializeDataSeriesConfig(config),
+          "config" -> dataSeriesConfigSerializer.serialize(config),
           "data" -> JsArray(seriesData),
         ))
     })
