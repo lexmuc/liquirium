@@ -14,14 +14,6 @@ package object simulation {
 
   def chartDataJsonSerializer = new ChartDataJsonSerializer(new ChartDataSeriesConfigJsonSerializer())
 
-//  def aggregateChartDataLogger(
-//    markets: Seq[Market],
-//    startTime: Instant,
-//    loggerFactory: ChartDataLoggerFactory,
-//  ): AggregateSimulationLogger[ChartDataLogger] = {
-//    AggregateSimulationLogger(markets.map (m => loggerFactory.getLogger(m, startTime)))
-//  }
-
   def simulationSingleInputUpdateStreamProvider(
     candleHistoryLoaderProvider: CandleHistoryLoaderProvider,
     tradeHistoryLoaderProvider: TradeHistoryLoaderProvider,

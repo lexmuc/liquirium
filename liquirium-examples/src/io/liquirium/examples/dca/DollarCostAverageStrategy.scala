@@ -1,0 +1,56 @@
+package io.liquirium.examples.dca
+
+import io.liquirium.bot.SingleMarketStrategy
+import io.liquirium.core.{ExactResources, OperationIntent}
+
+import java.time.Duration
+
+/**
+ * @param duration Many strategies can run forever but dollar cost averaging needs a fixed duration since it will run
+ *                 out of money eventually.
+ */
+case class DollarCostAverageStrategy(
+  duration: Duration,
+) extends SingleMarketStrategy {
+
+  // One hour candles should be enough for dollar cost averaging
+  override def candleLength: Duration = Duration.ofMinutes(60)
+
+  // We don't need any more history because we are not relying on any indicators calculated for the past
+  override def minimumCandleHistoryLength: Duration = Duration.ofMinutes(600)
+
+  // We have not bought the asset yet. We only have quote currency.
+  override def initialResources(totalQuoteValue: BigDecimal, initialPrice: BigDecimal): ExactResources =
+    ExactResources(
+      baseBalance = BigDecimal(0),
+      quoteBalance = totalQuoteValue,
+    )
+
+  override def apply(state: SingleMarketStrategy.State): Seq[OperationIntent.OrderIntent] = {
+    // in case last price is None (no trade activity in the market yet), we return an empty sequence
+    state.candleHistory.lastPrice map { price =>
+      val buyPrice = price * BigDecimal(0.995) // 0.5% lower than the current price to avoid taker fee
+      // We return one operation intent. Liquirium will try to convert this into an actual order and cancel other
+      // orders. If the order is not possible, for instance because the volume is too small, it will be ignored.
+      OperationIntent.OrderIntent(
+        quantity = getSpendingObligation(state) / buyPrice,
+        price = buyPrice,
+      )
+    }
+  }.toSeq
+
+  // How much money should we have spent at this point in time?
+  private def getSpendingTarget(state: SingleMarketStrategy.State): BigDecimal = {
+    val startMoney = state.runConfiguration.initialResources.quoteBalance
+    val secondsPassed = Duration.between(state.runConfiguration.startTime, state.time).toSeconds
+    val secondsTotal = duration.toSeconds
+    startMoney.toDouble / secondsTotal.toDouble * secondsPassed.toDouble
+  }
+
+  private def getSpendingObligation(state: SingleMarketStrategy.State): BigDecimal = {
+    val spentMoney = state.runConfiguration.initialResources.quoteBalance - state.quoteBalance
+    // never return a negative number
+    (getSpendingTarget(state) - spentMoney).max(BigDecimal(0))
+  }
+
+}

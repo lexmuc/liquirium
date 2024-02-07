@@ -1,11 +1,11 @@
-package io.liquirium.examples
+package io.liquirium.examples.ticker
 
 import akka.actor.typed.ActorSystem
 import io.liquirium.core.{CandleHistorySegment, TradingPair}
 
 import java.time.{Duration, Instant}
-import scala.concurrent.duration.DurationInt
 import scala.concurrent.Await
+import scala.concurrent.duration.DurationInt
 
 object CandleBasedPriceTicker extends App {
 

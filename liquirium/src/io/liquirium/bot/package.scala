@@ -1,7 +1,7 @@
 package io.liquirium
 
 import io.liquirium.bot.BotInput._
-import io.liquirium.bot.simulation.{BotWithSimulationInfo, ChartDataSeriesConfig, ChartMetric}
+import io.liquirium.bot.simulation.{BotWithSimulationInfo, ChartDataSeriesConfig}
 import io.liquirium.core.orderTracking._
 import io.liquirium.core.{BotId, Market, OrderConstraints}
 import io.liquirium.eval.IncrementalFoldHelpers.IncrementalEval
