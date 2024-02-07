@@ -12,6 +12,8 @@ import io.liquirium.connect.binance.{exchangeId => binanceExchangeId}
 
 package object simulation {
 
+  def chartDataJsonSerializer = new ChartDataJsonSerializer(new ChartDataSeriesConfigJsonSerializer())
+
   def aggregateChartDataLogger(
     markets: Seq[Market],
     startTime: Instant,
