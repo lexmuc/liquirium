@@ -8,11 +8,11 @@ import io.liquirium.util.JsonSerializer
 import io.liquirium.util.helpers.{FakeJsonSerializer, JsonSerializerTest}
 import play.api.libs.json.{JsString, JsValue}
 
-class ChartDataJsonSerializerTest extends JsonSerializerTest[Map[Market, ChartDataLogger]] with TestWithMocks {
+class ChartDataJsonSerializerTest extends JsonSerializerTest[Seq[(Market, ChartDataLogger)]] with TestWithMocks {
 
   var configMappings: Seq[(ChartDataSeriesConfig, JsValue)] = Seq[(ChartDataSeriesConfig, JsValue)]()
 
-  override def buildSerializer(): JsonSerializer[Map[Market, ChartDataLogger]] =
+  override def buildSerializer(): JsonSerializer[Seq[(Market, ChartDataLogger)]] =
     new ChartDataJsonSerializer(
       FakeJsonSerializer[ChartDataSeriesConfig](configMappings: _*)
     )
@@ -94,7 +94,7 @@ class ChartDataJsonSerializerTest extends JsonSerializerTest[Map[Market, ChartDa
         |}
         |""".stripMargin
 
-    assertSerialization(Map(market -> fakeLogger), expectedResultAsString)
+    assertSerialization(Seq(market -> fakeLogger), expectedResultAsString)
   }
 
   test("it can serialize multiple markets at once") {
@@ -161,7 +161,7 @@ class ChartDataJsonSerializerTest extends JsonSerializerTest[Map[Market, ChartDa
         |}
         |""".stripMargin
 
-    assertSerialization(Map(market1 -> fakeLogger1, market2 -> fakeLogger2), expectedResultAsString)
+    assertSerialization(Seq(market1 -> fakeLogger1, market2 -> fakeLogger2), expectedResultAsString)
   }
 
 }
