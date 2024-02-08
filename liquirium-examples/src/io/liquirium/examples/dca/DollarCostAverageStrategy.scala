@@ -1,9 +1,32 @@
 package io.liquirium.examples.dca
 
-import io.liquirium.bot.SingleMarketStrategy
+import io.liquirium.bot.SingleMarketStrategyBotUtils.{baseBalanceMetric, quoteBalanceMetric, totalValueEval}
+import io.liquirium.bot.simulation.ChartDataSeriesConfigUtils.{ownTradeVolumeInMarketSeriesConfig, simpleLineSeriesConfig}
+import io.liquirium.bot.simulation.ChartMetric.marketIndependentMetric
+import io.liquirium.bot.simulation.{ChartDataSeriesConfig, ChartDataSeriesConfigUtils}
+import io.liquirium.bot.{SingleMarketStrategy, SingleMarketStrategyBot, SingleMarketStrategyBotUtils}
 import io.liquirium.core.{ExactResources, OperationIntent}
+import io.liquirium.eval.Eval
 
 import java.time.Duration
+
+
+object DollarCostAverageStrategy {
+
+  // We define some data series that we want to see in the chart.
+  def getDefaultChartDataSeries(bot: SingleMarketStrategyBot): Seq[ChartDataSeriesConfig] = {
+    val lastPriceEval: Eval[BigDecimal] = SingleMarketStrategyBotUtils.candleBasedLastPriceEval(bot)
+    Seq(
+      simpleLineSeriesConfig("Total value", marketIndependentMetric(totalValueEval(bot, lastPriceEval))),
+      ChartDataSeriesConfigUtils.highestBuyConfig(lastPriceEval.map(_ * BigDecimal(0.9))),
+      simpleLineSeriesConfig("Base balance", baseBalanceMetric(bot), color = "blue"),
+      simpleLineSeriesConfig("Quote balance", quoteBalanceMetric(bot), color = "orange"),
+      ownTradeVolumeInMarketSeriesConfig(),
+    )
+  }
+
+}
+
 
 /**
  * @param duration Many strategies can run forever but dollar cost averaging needs a fixed duration since it will run
@@ -29,7 +52,7 @@ case class DollarCostAverageStrategy(
   override def apply(state: SingleMarketStrategy.State): Seq[OperationIntent.OrderIntent] = {
     // in case last price is None (no trade activity in the market yet), we return an empty sequence
     state.candleHistory.lastPrice map { price =>
-      val buyPrice = price * BigDecimal(0.995) // 0.5% lower than the current price to avoid taker fee
+      val buyPrice = price * BigDecimal(0.995) // slightly lower than the current price to avoid taker fee
       // We return one operation intent. Liquirium will try to convert this into an actual order and cancel other
       // orders. If the order is not possible, for instance because the volume is too small, it will be ignored.
       OperationIntent.OrderIntent(

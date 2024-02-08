@@ -91,10 +91,11 @@ package object bot {
         p <- getInitialPrice(market, strategy.candleLength, startTime)
       } yield {
         println("initial price: " + p)
-        val runConfiguration = SingleMarketBotRunConfiguration(
+        val runConfiguration = SingleMarketStrategyBotRunConfiguration(
           market = market,
           startTime = startTime,
           endTimeOption = endTimeOption,
+          initialPrice = p,
           initialResources = strategy.initialResources(
             totalQuoteValue = totalValue,
             initialPrice = p,

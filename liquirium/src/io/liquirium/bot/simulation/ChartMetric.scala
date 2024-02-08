@@ -30,43 +30,39 @@ object ChartMetric {
       ): Eval[BigDecimal] = eval
     }
 
-  //noinspection ConvertExpressionToSAM
-  def baseBalanceMetric(
+  case class BaseBalanceMetric(
     tradeMarkets: Iterable[Market],
     initialBalances: Map[LedgerRef, BigDecimal],
-  ): ChartMetric =
-    new ChartMetric {
-      override def getEval(
-        market: Market,
-        startTime: Instant,
-        chartCandlesEval: Eval[CandleHistorySegment],
-      ): Eval[BigDecimal] =
-        BalanceEval(
-          ledgerRef = market.baseLedger,
-          tradeMarkets = tradeMarkets,
-          startTime = startTime,
-          initialBalance = initialBalances(market.baseLedger),
-        )
-    }
+  ) extends ChartMetric {
+    override def getEval(
+      market: Market,
+      startTime: Instant,
+      chartCandlesEval: Eval[CandleHistorySegment],
+    ): Eval[BigDecimal] =
+      BalanceEval(
+        ledgerRef = market.baseLedger,
+        tradeMarkets = tradeMarkets,
+        startTime = startTime,
+        initialBalance = initialBalances(market.baseLedger),
+      )
+  }
 
-  //noinspection ConvertExpressionToSAM
-  def quoteBalanceMetric(
+  case class QuoteBalanceMetric(
     tradeMarkets: Iterable[Market],
     initialBalances: Map[LedgerRef, BigDecimal],
-  ): ChartMetric =
-    new ChartMetric {
-      override def getEval(
-        market: Market,
-        startTime: Instant,
-        chartCandlesEval: Eval[CandleHistorySegment],
-      ): Eval[BigDecimal] =
-        BalanceEval(
-          ledgerRef = market.quoteLedger,
-          tradeMarkets = tradeMarkets,
-          startTime = startTime,
-          initialBalance = initialBalances(market.quoteLedger),
-        )
-    }
+  ) extends ChartMetric {
+    override def getEval(
+      market: Market,
+      startTime: Instant,
+      chartCandlesEval: Eval[CandleHistorySegment],
+    ): Eval[BigDecimal] =
+      BalanceEval(
+        ledgerRef = market.quoteLedger,
+        tradeMarkets = tradeMarkets,
+        startTime = startTime,
+        initialBalance = initialBalances(market.quoteLedger),
+      )
+  }
 
   //noinspection ConvertExpressionToSAM
   val latestCandleTradeVolumeMetric: ChartMetric = new ChartMetric {

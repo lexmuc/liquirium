@@ -25,7 +25,7 @@ class ChartMetricTest extends BasicTest {
     val metricMarket = market(exchangeId(1), "base", "quote")
     val otherMarket = market(exchangeId(1), "quote", "other")
     val initialBalances = Map(metricMarket.baseLedger -> dec(1001))
-    ChartMetric.baseBalanceMetric(
+    ChartMetric.BaseBalanceMetric(
       tradeMarkets = Seq(metricMarket, otherMarket),
       initialBalances = initialBalances,
     ).getEval(
@@ -44,7 +44,7 @@ class ChartMetricTest extends BasicTest {
     val metricMarket = market(exchangeId(1), "base", "quote")
     val otherMarket = market(exchangeId(1), "base", "other")
     val initialBalances = Map(metricMarket.quoteLedger -> dec(1002))
-    ChartMetric.quoteBalanceMetric(
+    ChartMetric.QuoteBalanceMetric(
       tradeMarkets = Seq(metricMarket, otherMarket),
       initialBalances = initialBalances,
     ).getEval(

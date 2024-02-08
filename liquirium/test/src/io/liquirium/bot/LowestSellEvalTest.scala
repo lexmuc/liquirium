@@ -4,7 +4,6 @@ import io.liquirium.bot.BotInput.OrderSnapshotHistoryInput
 import io.liquirium.core.helpers.CoreHelpers.{dec, sec}
 import io.liquirium.core.helpers.MarketHelpers
 import io.liquirium.core.helpers.OrderHelpers.order
-import io.liquirium.core.orderTracking.helpers.OrderTrackingHelpers
 import io.liquirium.core.orderTracking.helpers.OrderTrackingHelpers.{openOrdersHistory, openOrdersSnapshot}
 import io.liquirium.eval.Constant
 import io.liquirium.eval.helpers.EvalTest

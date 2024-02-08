@@ -12,7 +12,7 @@ object SingleMarketStrategy {
     baseBalance: BigDecimal,
     quoteBalance: BigDecimal,
     candleHistory: CandleHistorySegment,
-    runConfiguration: SingleMarketBotRunConfiguration,
+    runConfiguration: SingleMarketStrategyBotRunConfiguration,
   )
 
 }

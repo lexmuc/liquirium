@@ -55,7 +55,7 @@ object RunSimulation extends App {
       ),
       strategy = strategy,
       market = market,
-      metricsFactory = bot => SingleMarketStrategyBotUtils.getDataSeriesConfigs(bot),
+      metricsFactory = bot => DollarCostAverageStrategy.getDefaultChartDataSeries(bot),
     )
 
     val botFuture = botFactory.makeBot(
@@ -118,7 +118,7 @@ object RunSimulation extends App {
     println("simulation took " + (stopwatchEnd.getEpochSecond - stopwatchStart.getEpochSecond) + " seconds.")
 
     Files.write(
-      Paths.get("visualization/data.json"),
+      Paths.get("../trading/workspace/cointrade/visualization/data.json"),
       chartDataJsonSerializer.serialize(finalLogger.marketsWithMarketLoggers).toString.getBytes
     )
 

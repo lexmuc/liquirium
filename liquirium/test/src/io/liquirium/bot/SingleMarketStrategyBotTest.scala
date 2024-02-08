@@ -20,6 +20,7 @@ class SingleMarketStrategyBotTest extends BasicTest with Matchers {
   private var startTime: Instant = Instant.ofEpochSecond(0)
   private var endTimeOption: Option[Instant] = None
   private val market: Market = MarketHelpers.market(1)
+  private var initialPrice: BigDecimal = BigDecimal(1)
   private var initialBaseBalance: BigDecimal = BigDecimal(0)
   private var initialQuoteBalance: BigDecimal = BigDecimal(0)
   private var candleLength: Duration = Duration.ofSeconds(1)
@@ -46,10 +47,11 @@ class SingleMarketStrategyBotTest extends BasicTest with Matchers {
 
   def makeBot(): SingleMarketStrategyBot = SingleMarketStrategyBot(
     strategy = makeStrategy(),
-    runConfiguration = SingleMarketBotRunConfiguration(
+    runConfiguration = SingleMarketStrategyBotRunConfiguration(
       market = market,
       startTime = startTime,
       endTimeOption = endTimeOption,
+      initialPrice = initialPrice,
       initialResources = ExactResources(
         baseBalance = SingleMarketStrategyBotTest.this.initialBaseBalance,
         quoteBalance = SingleMarketStrategyBotTest.this.initialQuoteBalance,
@@ -117,6 +119,15 @@ class SingleMarketStrategyBotTest extends BasicTest with Matchers {
     evaluate() shouldEqual Seq(botOutput(1), botOutput(2))
   }
 
+  test("the candle history eval is made available as a field") {
+    candleLength = secs(5)
+    minimumCandleHistoryLength = secs(10)
+    startTime = sec(100)
+    makeBot().candleHistoryEval shouldEqual InputEval(
+      CandleHistoryInput(market, candleLength = secs(5), start = sec(90))
+    )
+  }
+
   test("the candle history is provided according to the market, candleLength and minimum length") {
     candleLength = secs(5)
     minimumCandleHistoryLength = secs(10)
@@ -177,15 +188,17 @@ class SingleMarketStrategyBotTest extends BasicTest with Matchers {
   test("the given run configuration is part of the state") {
     initialBaseBalance = dec(10)
     initialQuoteBalance = dec(20)
+    initialPrice = dec(123)
     candleLength = secs(10)
     startTime = sec(10)
     endTimeOption = Some(sec(110))
     fakeDefaultTradeHistory()
     fakeDefaultCandleHistory()
-    val expectedRunConfiguration = SingleMarketBotRunConfiguration(
+    val expectedRunConfiguration = SingleMarketStrategyBotRunConfiguration(
       market = market,
       startTime = startTime,
       endTimeOption = endTimeOption,
+      initialPrice = initialPrice,
       initialResources = ExactResources(
         baseBalance = initialBaseBalance,
         quoteBalance = initialQuoteBalance,
