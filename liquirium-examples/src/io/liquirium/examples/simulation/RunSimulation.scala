@@ -1,12 +1,13 @@
 package io.liquirium.examples.simulation
 
 import io.liquirium.util.akka.DefaultConcurrencyContext
-import io.liquirium.bot.BotInput.CandleHistoryInput
-import io.liquirium.bot.SingleMarketStrategyBotUtils
+import io.liquirium.bot.BotInput._
+import io.liquirium.bot.SimpleBotEvaluator
 import io.liquirium.bot.simulation._
 import io.liquirium.connect.ExchangeConnector
 import io.liquirium.core._
-import io.liquirium.eval.{Eval, InputEval}
+import io.liquirium.core.orderTracking.{OpenOrdersHistory, OpenOrdersSnapshot}
+import io.liquirium.eval.{Eval, IncrementalContext, IncrementalSeq, InputEval, UpdatableContext}
 import io.liquirium.examples.dca.DollarCostAverageStrategy
 import io.liquirium.util.{ApiCredentials, NumberPrecision}
 import io.liquirium.util.store.TradeHistoryLoaderProvider
@@ -101,14 +102,14 @@ object RunSimulation extends App {
       bot.markets.map(m => m -> makeSingleMarketChartDataLogger(m)),
     )
 
-    val botSimulator = new EvalBotSimulatorFactory(
-      simulationEnvironmentProvider = simulationEnvironmentProvider,
-      withTradeHistoryInput = true,
-    ).getSimulator(
-      simulationStart = simulationStart,
-      simulationEnd = simulationEnd,
-      bot.eval,
-      logger,
+    val simulationEnvironment =
+      simulationEnvironmentProvider.apply(simulationStart = simulationStart, simulationEnd = simulationEnd)
+
+    val botSimulator = EvalBotSimulator(
+      context = initialContext(simulationStart, withTradeHistoryInput = true),
+      evaluator = SimpleBotEvaluator(bot.eval),
+      environment = simulationEnvironment,
+      logger = logger,
     )
 
     val stopwatchStart = Instant.now()
@@ -124,6 +125,22 @@ object RunSimulation extends App {
 
     println("simulation finished")
   }
+
+  def initialContext(simulationStart: Instant, withTradeHistoryInput: Boolean): UpdatableContext =
+    ContextWithInputResolution(
+      baseContext = IncrementalContext(),
+      resolve = {
+        case BotOutputHistory => Some(IncrementalSeq.empty)
+        case CompletedOperationRequestsInSession => Some(IncrementalSeq.empty)
+        case OrderSnapshotHistoryInput(_) => Some(
+          OpenOrdersHistory.start(OpenOrdersSnapshot(OrderSet.empty, Instant.ofEpochSecond(0)))
+        )
+        case TradeHistoryInput(_, start) if start == simulationStart && withTradeHistoryInput =>
+          Some(TradeHistorySegment.empty(simulationStart))
+        case SimulatedOpenOrdersInput(_) => Some(Set[Order]())
+        case _ => None
+      }
+    )
 
   // if we don't terminate the actor system afterwards the script will never complete
   try {
