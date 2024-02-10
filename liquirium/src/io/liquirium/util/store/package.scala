@@ -12,24 +12,26 @@ import scala.concurrent.{ExecutionContext, Future}
 
 package object store {
 
-  private val workingDir = Paths.get("").toAbsolutePath.toString
-
   private implicit val executionContext: ExecutionContext =
     DefaultConcurrencyContext.actorSystem.dispatchers.lookup(DispatcherSelector.fromConfig("h2-request-dispatcher"))
 
-  val h2candleStoreProvider: CandleStoreProvider = new H2CandleStoreProvider((id, candleLength) => {
-    val h2DbUrl = s"jdbc:h2:file:$workingDir/data/candles/$id;TRACE_LEVEL_FILE=0"
-    new H2CandleStore(DriverManager.getConnection(h2DbUrl), candleLength)
-  })
+  private def h2candleStoreProvider(cacheDirectory: Path): CandleStoreProvider = {
+    val cacheDirectoryString = cacheDirectory.toString
+    new H2CandleStoreProvider((id, candleLength) => {
+      val h2DbUrl = s"jdbc:h2:file:$cacheDirectoryString/candles/$id;TRACE_LEVEL_FILE=0"
+      new H2CandleStore(DriverManager.getConnection(h2DbUrl), candleLength)
+    })
+  }
 
   def getCachingCandleHistoryLoaderProvider(
     getConnector: ExchangeId => Future[ExchangeConnector],
+    cacheDirectory: Path,
   ): CandleHistoryLoaderProvider =
     new CandleHistoryLoaderProvider {
       override def getHistoryLoader(market: Market, resolution: Duration): Future[CandleHistoryLoader] = {
         for {
           connector <- getConnector(market.exchangeId)
-        } yield getCachingCandleHistoryLoader(market, resolution, connector)
+        } yield getCachingCandleHistoryLoader(market, resolution, connector, cacheDirectory)
       }
     }
 
@@ -50,8 +52,9 @@ package object store {
     market: Market,
     candleLength: Duration,
     connector: ExchangeConnector,
+    cacheDirectory: Path,
   ): CachingCandleHistoryLoader = {
-    val cache = new CandleHistoryCache(h2candleStoreProvider.getStore(market, candleLength))
+    val cache = new CandleHistoryCache(h2candleStoreProvider(cacheDirectory).getStore(market, candleLength))
     val loader = new CandleHistoryLoader {
       override def load(start: Instant, end: Instant): Future[CandleHistorySegment] =
         connector.loadCandleHistory(market.tradingPair, candleLength, start, end)

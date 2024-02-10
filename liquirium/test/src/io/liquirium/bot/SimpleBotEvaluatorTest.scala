@@ -42,16 +42,18 @@ class SimpleBotEvaluatorTest extends BasicTest {
 
   }
 
-  test("an input request obtained when evaluating the output history is forwarded") {
-    val c = FakeContext(outputHistoryEval, inputRequest(1), finalContext)
-    evaluator.eval(c) shouldEqual (inputRequest(1), finalContext)
-  }
-
   test("in case of no output or input request it just returns the context without bot outputs") {
     val history = IncrementalSeq(out(1))
     val c1 = FakeContext(botEval, Value(Seq()), finalContext)
     val c0 = FakeContext(outputHistoryEval, Value(history), c1)
     evaluator.eval(c0) shouldEqual (Value(Seq[BotOutput]()), finalContext)
+  }
+
+  test("if the output history cannot be obtained, it is set to empty and the bot is evaluated") {
+    val c1 = FakeContext(botEval, Value(Seq(out(1))), finalContext)
+    val c0 = FakeContext(outputHistoryEval, inputRequest(1), c1)
+    val expectedContext = finalContext.update(InputUpdate(Map(BotOutputHistory -> IncrementalSeq(out(1)))))
+    evaluator.eval(c0) shouldEqual (Value(Seq(out(1))), expectedContext)
   }
 
   test("in case the bot outputs something it is appended to the history and returned in the eval result") {

@@ -45,7 +45,8 @@ object RunSimulation extends App {
     }
 
     val candleHistoryLoaderProvider = io.liquirium.util.store.getCachingCandleHistoryLoaderProvider(
-      exchangeConnectorProvider,
+      getConnector = exchangeConnectorProvider,
+      cacheDirectory = Paths.get("../trading/workspace/cointrade/data"),
     )
 
     val botFactory = io.liquirium.bot.singleMarketStrategyBotFactoryForSimulation(
@@ -130,7 +131,6 @@ object RunSimulation extends App {
     ContextWithInputResolution(
       baseContext = IncrementalContext(),
       resolve = {
-        case BotOutputHistory => Some(IncrementalSeq.empty)
         case CompletedOperationRequestsInSession => Some(IncrementalSeq.empty)
         case OrderSnapshotHistoryInput(_) => Some(
           OpenOrdersHistory.start(OpenOrdersSnapshot(OrderSet.empty, Instant.ofEpochSecond(0)))
