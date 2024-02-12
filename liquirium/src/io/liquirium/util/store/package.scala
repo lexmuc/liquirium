@@ -15,7 +15,7 @@ package object store {
   private implicit val executionContext: ExecutionContext =
     DefaultConcurrencyContext.actorSystem.dispatchers.lookup(DispatcherSelector.fromConfig("h2-request-dispatcher"))
 
-  private def h2candleStoreProvider(cacheDirectory: Path): CandleStoreProvider = {
+  def h2candleStoreProvider(cacheDirectory: Path): CandleStoreProvider = {
     val cacheDirectoryString = cacheDirectory.toString
     new H2CandleStoreProvider((id, candleLength) => {
       val h2DbUrl = s"jdbc:h2:file:$cacheDirectoryString/candles/$id;TRACE_LEVEL_FILE=0"

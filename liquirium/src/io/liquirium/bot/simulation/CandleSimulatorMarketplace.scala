@@ -21,6 +21,8 @@ trait CandleSimulatorMarketplace extends SimulationMarketplace {
     newContext: UpdatableContext,
   ): Either[InputRequest, (UpdatableContext, CandleSimulatorMarketplace)]
 
+  def lastCandleEndTime: Instant
+
 }
 
 object CandleSimulatorMarketplace {
@@ -105,6 +107,7 @@ object CandleSimulatorMarketplace {
       val newOrder = or.toExactOrder(orderIds.head)
       val newState = copy(
         orderIds = orderIds.tail,
+        lastCandleEndTime = time,
       )
       val newOrderSet = oldOrderHistory.lastSnapshot.orders + newOrder
       val newOrderHistory = oldOrderHistory.appendIfChanged(
@@ -127,6 +130,7 @@ object CandleSimulatorMarketplace {
       oldOrderHistory: OpenOrdersHistory,
       completedOperationRequests: IncrementalSeq[CompletedOperationRequest]
     ): (InputUpdate, Impl) = {
+      val newState = copy(lastCandleEndTime = time)
       oldOrderHistory.lastSnapshot.orders.find(_.id == cr.orderId) match {
         case Some(order) =>
           val newOrderSet = oldOrderHistory.lastSnapshot.orders.removeId(cr.orderId)
@@ -140,7 +144,7 @@ object CandleSimulatorMarketplace {
             simulatedOpenOrdersInput -> newOrderSet,
             CompletedOperationRequestsInSession -> completedOperationRequests.inc(newCompletedRequest),
           ))
-          (inputUpdate, copy())
+          (inputUpdate, newState)
 
         case None =>
           val failure = NoSuchOpenOrderCancelFailure(cr.orderId)
@@ -148,7 +152,7 @@ object CandleSimulatorMarketplace {
           val inputUpdate = InputUpdate(Map(
             CompletedOperationRequestsInSession -> completedOperationRequests.inc(newCompletedRequest),
           ))
-          (inputUpdate, copy())
+          (inputUpdate, newState)
       }
 
     }

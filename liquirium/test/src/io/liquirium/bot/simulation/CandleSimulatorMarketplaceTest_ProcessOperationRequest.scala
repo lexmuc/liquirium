@@ -43,7 +43,7 @@ class CandleSimulatorMarketplaceTest_ProcessOperationRequest extends CandleSimul
 
   test("upon an order request the simulated orders and order history are updated and time is taken from the candles") {
     orderIds = List("A", "B").toStream
-    simulationStartTime = sec(777)
+    simulationStartTime = sec(100)
     fakeCandles(c(100), c(101))
     fakeOrderHistory(
       openOrdersSnapshot(sec(100), order(42)),
@@ -58,6 +58,18 @@ class CandleSimulatorMarketplaceTest_ProcessOperationRequest extends CandleSimul
     assertSimulatedOpenOrders(Set(order(42), expectedNewOrder))
   }
 
+  test("the internal time is advanced according to the candles when an order request is handled") {
+    orderIds = List("A", "B").toStream
+    simulationStartTime = sec(0)
+    fakeCandles(c(100), c(101))
+    fakeOrderHistory(
+      openOrdersSnapshot(sec(100), order(42)),
+    )
+    fakeCompletedOperationRequests()
+    process(msg(1, orderRequest(123)))
+    currentMarketplace.lastCandleEndTime shouldEqual sec(102)
+  }
+
   test("it yields an input request if the order history is missing") {
     orderIds = List("A", "B").toStream
     fakeCandles(c(100), c(101))
@@ -69,7 +81,7 @@ class CandleSimulatorMarketplaceTest_ProcessOperationRequest extends CandleSimul
 
   test("the completed requests are extended with another completed order request with the order id") {
     orderIds = List("A", "B").toStream
-    simulationStartTime = sec(777)
+    simulationStartTime = sec(100)
     fakeCandles(c(100), c(101))
     fakeCompletedOperationRequests(completedOperationRequest(1))
     fakeEmptyOrderHistory()
@@ -124,6 +136,28 @@ class CandleSimulatorMarketplaceTest_ProcessOperationRequest extends CandleSimul
       response = Right(confirmation),
     )
     assertCompletedTradeRequests(completedOperationRequest(1), newCompletedRequest)
+  }
+
+  test("the internal time is advanced according to the candles when a cancel happens") {
+    simulationStartTime = sec(0)
+    fakeCandles(c(100), c(101))
+    fakeCompletedOperationRequests(completedOperationRequest(1))
+    fakeOrderHistory(
+      openOrdersSnapshot(sec(100), order(42)),
+    )
+    process(msg(1, cancelRequest(order(42).id)))
+    currentMarketplace.lastCandleEndTime shouldEqual sec(102)
+  }
+
+  test("the internal time is advanced according to the candles when a cancel fails") {
+    simulationStartTime = sec(0)
+    fakeCandles(c(100), c(101))
+    fakeCompletedOperationRequests(completedOperationRequest(1))
+    fakeOrderHistory(
+      openOrdersSnapshot(sec(100), order(42)),
+    )
+    process(msg(1, cancelRequest(order(43).id)))
+    currentMarketplace.lastCandleEndTime shouldEqual sec(102)
   }
 
   test("a cancel failure is returned when there is no such order") {
