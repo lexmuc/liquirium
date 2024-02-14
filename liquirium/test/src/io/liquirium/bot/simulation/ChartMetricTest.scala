@@ -1,7 +1,7 @@
 package io.liquirium.bot.simulation
 
 import io.liquirium.bot.BotInput.TradeHistoryInput
-import io.liquirium.bot.LatestCandleTradeVolumeEval
+import io.liquirium.bot.{LatestCandleTradeVolumeEval, TotalTradeVolumeEval}
 import io.liquirium.core.CandleHistorySegment
 import io.liquirium.core.helpers.BasicTest
 import io.liquirium.core.helpers.CoreHelpers.{dec, exchangeId, sec}
@@ -67,6 +67,17 @@ class ChartMetricTest extends BasicTest {
       chartCandlesEval = testEval[CandleHistorySegment](123),
     ) shouldEqual LatestCandleTradeVolumeEval(
       candlesEval = testEval[CandleHistorySegment](123),
+      tradeHistoryEval = InputEval(TradeHistoryInput(metricMarket, start = sec(123))),
+    )
+  }
+
+  test("an eval can be derived from the totalTradeVolume metric") {
+    val metricMarket = market(123)
+    ChartMetric.totalTradeVolumeMetric.getEval(
+      market = metricMarket,
+      startTime = sec(123),
+      chartCandlesEval = testEval[CandleHistorySegment](123),
+    ) shouldEqual TotalTradeVolumeEval(
       tradeHistoryEval = InputEval(TradeHistoryInput(metricMarket, start = sec(123))),
     )
   }

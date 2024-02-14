@@ -1,7 +1,7 @@
 package io.liquirium.bot.simulation
 
 import io.liquirium.bot.BotInput.TradeHistoryInput
-import io.liquirium.bot.LatestCandleTradeVolumeEval
+import io.liquirium.bot.{LatestCandleTradeVolumeEval, TotalTradeVolumeEval}
 import io.liquirium.core.{CandleHistorySegment, LedgerRef, Market}
 import io.liquirium.eval.{Eval, InputEval}
 
@@ -73,6 +73,19 @@ object ChartMetric {
     ): Eval[BigDecimal] = {
       LatestCandleTradeVolumeEval(
         candlesEval = chartCandlesEval,
+        tradeHistoryEval = InputEval(TradeHistoryInput(market, startTime)),
+      )
+    }
+  }
+
+  //noinspection ConvertExpressionToSAM
+  val totalTradeVolumeMetric: ChartMetric = new ChartMetric {
+    override def getEval(
+      market: Market,
+      startTime: Instant,
+      chartCandlesEval: Eval[CandleHistorySegment],
+    ): Eval[BigDecimal] = {
+      TotalTradeVolumeEval(
         tradeHistoryEval = InputEval(TradeHistoryInput(market, startTime)),
       )
     }
