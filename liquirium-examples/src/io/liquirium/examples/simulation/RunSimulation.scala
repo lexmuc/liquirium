@@ -9,7 +9,7 @@ import io.liquirium.eval.InputEval
 import io.liquirium.examples.dca.DollarCostAverageStrategy
 import io.liquirium.util.NumberPrecision
 import io.liquirium.util.akka.DefaultConcurrencyContext
-import io.liquirium.util.store.TradeHistoryLoaderProvider
+import io.liquirium.util.store.{CandleHistoryLoaderProvider, TradeHistoryLoaderProvider}
 
 import java.awt.Desktop
 import java.nio.file.{Files, Paths}
@@ -52,32 +52,23 @@ object RunSimulation extends App {
     )
     val bot = Await.result(botFuture, 1.minute)
 
-    val dummyTradeHistoryLoaderProvider = new TradeHistoryLoaderProvider {
-      override def getHistoryLoader(market: Market): Future[TradeHistoryLoader] =
-        throw new RuntimeException("Trade history loader should not be required in simulation.")
-    }
-
-    val singleInputUpdateStreamProvider = simulationSingleInputUpdateStreamProvider(
+    val simulationEnvironment = getSimulationEnvironment(
+      simulationStart = simulationStart,
+      simulationEnd = simulationEnd,
+      candleLength = strategy.candleLength,
       candleHistoryLoaderProvider = candleHistoryLoaderProvider,
-      tradeHistoryLoaderProvider = dummyTradeHistoryLoaderProvider,
-    )(DefaultConcurrencyContext.executionContext)
-
-    val simulationEnvironmentProvider = new DynamicSimulationEnvironmentProvider(
-      inputUpdateStreamProvider = singleInputUpdateStreamProvider,
-      simulationMarketplaceFactory = simulationMarketplaceFactory(bot.basicCandleLength),
     )
 
     val botSimulator = EvalBotSimulator(
       context = initialContextForSimulation(simulationStart),
       evaluator = SimpleBotEvaluator(bot.eval),
-      environment = simulationEnvironmentProvider.apply(simulationStart, simulationEnd = simulationEnd),
+      environment = simulationEnvironment,
       logger = getLogger(bot, simulationStart),
     )
 
     val stopwatchStart = Instant.now()
     val finalLogger = botSimulator.run()
     val stopwatchEnd = Instant.now()
-
     println("simulation took " + (stopwatchEnd.getEpochSecond - stopwatchStart.getEpochSecond) + " seconds.")
 
     val outputFilePath = Paths.get("liquirium-examples/charts/last-simulation.html").toAbsolutePath
@@ -86,6 +77,33 @@ object RunSimulation extends App {
     Desktop.getDesktop.open(outputFilePath.toFile)
 
     println("simulation finished")
+  }
+
+  private def getSimulationEnvironment(
+    simulationStart: Instant,
+    simulationEnd: Instant,
+    candleLength: Duration,
+    candleHistoryLoaderProvider: CandleHistoryLoaderProvider,
+  ) = {
+    val dummyTradeHistoryLoaderProvider = new TradeHistoryLoaderProvider {
+      override def getHistoryLoader(market: Market): Future[TradeHistoryLoader] =
+        throw new RuntimeException("Trade history loader should not be required in simulation.")
+    }
+
+    val inputUpdateStream = SimulationInputUpdateStream(
+      start = simulationStart,
+      end = simulationEnd,
+      singleInputStreamProvider = simulationSingleInputUpdateStreamProvider(
+        candleHistoryLoaderProvider = candleHistoryLoaderProvider,
+        tradeHistoryLoaderProvider = dummyTradeHistoryLoaderProvider,
+      )(DefaultConcurrencyContext.executionContext),
+    )
+
+    val marketplaceFactory = simulationMarketplaceFactory(candleLength)
+    DynamicInputSimulationEnvironment(
+      inputUpdateStream = inputUpdateStream,
+      marketplaces = SimulationMarketplaces(Seq(), m => marketplaceFactory(m, simulationStart)),
+    )
   }
 
   private def getLogger(bot: BotWithSimulationInfo, simulationStart: Instant): AggregateChartDataLogger = {
