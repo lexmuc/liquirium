@@ -19,13 +19,12 @@ trait SimulationInputUpdateStream {
 object SimulationInputUpdateStream {
 
   def apply(
-    start: Instant,
-    end: Instant,
+    period: SimulationPeriod,
     singleInputStreamProvider: SingleInputUpdateStreamProvider,
   ): SimulationInputUpdateStream = Impl(
-    nextInputUpdateWithTime = Some((start, InputUpdate(Map()))),
+    nextInputUpdateWithTime = Some((period.start, InputUpdate(Map()))),
     timedInputStreamsByInput = Map(),
-    end = end,
+    end = period.end,
     singleInputStreamProvider = singleInputStreamProvider,
   )
 

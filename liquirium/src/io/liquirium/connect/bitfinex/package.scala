@@ -94,6 +94,8 @@ package object bitfinex {
   )(implicit ec: ExecutionContext) =
     new ExchangeConnector {
 
+      override def exchangeId: ExchangeId = io.liquirium.connect.bitfinex.exchangeId
+
       private def makeCandleHistorySegmentLoader(
         tradingPair: TradingPair,
         candleLength: Duration,

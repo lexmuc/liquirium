@@ -1,7 +1,7 @@
 package io.liquirium.examples.simulation
 
 import io.liquirium.bot.BotInput._
-import io.liquirium.bot.SimpleBotEvaluator
+import io.liquirium.bot.{SimpleBotEvaluator, SingleMarketStrategy}
 import io.liquirium.bot.simulation._
 import io.liquirium.connect.ExchangeConnector
 import io.liquirium.core._
@@ -20,41 +20,31 @@ import scala.concurrent.{Await, Future}
 object RunSimulation extends App {
 
   private def run(): Unit = {
-
     val runDuration = Duration.ofDays(50)
     val strategy = DollarCostAverageStrategy(runDuration, candleLength = Duration.ofHours(1))
     val totalValue = BigDecimal(10000)
     val market = Market(io.liquirium.connect.binance.exchangeId, TradingPair("BTC", "USDT"))
     val simulationStart = Instant.parse("2022-07-01T00:00:00.000Z")
-    val simulationEnd = simulationStart plus runDuration
+    val simulationPeriod = SimulationPeriod(
+      start = simulationStart,
+      end = simulationStart plus runDuration,
+    )
 
     // We only read chart data from the exchange, so we don't need to authenticate
     val connector = Await.result(io.liquirium.connect.binance.getConnector(), 10.seconds)
 
-    val candleHistoryLoaderProvider =
-      getCandleHistoryLoaderProvider(io.liquirium.connect.binance.exchangeId, connector)
+    val candleHistoryLoaderProvider = getCandleHistoryLoaderProvider(connector)
 
-    val botFactory = io.liquirium.bot.singleMarketStrategyBotFactoryForSimulation(
+    val bot = getBot(
+      simulationPeriod = simulationPeriod,
       candleHistoryLoaderProvider = candleHistoryLoaderProvider,
-      orderConstraints = OrderConstraints(
-        pricePrecision = NumberPrecision.significantDigits(5),
-        quantityPrecision = NumberPrecision.significantDigits(5),
-      ),
       strategy = strategy,
       market = market,
-      metricsFactory = bot => DollarCostAverageStrategy.getDefaultChartDataSeries(bot),
-    )(DefaultConcurrencyContext.executionContext)
-
-    val botFuture = botFactory.makeBot(
-      startTime = simulationStart,
-      endTimeOption = Some(simulationEnd),
       totalValue = totalValue,
     )
-    val bot = Await.result(botFuture, 1.minute)
 
     val simulationEnvironment = getSimulationEnvironment(
-      simulationStart = simulationStart,
-      simulationEnd = simulationEnd,
+      simulationPeriod = simulationPeriod,
       candleLength = strategy.candleLength,
       candleHistoryLoaderProvider = candleHistoryLoaderProvider,
     )
@@ -79,9 +69,34 @@ object RunSimulation extends App {
     println("simulation finished")
   }
 
+  private def getBot(
+    simulationPeriod: SimulationPeriod,
+    candleHistoryLoaderProvider: CandleHistoryLoaderProvider,
+    strategy: SingleMarketStrategy,
+    market: Market,
+    totalValue: BigDecimal,
+  ) = {
+    val botFactory = io.liquirium.bot.singleMarketStrategyBotFactoryForSimulation(
+      candleHistoryLoaderProvider = candleHistoryLoaderProvider,
+      orderConstraints = OrderConstraints(
+        pricePrecision = NumberPrecision.significantDigits(5),
+        quantityPrecision = NumberPrecision.significantDigits(5),
+      ),
+      strategy = strategy,
+      market = market,
+      metricsFactory = bot => DollarCostAverageStrategy.getDefaultChartDataSeries(bot),
+    )(DefaultConcurrencyContext.executionContext)
+
+    val botFuture = botFactory.makeBot(
+      startTime = simulationPeriod.start,
+      endTimeOption = Some(simulationPeriod.end),
+      totalValue = totalValue,
+    )
+    Await.result(botFuture, 1.minute)
+  }
+
   private def getSimulationEnvironment(
-    simulationStart: Instant,
-    simulationEnd: Instant,
+    simulationPeriod: SimulationPeriod,
     candleLength: Duration,
     candleHistoryLoaderProvider: CandleHistoryLoaderProvider,
   ) = {
@@ -91,8 +106,7 @@ object RunSimulation extends App {
     }
 
     val inputUpdateStream = SimulationInputUpdateStream(
-      start = simulationStart,
-      end = simulationEnd,
+      period = simulationPeriod,
       singleInputStreamProvider = simulationSingleInputUpdateStreamProvider(
         candleHistoryLoaderProvider = candleHistoryLoaderProvider,
         tradeHistoryLoaderProvider = dummyTradeHistoryLoaderProvider,
@@ -102,7 +116,7 @@ object RunSimulation extends App {
     val marketplaceFactory = simulationMarketplaceFactory(candleLength)
     DynamicInputSimulationEnvironment(
       inputUpdateStream = inputUpdateStream,
-      marketplaces = SimulationMarketplaces(Seq(), m => marketplaceFactory(m, simulationStart)),
+      marketplaces = SimulationMarketplaces(Seq(), m => marketplaceFactory(m, simulationPeriod.start)),
     )
   }
 
@@ -128,10 +142,11 @@ object RunSimulation extends App {
     )
   }
 
-  private def getCandleHistoryLoaderProvider(exchangeId: ExchangeId, connector: ExchangeConnector) = {
+  private def getCandleHistoryLoaderProvider(connector: ExchangeConnector) = {
+    val connectorExchangeId = connector.exchangeId
     val exchangeConnectorProvider = new(ExchangeId => Future[ExchangeConnector]) {
       override def apply(exchangeId: ExchangeId): Future[ExchangeConnector] = exchangeId match {
-        case `exchangeId` => Future { connector }(DefaultConcurrencyContext.executionContext)
+        case `connectorExchangeId` => Future { connector }(DefaultConcurrencyContext.executionContext)
         case _ => throw new RuntimeException("Exchange not supported: " + exchangeId)
       }
     }

@@ -85,6 +85,8 @@ package object poloniex {
   )(implicit ec: ExecutionContext) =
     new ExchangeConnector {
 
+      override def exchangeId: ExchangeId = io.liquirium.connect.poloniex.exchangeId
+
       private def makeCandleHistorySegmentLoader(
         tradingPair: TradingPair,
         candleLength: Duration,

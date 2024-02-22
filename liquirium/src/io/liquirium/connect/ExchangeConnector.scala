@@ -10,6 +10,8 @@ import scala.concurrent.Future
 
 trait ExchangeConnector {
 
+  def exchangeId: ExchangeId
+
   def loadCandleHistory(
     tradingPair: TradingPair,
     candleLength: Duration,

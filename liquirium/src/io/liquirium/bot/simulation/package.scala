@@ -59,26 +59,6 @@ package object simulation {
 
   }
 
-  def simulationEnvironmentProvider(
-    marketplaceFactory: SimulationMarketplaceFactory,
-    inputUpdateStreamProvider: SingleInputUpdateStreamProvider,
-  ): SimulationEnvironmentProvider = new SimulationEnvironmentProvider {
-
-    def apply(
-      simulationStart: Instant,
-      simulationEnd: Instant,
-    ): DynamicInputSimulationEnvironment =
-      DynamicInputSimulationEnvironment(
-        inputUpdateStream = SimulationInputUpdateStream(
-          start = simulationStart,
-          end = simulationEnd,
-          singleInputStreamProvider = inputUpdateStreamProvider,
-        ),
-        marketplaces = SimulationMarketplaces(Seq(), m => marketplaceFactory(m, simulationStart)),
-      )
-
-  }
-
   def simulationMarketplaceFactory(
     candleLength: Duration,
   ): SimulationMarketplaceFactory = new SimulationMarketplaceFactory {

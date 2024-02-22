@@ -13,8 +13,7 @@ class SimulationInputUpdateStreamTest extends TestWithMocks {
   private val streamProvider: SingleInputUpdateStreamProvider = mock[SingleInputUpdateStreamProvider]
 
   private def stream(start: Instant, end: Instant) = SimulationInputUpdateStream(
-    start = start,
-    end = end,
+    period = SimulationPeriod(start, end),
     singleInputStreamProvider = streamProvider,
   )
 

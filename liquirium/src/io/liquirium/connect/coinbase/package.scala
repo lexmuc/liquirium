@@ -86,6 +86,8 @@ package object coinbase {
   )(implicit ec: ExecutionContext) =
     new ExchangeConnector {
 
+      override def exchangeId: ExchangeId = io.liquirium.connect.coinbase.exchangeId
+
       private def makeCandleHistorySegmentLoader(
         tradingPair: TradingPair,
         candleLength: Duration,

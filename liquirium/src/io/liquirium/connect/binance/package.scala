@@ -81,8 +81,9 @@ package object binance {
   )(implicit ec: ExecutionContext) =
     new ExchangeConnector {
 
-      // candles
+      override def exchangeId: ExchangeId = io.liquirium.connect.binance.exchangeId
 
+      // candles
       private def makeCandleHistorySegmentLoader(
         tradingPair: TradingPair,
         candleLength: Duration,
