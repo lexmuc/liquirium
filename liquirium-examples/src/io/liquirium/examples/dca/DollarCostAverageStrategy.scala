@@ -29,15 +29,14 @@ object DollarCostAverageStrategy {
 
 
 /**
- * @param duration Many strategies can run forever but dollar cost averaging needs a fixed duration since it will run
- *                 out of money eventually.
+ * @param duration     Many strategies can run forever but dollar cost averaging needs a fixed duration since it will
+ *                     run out of money eventually.
+ * @param candleLength One hour candles should be enough for dollar cost averaging
  */
 case class DollarCostAverageStrategy(
   duration: Duration,
+  candleLength: Duration,
 ) extends SingleMarketStrategy {
-
-  // One hour candles should be enough for dollar cost averaging
-  override def candleLength: Duration = Duration.ofMinutes(60)
 
   // We don't need any more history because we are not relying on any indicators calculated for the past
   override def minimumCandleHistoryLength: Duration = Duration.ofMinutes(600)

@@ -1,0 +1,23 @@
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Liquirium Chart</title>
+    <style>
+      {{chartStyles}}
+    </style>
+  </head>
+  <body>
+    <script type="text/javascript">
+      {{lightweightCharts}}
+      {{jquery}}
+      window.chartData = {{chartData}};
+      {{chartCode}}
+    </script>
+    <div class="chart-panel">
+      <div class="chart"></div>
+      <div class="legend"></div>
+    </div>
+    <div id="toolbar" style="height: 30px;">
+    </div>
+  </body>
+</html>

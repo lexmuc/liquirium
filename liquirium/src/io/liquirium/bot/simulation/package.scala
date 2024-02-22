@@ -9,6 +9,11 @@ import java.time.{Duration, Instant}
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, ExecutionContext}
 import io.liquirium.connect.binance.{exchangeId => binanceExchangeId}
+import io.liquirium.core.orderTracking.{OpenOrdersHistory, OpenOrdersSnapshot}
+import play.api.libs.json.JsValue
+
+import java.nio.file.{Files, Path, Paths}
+import scala.io.Source
 
 package object simulation {
 
@@ -110,6 +115,39 @@ package object simulation {
         n => StringTradeId(m.exchangeId.value + "-" + m.tradingPair.base + "-" + m.tradingPair.quote + "-" + n.toString)
       )
 
+  }
+
+  /**
+   * Provides a context that can be used to simulate a bot.
+   *
+   * It would be preferable to provide the initial values for the inputs where the updates are provided but this
+   * would require a change of the way the simulation works. So for the time being we use this workaround.
+   */
+  def initialContextForSimulation(simulationStart: Instant): UpdatableContext =
+    ContextWithInputResolution(
+      baseContext = IncrementalContext(),
+      resolve = {
+        case CompletedOperationRequestsInSession => Some(IncrementalSeq.empty)
+        case OrderSnapshotHistoryInput(_) => Some(
+          OpenOrdersHistory.start(OpenOrdersSnapshot(OrderSet.empty, Instant.ofEpochSecond(0)))
+        )
+        case TradeHistoryInput(_, start) if start == simulationStart =>
+          Some(TradeHistorySegment.empty(simulationStart))
+        case SimulatedOpenOrdersInput(_) => Some(Set[Order]())
+        case _ => None
+      }
+    )
+
+  def writeChart(path: Path, dataJson: JsValue): Unit = {
+    val template = Source.fromResource("chart-template.html").mkString
+    val code = Source.fromResource("chart-code.js").mkString
+    val chartHtml = template
+      .replace("{{lightweightCharts}}", Source.fromResource("lightweight-charts.standalone.production.js").mkString)
+      .replace("{{jquery}}", Source.fromResource("jquery-3.3.1.min.js").mkString)
+      .replace("{{chartStyles}}", Source.fromResource("chart-styles.css").mkString)
+      .replace("{{chartData}}", dataJson.toString)
+      .replace("{{chartCode}}", code)
+    Files.write(path, chartHtml.getBytes)
   }
 
 }
