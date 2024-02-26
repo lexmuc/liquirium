@@ -11,6 +11,10 @@ object CandleBasedPriceTicker extends App {
 
   private val connector = Await.result(io.liquirium.connect.binance.getConnector(), 10.seconds)
 
+  private val tradingPair = TradingPair("ETH", "BTC")
+
+  println("Running price ticker for " + tradingPair.toString())
+
   // We need the actor system to run the Akka Source returned by candleHistoryStream
   implicit val actorSystem: ActorSystem[Nothing] =
     io.liquirium.util.akka.DefaultConcurrencyContext.actorSystem
@@ -28,14 +32,14 @@ object CandleBasedPriceTicker extends App {
   // the candle length so we should get new candles one by one. Incomplete candles, i.e. candles that have not
   // ended yet, are returned -- and later updated -- if the exchange API returns incomplete candles.
   connector.candleHistoryStream(
-    tradingPair = TradingPair("ETH", "BTC"),
+    tradingPair = tradingPair,
     initialSegment = initialHistorySegment,
   ).runForeach { candleHistorySegment =>
     candleHistorySegment.lastOption match {
       case None =>
         println(s"${candleHistorySegment.end}: No price data available yet")
       case Some(candle) =>
-        println(s"${candleHistorySegment.end}:Latest price is ${candle.close.toString()}")
+        println(s"${candleHistorySegment.end}: Latest price is ${candle.close.toString()}")
     }
   }
 

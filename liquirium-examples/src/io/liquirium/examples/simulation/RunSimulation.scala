@@ -24,7 +24,7 @@ object RunSimulation extends App {
     val strategy = DollarCostAverageStrategy(runDuration, candleLength = Duration.ofHours(1))
     val totalValue = BigDecimal(10000)
     val market = Market(io.liquirium.connect.binance.exchangeId, TradingPair("BTC", "USDT"))
-    val simulationStart = Instant.parse("2022-07-01T00:00:00.000Z")
+    val simulationStart = Instant.parse("2024-01-01T00:00:00.000Z")
     val simulationPeriod = SimulationPeriod(
       start = simulationStart,
       end = simulationStart plus runDuration,

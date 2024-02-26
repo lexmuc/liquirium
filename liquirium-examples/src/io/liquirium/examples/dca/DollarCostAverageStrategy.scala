@@ -38,16 +38,28 @@ case class DollarCostAverageStrategy(
   candleLength: Duration,
 ) extends SingleMarketStrategy {
 
-  // We don't need any more history because we are not relying on any indicators calculated for the past
-  override def minimumCandleHistoryLength: Duration = Duration.ofMinutes(600)
+  override def minimumCandleHistoryLength: Duration = {
+    // We don't need any more history because we are not relying on any indicators calculated for the past
+    Duration.ofMinutes(600)
+  }
 
-  // We have not bought the asset yet. We only have quote currency.
-  override def initialResources(totalQuoteValue: BigDecimal, initialPrice: BigDecimal): ExactResources =
+  override def initialResources(totalQuoteValue: BigDecimal, initialPrice: BigDecimal): ExactResources = {
+    // We have not bought the asset yet. We only have quote currency.
     ExactResources(
       baseBalance = BigDecimal(0),
       quoteBalance = totalQuoteValue,
     )
+  }
 
+  /**
+   * This is the main method of the strategy. It is called at least every time a new candle is available.
+   * The strategy can access the state of the bot comprising the candle history, current time and balances.
+   *
+   * Output is a sequence of order intents. The bot will try to convert these into actual (limit) orders.
+   * If the an order is already in the order book, it will be ignored. If the order is not possible, for instance
+   * because the volume is too small, it will be ignored. Open orders not in the sequence will be cancelled.
+   * In short, the sequence should contain all orders that the bot should have in the order book.
+   */
   override def apply(state: SingleMarketStrategy.State): Seq[OperationIntent.OrderIntent] = {
     // in case last price is None (no trade activity in the market yet), we return an empty sequence
     state.candleHistory.lastPrice map { price =>
@@ -69,6 +81,7 @@ case class DollarCostAverageStrategy(
     startMoney.toDouble / secondsTotal.toDouble * secondsPassed.toDouble
   }
 
+  // How much money should we spend now to meet the target?
   private def getSpendingObligation(state: SingleMarketStrategy.State): BigDecimal = {
     val spentMoney = state.runConfiguration.initialResources.quoteBalance - state.quoteBalance
     // never return a negative number

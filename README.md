@@ -41,11 +41,11 @@ liquirium.bot and liquirium.eval are still in an alpha or in part even experimen
 
 liquirium.connect can be considered beta. The following exchanges are currently supported:
 
-- Binance
-- Bitfinex
-- Poloniex
-- Coinbase
-- Deribit (still incomplete)
+- Binance (spot markets, no websocket support yet)
+- Bitfinex (work in progress)
+- Poloniex (work in progress)
+- Coinbase (work in progress
+- Deribit (work in progress)
 
 Please note that intentionally only a small part of the operations provided by the exchanges are supported.
 
@@ -57,10 +57,42 @@ Please note that intentionally only a small part of the operations provided by t
 - more convenient simulation and backtesting
 - examples of how to use Liquirium from Java
 
-## Getting help / Contact
+## Getting started
 
-Documentation is currently minimal. However, more examples of how Liquirium Bot and Liquirium Connect can be used
-will be added shortly in the 'examples' folder.
+You need Scala 2.12.18 to build and run Liquirium. The project is built with Mill (https://www.lihaoyi.com/mill/).
+If you don't have Mill installed, you can just download [the in-repo bootstrap
+script](https://mill-build.com/mill/Installation_IDE_Support.html#_mills_bootstrap_script_linuxos_x_only) for a 
+quick start. 
+
+Run the following command to build the project and publish it to your local ivy2 repository
+(type `./mill` instead of `mill` if you haven't installed Mill globally):
+
+```bash
+mill liquirium.publishLocal
+```
+
+In the `liquirium-examples` folder you find a few examples of how to use the framework. The examples should give you
+a good starting point for developing your own trading bots.
+
+The `CandleBasedPriceTicker` example demonstrates how to use liquirium.connect to subscribe to candlestick
+data from an exchange and print the latest price to the console. Run the following command to try it out:
+
+```bash
+mill liquirium-examples.runTicker
+```
+
+The `DollarCostAverageStrategy` demonstrates how to use the framework to implement a simple trading strategy without 
+having to worry about placing and cancelling orders. The framework takes care of all the low-level details such as
+cancelling outdated orders or retrying failed requests.
+
+Run the following command to simulate/backtest the bot:
+
+```bash
+mill liquirium-examples.runSimulation
+```
+
+
+## Contact
 
 In case you need help or if you want to give us feedback, don't hesitate to write an email to 
 [hello@liquirium.io](mailto:hello@liquirium.io).

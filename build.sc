@@ -1,8 +1,10 @@
 import mill._, scalalib._, publish._
 
-object liquirium extends ScalaModule with PublishModule {
+trait LiquiriumModule extends ScalaModule {
+  def scalaVersion = "2.12.18"
+}
 
-  def scalaVersion = "2.12.12"
+object liquirium extends LiquiriumModule with PublishModule {
 
   val akkaVersion = "2.6.10"
 
@@ -59,10 +61,16 @@ object liquirium extends ScalaModule with PublishModule {
 
 }
 
-object `liquirium-examples` extends ScalaModule {
-
-  def scalaVersion = "2.12.12"
+object `liquirium-examples` extends LiquiriumModule {
 
   override def moduleDeps = Seq(liquirium)
+
+  def runSimulation = T {
+    runMain("io.liquirium.examples.simulation.RunSimulation")
+  }
+
+  def runTicker = T {
+    runMain("io.liquirium.examples.ticker.CandleBasedPriceTicker")
+  }
 
 }
