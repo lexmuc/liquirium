@@ -3,7 +3,7 @@ package io.liquirium.examples.dca
 import io.liquirium.bot.SingleMarketStrategyBotUtils.{baseBalanceMetric, quoteBalanceMetric, totalValueEval}
 import io.liquirium.bot.simulation.ChartDataSeriesConfigUtils.{ownTradeVolumeInMarketSeriesConfig, simpleLineSeriesConfig}
 import io.liquirium.bot.simulation.ChartMetric.marketIndependentMetric
-import io.liquirium.bot.simulation.{ChartDataSeriesConfig, ChartDataSeriesConfigUtils}
+import io.liquirium.bot.simulation.{BotSimulationInfo, ChartDataSeriesConfigUtils}
 import io.liquirium.bot.{SingleMarketStrategy, SingleMarketStrategyBot, SingleMarketStrategyBotUtils}
 import io.liquirium.core.{ExactResources, OperationIntent}
 import io.liquirium.eval.Eval
@@ -14,14 +14,19 @@ import java.time.Duration
 object DollarCostAverageStrategy {
 
   // We define some data series that we want to see in the chart.
-  def getDefaultChartDataSeries(bot: SingleMarketStrategyBot): Seq[ChartDataSeriesConfig] = {
+  def getSimulationInfo(bot: SingleMarketStrategyBot): BotSimulationInfo = {
     val lastPriceEval: Eval[BigDecimal] = SingleMarketStrategyBotUtils.candleBasedLastPriceEval(bot)
-    Seq(
+    val chartDataSeries = Seq(
       simpleLineSeriesConfig("Total value", marketIndependentMetric(totalValueEval(bot, lastPriceEval))),
       ChartDataSeriesConfigUtils.highestBuyConfig(lastPriceEval.map(_ * BigDecimal(0.9))),
       simpleLineSeriesConfig("Base balance", baseBalanceMetric(bot), color = "blue"),
       simpleLineSeriesConfig("Quote balance", quoteBalanceMetric(bot), color = "orange"),
       ownTradeVolumeInMarketSeriesConfig(),
+    )
+    BotSimulationInfo(
+      basicCandleLength = bot.strategy.candleLength,
+      chartDataSeriesConfigs = chartDataSeries,
+      markets = Seq(bot.runConfiguration.market),
     )
   }
 

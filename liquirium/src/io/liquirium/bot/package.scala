@@ -1,7 +1,6 @@
 package io.liquirium
 
 import io.liquirium.bot.BotInput._
-import io.liquirium.bot.simulation.{BotWithSimulationInfo, ChartDataSeriesConfig}
 import io.liquirium.core.orderTracking._
 import io.liquirium.core.{BotId, Market, OrderConstraints}
 import io.liquirium.eval.IncrementalFoldHelpers.IncrementalEval
@@ -72,21 +71,20 @@ package object bot {
 
   }
 
-  def singleMarketStrategyBotFactoryForSimulation(
+  def singleMarketStrategyBotFactory(
     candleHistoryLoaderProvider: CandleHistoryLoaderProvider,
     orderConstraints: OrderConstraints,
     strategy: SingleMarketStrategy,
     market: Market,
-    metricsFactory: SingleMarketStrategyBot => Seq[ChartDataSeriesConfig],
   )(
     implicit executionContext: ExecutionContext,
-  ): BotFactory = new BotFactory {
+  ): BotFactory[SingleMarketStrategyBot] = new BotFactory[SingleMarketStrategyBot] {
 
     def makeBot(
       startTime: Instant,
       endTimeOption: Option[Instant],
       totalValue: BigDecimal,
-    ): Future[BotWithSimulationInfo] =
+    ): Future[SingleMarketStrategyBot] =
       for {
         p <- getInitialPrice(market, strategy.candleLength, startTime)
       } yield {
@@ -103,7 +101,7 @@ package object bot {
         val orderIntentConveyorFactory = new ProductionOrderIntentConveyorFactory(
           syncInterval = Duration.ofSeconds(150),
         )
-        val coreBot = SingleMarketStrategyBot(
+        SingleMarketStrategyBot(
           strategy = strategy,
           runConfiguration = runConfiguration,
           orderIntentConveyorEval = orderIntentConveyorFactory.apply(
@@ -112,15 +110,6 @@ package object bot {
             start = startTime,
           ),
         )
-        new BotWithSimulationInfo {
-          override def basicCandleLength: Duration = coreBot.strategy.candleLength
-
-          override def markets: Seq[Market] = Seq(market)
-
-          override def eval: Eval[Iterable[BotOutput]] = coreBot.eval
-
-          override def chartDataSeriesConfigs: Seq[ChartDataSeriesConfig] = metricsFactory.apply(coreBot)
-        }
       }
 
     private def getInitialPrice(market: Market, candleLength: Duration, startTime: Instant): Future[BigDecimal] = {

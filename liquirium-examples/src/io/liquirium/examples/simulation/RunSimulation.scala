@@ -24,6 +24,7 @@ object RunSimulation extends App {
     val strategy = DollarCostAverageStrategy(runDuration, candleLength = Duration.ofHours(1))
     val totalValue = BigDecimal(10000)
     val market = Market(io.liquirium.connect.binance.exchangeId, TradingPair("BTC", "USDT"))
+    val getSimulationInfo = bot => DollarCostAverageStrategy.getSimulationInfo(bot)
     val simulationStart = Instant.parse("2024-01-01T00:00:00.000Z")
     val simulationPeriod = SimulationPeriod(
       start = simulationStart,
@@ -53,7 +54,7 @@ object RunSimulation extends App {
       context = initialContextForSimulation(simulationStart),
       evaluator = SimpleBotEvaluator(bot.eval),
       environment = simulationEnvironment,
-      logger = getLogger(bot, simulationStart),
+      logger = getLogger(getSimulationInfo(bot), simulationStart),
     )
 
     val stopwatchStart = Instant.now()
@@ -76,7 +77,7 @@ object RunSimulation extends App {
     market: Market,
     totalValue: BigDecimal,
   ) = {
-    val botFactory = io.liquirium.bot.singleMarketStrategyBotFactoryForSimulation(
+    val botFactory = io.liquirium.bot.singleMarketStrategyBotFactory(
       candleHistoryLoaderProvider = candleHistoryLoaderProvider,
       orderConstraints = OrderConstraints(
         pricePrecision = NumberPrecision.significantDigits(5),
@@ -84,7 +85,6 @@ object RunSimulation extends App {
       ),
       strategy = strategy,
       market = market,
-      metricsFactory = bot => DollarCostAverageStrategy.getDefaultChartDataSeries(bot),
     )(DefaultConcurrencyContext.executionContext)
 
     val botFuture = botFactory.makeBot(
@@ -120,17 +120,17 @@ object RunSimulation extends App {
     )
   }
 
-  private def getLogger(bot: BotWithSimulationInfo, simulationStart: Instant): AggregateChartDataLogger = {
+  private def getLogger(simulationInfo: BotSimulationInfo, simulationStart: Instant): AggregateChartDataLogger = {
 
     def makeSingleMarketChartDataLogger(market: Market): ChartDataLogger = {
       val candlesEval =
         CandleAggregationFold.aggregate(
-          InputEval(CandleHistoryInput(market, bot.basicCandleLength, simulationStart)),
+          InputEval(CandleHistoryInput(market, simulationInfo.basicCandleLength, simulationStart)),
           Duration.ofHours(6),
         )
       ChartDataLogger(
         candlesEval = candlesEval,
-        dataSeriesConfigsWithEvals = bot.chartDataSeriesConfigs.map(dsc => {
+        dataSeriesConfigsWithEvals = simulationInfo.chartDataSeriesConfigs.map(dsc => {
           val e = dsc.metric.getEval(market, simulationStart, candlesEval)
           (dsc, e)
         }),
@@ -138,7 +138,7 @@ object RunSimulation extends App {
     }
 
     AggregateChartDataLogger(
-      bot.markets.map(m => m -> makeSingleMarketChartDataLogger(m)),
+      simulationInfo.markets.map(m => m -> makeSingleMarketChartDataLogger(m)),
     )
   }
 
