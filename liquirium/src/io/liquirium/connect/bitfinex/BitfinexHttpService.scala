@@ -1,7 +1,6 @@
 package io.liquirium.connect.bitfinex
 
-import io.liquirium.util.akka.AsyncHttpService
-import io.liquirium.util.{HttpResponse, Logger, NonceGenerator}
+import io.liquirium.util.{HttpResponse, HttpService, Logger, NonceGenerator}
 import play.api.libs.json.JsValue
 
 import java.net.URLEncoder
@@ -9,7 +8,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
 class BitfinexHttpService(
-  baseService: AsyncHttpService,
+  baseService: HttpService,
   authenticator: BitfinexAuthenticator,
   nonceGenerator: NonceGenerator,
   responseTransformer: Try[HttpResponse] => Try[JsValue],

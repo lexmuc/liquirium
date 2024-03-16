@@ -41,7 +41,7 @@ case object DefaultConcurrencyContext extends ConcurrencyContext {
 
   implicit val executionContext: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
-  lazy val asyncHttpService = new AsyncHttpService()(actorSystem.toClassic)
+  lazy val asyncHttpService = new AkkaHttpService()(actorSystem.toClassic)
 
   val spawner: ActorSpawner = new ActorSpawner {
     private val timeoutTime: FiniteDuration = 20.seconds

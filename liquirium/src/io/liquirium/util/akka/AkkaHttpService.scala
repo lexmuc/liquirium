@@ -5,32 +5,39 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import io.liquirium.util.{HttpResponse => LiquiriumHttpResponse}
+import io.liquirium.util.{HttpResponse => LiquiriumHttpResponse, HttpService => LiquiriumHttpService}
 
-import scala.collection.immutable.Seq
 import scala.concurrent.{ExecutionContextExecutor, Future}
 
-class AsyncHttpService(implicit val actorSystem: ActorSystem) {
+class AkkaHttpService(implicit val actorSystem: ActorSystem) extends LiquiriumHttpService {
 
   implicit val executionContext: ExecutionContextExecutor = actorSystem.dispatcher
 
-  def postFormData(url: String, data: String, headers: Map[String, String] = Map()): Future[LiquiriumHttpResponse] =
+  override def postFormData(
+    url: String,
+    data: String,
+    headers: Map[String, String] = Map(),
+  ): Future[LiquiriumHttpResponse] =
     process(postRequest(url, data, headers, ContentTypes.`application/x-www-form-urlencoded`))
 
-  def postJson(url: String, data: String, headers: Map[String, String] = Map()): Future[LiquiriumHttpResponse] =
+  override def postJson(
+    url: String,
+    data: String,
+    headers: Map[String, String] = Map(),
+  ): Future[LiquiriumHttpResponse] =
     process(postRequest(url, data, headers, ContentTypes.`application/json`))
 
-  def get(url: String, headers: Map[String, String]): Future[LiquiriumHttpResponse] =
+  override def get(url: String, headers: Map[String, String]): Future[LiquiriumHttpResponse] =
     process(getRequest(url, headers))
 
-  def delete(url: String, headers: Map[String, String]): Future[LiquiriumHttpResponse] =
+  override def delete(url: String, headers: Map[String, String]): Future[LiquiriumHttpResponse] =
     process(deleteRequest(url, headers))
 
-  def deleteJson(url: String, data: String, headers: Map[String, String]): Future[LiquiriumHttpResponse] =
+  override def deleteJson(url: String, data: String, headers: Map[String, String]): Future[LiquiriumHttpResponse] =
     process(deleteRequestWithBody(url, data, headers, ContentTypes.`application/json`))
 
-  private def convertHeaders(hh: Map[String, String]): Seq[HttpHeader] =
-    Seq[HttpHeader](hh.map { case (k, v) => RawHeader(k, v) }.toSeq: _*)
+  private def convertHeaders(hh: Map[String, String]): scala.collection.immutable.Seq[HttpHeader] =
+    hh.map { case (k, v) => RawHeader(k, v) }.toList
 
   private def getRequest(url: String, headers: Map[String, String]) = HttpRequest(
     method = HttpMethods.GET,
@@ -44,7 +51,12 @@ class AsyncHttpService(implicit val actorSystem: ActorSystem) {
     headers = convertHeaders(headers)
   )
 
-  private def deleteRequestWithBody(url: String, data: String, headers: Map[String, String], contentType: ContentType) = HttpRequest(
+  private def deleteRequestWithBody(
+    url: String,
+    data: String,
+    headers: Map[String, String],
+    contentType: ContentType,
+  ) = HttpRequest(
     method = HttpMethods.DELETE,
     uri = url,
     headers = convertHeaders(headers),

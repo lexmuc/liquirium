@@ -2,7 +2,8 @@ package io.liquirium.connect.coinbase
 
 import io.liquirium.core.helpers.TestWithMocks
 import io.liquirium.core.helpers.async.FutureServiceMock
-import io.liquirium.helpers.{CallingThreadExecutionContext, DummyLogger}
+import io.liquirium.helpers.CallingThreadExecutionContext
+import io.liquirium.util.DummyLogger
 import org.mockito.Mockito
 
 class CoinbaseRestApiTest extends TestWithMocks {

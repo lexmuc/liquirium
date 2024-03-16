@@ -1,8 +1,7 @@
 package io.liquirium.connect.poloniex
 
 import io.liquirium.connect.poloniex.PoloniexHttpRequest._
-import io.liquirium.util.akka.AsyncHttpService
-import io.liquirium.util.{HttpResponse, Logger}
+import io.liquirium.util.{HttpResponse, HttpService, Logger}
 import play.api.libs.json.{JsObject, JsString, JsValue}
 
 import java.net.URLEncoder
@@ -10,7 +9,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
 class PoloniexHttpService(
-  baseService: AsyncHttpService,
+  baseService: HttpService,
   authenticator: PoloniexAuthenticator,
   responseTransformer: Try[HttpResponse] => Try[JsValue],
   logger: Logger,

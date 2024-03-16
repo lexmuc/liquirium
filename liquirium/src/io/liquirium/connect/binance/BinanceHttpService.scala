@@ -1,14 +1,13 @@
 package io.liquirium.connect.binance
 
-import io.liquirium.util.akka.AsyncHttpService
-import io.liquirium.util.{Clock, HttpResponse}
+import io.liquirium.util.{Clock, HttpResponse, HttpService}
 
 import java.net.URLEncoder
 import scala.concurrent.Future
 
 class BinanceHttpService
 (
-  baseService: AsyncHttpService,
+  baseService: HttpService,
   authenticator: BinanceAuthenticator,
   clock: Clock,
 ) {

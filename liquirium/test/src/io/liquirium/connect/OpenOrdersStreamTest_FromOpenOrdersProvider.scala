@@ -9,7 +9,8 @@ import io.liquirium.core.helpers.OrderHelpers.{order => o}
 import io.liquirium.core.helpers.TestWithMocks
 import io.liquirium.core.helpers.async.FutureServiceMock
 import io.liquirium.core.{Market, Order}
-import io.liquirium.helpers.{DummyLogger, TypedActorTest}
+import io.liquirium.helpers.TypedActorTest
+import io.liquirium.util.DummyLogger
 
 import scala.concurrent.Future
 import scala.concurrent.duration._

@@ -1,6 +1,4 @@
-package io.liquirium.helpers
-
-import io.liquirium.util.Logger
+package io.liquirium.util
 
 object DummyLogger extends Logger {
   override def warn(msg: String): Unit = ()

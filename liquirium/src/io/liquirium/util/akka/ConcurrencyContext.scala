@@ -14,7 +14,7 @@ trait ConcurrencyContext {
 
   def sourceQueueFactory: SourceQueueFactory
 
-  def asyncHttpService: AsyncHttpService
+  def asyncHttpService: AkkaHttpService
 
   val actorSystem: ActorSystem[_]
 
