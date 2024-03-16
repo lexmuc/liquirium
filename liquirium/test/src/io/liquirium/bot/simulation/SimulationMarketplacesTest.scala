@@ -14,9 +14,9 @@ import io.liquirium.eval.helpers.EvalHelpers.inputRequest
 
 class SimulationMarketplacesTest extends TestWithMocks {
 
-  private val marketplaceFactory = mock[Market => SimulationMarketplace]
+  private def marketplaces(mm: SimulationMarketplace*) = SimulationMarketplaces(mm)
 
-  private def marketplaces(mm: SimulationMarketplace*) = SimulationMarketplaces(mm, marketplaceFactory)
+  private def marketplaces(factory: Market => SimulationMarketplace) = SimulationMarketplaces(factory)
 
   private def marketplace(market: Market, inputs: Map[BotInput[_], Any] = Map()) =
     helpers.FakeSimulationMarketplace(market, inputs)
@@ -37,16 +37,39 @@ class SimulationMarketplacesTest extends TestWithMocks {
     newState shouldEqual marketplaces(newMp1, mp2)
   }
 
-  test("when an operation request for an unknown market is encountered, the market is created") {
-    val r2 = requestMessage(2, m(2))
-    val context = simpleFakeContext()
+  test("it can be created with a marketplace factory that can create marketplaces on demand") {
+    val marketplaceFactory = mock[Market => SimulationMarketplace]
+    val r1 = requestMessage(1, m(1))
+    val context0 = simpleFakeContext()
+    val context1 = context0.update(inputUpdate(1))
     val mp1 = marketplace(m(1))
-    val mp2 = marketplace(m(2)).addTradeRequestCompletion(r2, context, inputUpdate(123))
+      .addTradeRequestCompletion(r1, context0, inputUpdate(1))
+    marketplaceFactory.apply(m(1)) returns mp1
+    val (finalContext, _) = marketplaces(marketplaceFactory)
+      .processOperationRequest(r1, context0).right.get
+    finalContext shouldEqual context1
+  }
+
+  test("created marketplaces are stored and reused for subsequent requests") {
+    val marketplaceFactory = mock[Market => SimulationMarketplace]
+    val r1 = requestMessage(1, m(1))
+    val r2 = requestMessage(2, m(2))
+    val r3 = requestMessage(3, m(1))
+    val context0 = simpleFakeContext()
+    val context1 = context0.update(inputUpdate(1))
+    val context2 = context1.update(inputUpdate(2))
+    val context3 = context2.update(inputUpdate(3))
+    val mp1 = marketplace(m(1))
+      .addTradeRequestCompletion(r1, context0, inputUpdate(1))
+      .addTradeRequestCompletion(r3, context2, inputUpdate(3))
+    val mp2 = marketplace(m(2)).addTradeRequestCompletion(r2, context1, inputUpdate(2))
+    marketplaceFactory.apply(m(1)) returns mp1
     marketplaceFactory.apply(m(2)) returns mp2
-    val newMp2 = mp2.processOperationRequest(r2, context).right.get._2
-    newMp2 shouldNot equal(mp2)
-    val (_, newState) = marketplaces(mp1).processOperationRequest(r2, context).right.get
-    newState shouldEqual marketplaces(mp1, newMp2)
+    val (finalContext, _) = marketplaces(marketplaceFactory)
+      .processOperationRequest(r1, context0).right.get._2
+      .processOperationRequest(r2, context1).right.get._2
+      .processOperationRequest(r3, context2).right.get
+    finalContext shouldEqual context3
   }
 
   test("after an operation request message it returns the context updated with the respective input update") {

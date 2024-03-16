@@ -12,7 +12,7 @@ import io.liquirium.connect.binance.{exchangeId => binanceExchangeId}
 import io.liquirium.core.orderTracking.{OpenOrdersHistory, OpenOrdersSnapshot}
 import play.api.libs.json.JsValue
 
-import java.nio.file.{Files, Path, Paths}
+import java.nio.file.{Files, Path}
 import scala.io.Source
 
 package object simulation {
@@ -100,10 +100,13 @@ package object simulation {
   /**
    * Provides a context that can be used to simulate a bot.
    *
-   * It would be preferable to provide the initial values for the inputs where the updates are provided but this
-   * would require a change of the way the simulation works. So for the time being we use this workaround.
+   * It would be preferable to provide the initial values for the inputs in the classes where the updates are generated,
+   * but this would require a change of the way the simulation works. So for the time being we use this workaround.
    */
-  def initialContextForSimulation(simulationStart: Instant): UpdatableContext =
+  def initialContextForSimulation(
+    simulationStart: Instant,
+    withTradeHistoryInput: Boolean = true, // deactivate when tracking the performance of a bot running in production
+  ): UpdatableContext =
     ContextWithInputResolution(
       baseContext = IncrementalContext(),
       resolve = {
@@ -111,7 +114,7 @@ package object simulation {
         case OrderSnapshotHistoryInput(_) => Some(
           OpenOrdersHistory.start(OpenOrdersSnapshot(OrderSet.empty, Instant.ofEpochSecond(0)))
         )
-        case TradeHistoryInput(_, start) if start == simulationStart =>
+        case TradeHistoryInput(_, start) if start == simulationStart && withTradeHistoryInput =>
           Some(TradeHistorySegment.empty(simulationStart))
         case SimulatedOpenOrdersInput(_) => Some(Set[Order]())
         case _ => None

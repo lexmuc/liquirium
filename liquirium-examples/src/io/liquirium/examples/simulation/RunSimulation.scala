@@ -45,6 +45,7 @@ object RunSimulation extends App {
     )
 
     val simulationEnvironment = getSimulationEnvironment(
+      market = market,
       simulationPeriod = simulationPeriod,
       candleLength = strategy.candleLength,
       candleHistoryLoaderProvider = candleHistoryLoaderProvider,
@@ -96,10 +97,13 @@ object RunSimulation extends App {
   }
 
   private def getSimulationEnvironment(
+    market: Market,
     simulationPeriod: SimulationPeriod,
     candleLength: Duration,
     candleHistoryLoaderProvider: CandleHistoryLoaderProvider,
   ) = {
+    // The trades are part of the output of the simulation, so we don't provide a trade history loader.
+    // However, when tracking the performance of a bot running in production, we would provide the actual trades here.
     val dummyTradeHistoryLoaderProvider = new TradeHistoryLoaderProvider {
       override def getHistoryLoader(market: Market): Future[TradeHistoryLoader] =
         throw new RuntimeException("Trade history loader should not be required in simulation.")
@@ -116,7 +120,7 @@ object RunSimulation extends App {
     val marketplaceFactory = simulationMarketplaceFactory(candleLength)
     DynamicInputSimulationEnvironment(
       inputUpdateStream = inputUpdateStream,
-      marketplaces = SimulationMarketplaces(Seq(), m => marketplaceFactory(m, simulationPeriod.start)),
+      marketplaces = SimulationMarketplaces(Seq(marketplaceFactory(market, simulationPeriod.start))),
     )
   }
 

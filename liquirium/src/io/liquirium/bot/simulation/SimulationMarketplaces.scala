@@ -21,8 +21,17 @@ object SimulationMarketplaces {
 
   def apply(
     marketplaces: Traversable[SimulationMarketplace],
+  ): SimulationMarketplaces = Impl(
+    marketplaces.toSeq,
+    _ => {
+      val msg = "This instance of SimulationMarketplaces does not support creating new marketplaces"
+      throw new UnsupportedOperationException(msg)
+    },
+  )
+
+  def apply(
     marketplaceFactory: Market => SimulationMarketplace,
-  ): SimulationMarketplaces = Impl(marketplaces.toSeq, marketplaceFactory)
+  ): SimulationMarketplaces = Impl(Seq(), marketplaceFactory)
 
   case class Impl(
     marketplaces: Seq[SimulationMarketplace],
