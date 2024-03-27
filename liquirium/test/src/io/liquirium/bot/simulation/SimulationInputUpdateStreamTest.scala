@@ -5,6 +5,7 @@ import io.liquirium.core.helpers.TestWithMocks
 import io.liquirium.eval.helpers.ContextHelpers.inputUpdate
 import io.liquirium.eval.helpers.EvalHelpers.{input, inputRequest, unknownInputsException}
 import io.liquirium.eval.{Input, UnknownInputsException}
+import io.liquirium.util.TimePeriod
 
 import java.time.Instant
 
@@ -13,7 +14,7 @@ class SimulationInputUpdateStreamTest extends TestWithMocks {
   private val streamProvider: SingleInputUpdateStreamProvider = mock[SingleInputUpdateStreamProvider]
 
   private def stream(start: Instant, end: Instant) = SimulationInputUpdateStream(
-    period = SimulationPeriod(start, end),
+    period = TimePeriod(start, end),
     singleInputStreamProvider = streamProvider,
   )
 

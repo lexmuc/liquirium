@@ -14,7 +14,7 @@ case class SingleMarketStrategyBot(
 ) extends EvalBot {
 
   private val market = runConfiguration.market
-  private val startTime = runConfiguration.startTime
+  private val startTime = runConfiguration.operationPeriod.start
   private val initialResources = runConfiguration.initialResources
 
   val candleHistoryEval: Eval[CandleHistorySegment] =
@@ -58,9 +58,8 @@ case class SingleMarketStrategyBot(
       state <- stateEval
     } yield {
       val intents =
-        if (state.time isBefore startTime) Seq()
-        else if (state.runConfiguration.endTimeOption.isDefined
-          && !(state.time isBefore state.runConfiguration.endTimeOption.get)) Seq()
+        if ((state.time isBefore startTime) || !(state.time isBefore runConfiguration.operationPeriod.end))
+          Seq()
         else strategy(state)
       conveyor(intents)
     }

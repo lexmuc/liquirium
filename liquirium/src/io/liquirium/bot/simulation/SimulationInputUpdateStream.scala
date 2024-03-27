@@ -1,6 +1,7 @@
 package io.liquirium.bot.simulation
 
 import io.liquirium.eval.{Input, InputRequest, InputUpdate, UnknownInputsException}
+import io.liquirium.util.TimePeriod
 
 import java.time.Instant
 
@@ -19,7 +20,7 @@ trait SimulationInputUpdateStream {
 object SimulationInputUpdateStream {
 
   def apply(
-    period: SimulationPeriod,
+    period: TimePeriod,
     singleInputStreamProvider: SingleInputUpdateStreamProvider,
   ): SimulationInputUpdateStream = Impl(
     nextInputUpdateWithTime = Some((period.start, InputUpdate(Map()))),

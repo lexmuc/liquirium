@@ -7,7 +7,7 @@ import io.liquirium.connect.ExchangeConnector
 import io.liquirium.core._
 import io.liquirium.eval.InputEval
 import io.liquirium.examples.dca.DollarCostAverageStrategy
-import io.liquirium.util.NumberPrecision
+import io.liquirium.util.{NumberPrecision, TimePeriod}
 import io.liquirium.util.akka.DefaultConcurrencyContext
 import io.liquirium.util.store.{CandleHistoryLoaderProvider, TradeHistoryLoaderProvider}
 
@@ -26,7 +26,7 @@ object RunSimulation extends App {
     val market = Market(io.liquirium.connect.binance.exchangeId, TradingPair("BTC", "USDT"))
     val getSimulationInfo = bot => DollarCostAverageStrategy.getSimulationInfo(bot)
     val simulationStart = Instant.parse("2024-01-01T00:00:00.000Z")
-    val simulationPeriod = SimulationPeriod(
+    val simulationPeriod = TimePeriod(
       start = simulationStart,
       end = simulationStart plus runDuration,
     )
@@ -72,7 +72,7 @@ object RunSimulation extends App {
   }
 
   private def getBot(
-    simulationPeriod: SimulationPeriod,
+    simulationPeriod: TimePeriod,
     candleHistoryLoaderProvider: CandleHistoryLoaderProvider,
     strategy: SingleMarketStrategy,
     market: Market,
@@ -88,17 +88,13 @@ object RunSimulation extends App {
       market = market,
     )(DefaultConcurrencyContext.executionContext)
 
-    val botFuture = botFactory.makeBot(
-      startTime = simulationPeriod.start,
-      endTimeOption = Some(simulationPeriod.end),
-      totalValue = totalValue,
-    )
+    val botFuture = botFactory.makeBot(simulationPeriod, totalValue)
     Await.result(botFuture, 1.minute)
   }
 
   private def getSimulationEnvironment(
     market: Market,
-    simulationPeriod: SimulationPeriod,
+    simulationPeriod: TimePeriod,
     candleLength: Duration,
     candleHistoryLoaderProvider: CandleHistoryLoaderProvider,
   ) = {

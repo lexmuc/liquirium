@@ -2,9 +2,8 @@ package io.liquirium.bot
 
 import io.liquirium.core.ExactResources
 import io.liquirium.core.helpers.{BasicTest, MarketHelpers}
-import io.liquirium.core.helpers.CoreHelpers.{dec, exchangeId}
-
-import java.time.Instant
+import io.liquirium.core.helpers.CoreHelpers.{dec, exchangeId, sec}
+import io.liquirium.util.TimePeriod
 
 class SingleMarketStrategyBotRunConfigurationTest extends BasicTest {
 
@@ -12,8 +11,7 @@ class SingleMarketStrategyBotRunConfigurationTest extends BasicTest {
     val market = MarketHelpers.market(exchangeId(1), base = "base", quote = "quote")
     val runConfiguration = SingleMarketStrategyBotRunConfiguration(
       market = market,
-      startTime = Instant.ofEpochSecond(0),
-      endTimeOption = None,
+      operationPeriod = TimePeriod(sec(0), sec(1000)),
       initialPrice = BigDecimal(1),
       initialResources = ExactResources.apply(
         baseBalance = dec(1),

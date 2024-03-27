@@ -5,6 +5,7 @@ import io.liquirium.core.orderTracking._
 import io.liquirium.core.{BotId, Market, OrderConstraints}
 import io.liquirium.eval.IncrementalFoldHelpers.IncrementalEval
 import io.liquirium.eval.{Constant, Eval, InputEval}
+import io.liquirium.util.TimePeriod
 import io.liquirium.util.store.CandleHistoryLoaderProvider
 
 import java.time.{Duration, Instant}
@@ -81,17 +82,15 @@ package object bot {
   ): BotFactory[SingleMarketStrategyBot] = new BotFactory[SingleMarketStrategyBot] {
 
     def makeBot(
-      startTime: Instant,
-      endTimeOption: Option[Instant],
+      operationPeriod: TimePeriod,
       totalValue: BigDecimal,
     ): Future[SingleMarketStrategyBot] =
       for {
-        p <- getInitialPrice(market, strategy.candleLength, startTime)
+        p <- getInitialPrice(market, strategy.candleLength, operationPeriod.start)
       } yield {
         val runConfiguration = SingleMarketStrategyBotRunConfiguration(
           market = market,
-          startTime = startTime,
-          endTimeOption = endTimeOption,
+          operationPeriod = operationPeriod,
           initialPrice = p,
           initialResources = strategy.initialResources(
             totalQuoteValue = totalValue,
@@ -107,7 +106,7 @@ package object bot {
           orderIntentConveyorEval = orderIntentConveyorFactory.apply(
             market = market,
             orderConstraints = orderConstraints,
-            start = startTime,
+            start = operationPeriod.start,
           ),
         )
       }

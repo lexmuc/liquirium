@@ -11,6 +11,7 @@ import io.liquirium.core.helpers.{BasicTest, MarketHelpers}
 import io.liquirium.core.{CandleHistorySegment, ExactResources, Market, Trade}
 import io.liquirium.eval.helpers.ContextHelpers.inputUpdate
 import io.liquirium.eval.{Eval, IncrementalContext, InputEval, UpdatableContext}
+import io.liquirium.util.TimePeriod
 import org.scalatest.Matchers
 
 import java.time.{Duration, Instant}
@@ -18,7 +19,7 @@ import java.time.{Duration, Instant}
 class SingleMarketStrategyBotTest extends BasicTest with Matchers {
 
   private var startTime: Instant = Instant.ofEpochSecond(0)
-  private var endTimeOption: Option[Instant] = None
+  private var endTime: Instant = Instant.ofEpochSecond(1000)
   private val market: Market = MarketHelpers.market(1)
   private var initialPrice: BigDecimal = BigDecimal(1)
   private var initialBaseBalance: BigDecimal = BigDecimal(0)
@@ -49,8 +50,7 @@ class SingleMarketStrategyBotTest extends BasicTest with Matchers {
     strategy = makeStrategy(),
     runConfiguration = SingleMarketStrategyBotRunConfiguration(
       market = market,
-      startTime = startTime,
-      endTimeOption = endTimeOption,
+      operationPeriod = TimePeriod(startTime, endTime),
       initialPrice = initialPrice,
       initialResources = ExactResources(
         baseBalance = SingleMarketStrategyBotTest.this.initialBaseBalance,
@@ -191,13 +191,12 @@ class SingleMarketStrategyBotTest extends BasicTest with Matchers {
     initialPrice = dec(123)
     candleLength = secs(10)
     startTime = sec(10)
-    endTimeOption = Some(sec(110))
+    endTime = sec(110)
     fakeDefaultTradeHistory()
     fakeDefaultCandleHistory()
     val expectedRunConfiguration = SingleMarketStrategyBotRunConfiguration(
       market = market,
-      startTime = startTime,
-      endTimeOption = endTimeOption,
+      operationPeriod = TimePeriod(startTime, endTime),
       initialPrice = initialPrice,
       initialResources = ExactResources(
         baseBalance = initialBaseBalance,
@@ -260,7 +259,7 @@ class SingleMarketStrategyBotTest extends BasicTest with Matchers {
   test("from the end on no order intents are passed to the conveyor") {
     minimumCandleHistoryLength = secs(10)
     startTime = sec(10)
-    endTimeOption = Some(sec(30))
+    endTime = sec(30)
     fakeDefaultTradeHistory()
     strategyFunction = _ => Seq(orderIntent(1), orderIntent(2))
     fakeCandleHistory(

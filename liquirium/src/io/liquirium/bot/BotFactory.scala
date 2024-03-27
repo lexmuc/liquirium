@@ -1,13 +1,13 @@
 package io.liquirium.bot
 
-import java.time.Instant
+import io.liquirium.util.TimePeriod
+
 import scala.concurrent.Future
 
 trait BotFactory[B <: EvalBot] {
 
   def makeBot(
-    startTime: Instant,
-    endTimeOption: Option[Instant],
+    operationPeriod: TimePeriod,
     totalValue: BigDecimal,
   ): Future[B]
 
