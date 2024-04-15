@@ -26,9 +26,10 @@ class MultiMarketStrategyBotTest extends BasicTest with Matchers {
   private var initialBalancesByLedgerRef: Map[LedgerRef, BigDecimal] = Map()
   private var candleLength: Duration = Duration.ofSeconds(1)
   private var minimumCandleHistoryLength = Duration.ofSeconds(0)
-  private var strategyFunction: bot.MultiMarketStrategy.State => Seq[OrderIntent] =
-    (_: bot.MultiMarketStrategy.State) => Seq()
-  private var outputsByOrderIntents: Map[Seq[OrderIntent], Seq[BotOutput]] = Map(Seq() -> Seq())
+  private var strategyFunction: bot.MultiMarketStrategy.State => Map[Market, Seq[OrderIntent]] =
+    (_: bot.MultiMarketStrategy.State) => Map()
+
+  private var outputsByMarketAndOrderIntents: Map[(Market, Seq[OrderIntent]), Seq[BotOutput]] = Map()
 
   private var context: UpdatableContext = IncrementalContext()
 
@@ -36,13 +37,14 @@ class MultiMarketStrategyBotTest extends BasicTest with Matchers {
 
   private def makeStrategy() = new MultiMarketStrategy {
 
-    override def apply(state: bot.MultiMarketStrategy.State): Seq[OrderIntent] =
+    override def apply(state: bot.MultiMarketStrategy.State): Map[Market, Seq[OrderIntent]] =
       MultiMarketStrategyBotTest.this.strategyFunction(state)
 
     override def minimumCandleHistoryLength: Duration = MultiMarketStrategyBotTest.this.minimumCandleHistoryLength
 
     override def candleLength: Duration = MultiMarketStrategyBotTest.this.candleLength
 
+    //noinspection NotImplementedCode
     // the calculation of initial balances is not relevant for this test
     override def calculateInitialBalances(
       totalQuoteValue: BigDecimal,
@@ -58,13 +60,15 @@ class MultiMarketStrategyBotTest extends BasicTest with Matchers {
       initialPricesByMarket = initialPricesByMarket,
       initialBalances = initialBalancesByLedgerRef,
     ),
-    orderIntentConveyorEval = Eval.unit(
-      (intents: Seq[OrderIntent]) => outputsByOrderIntents(intents)
-    ),
+    orderIntentConveyorsByMarketEval = Eval.unit(
+      markets.map { m =>
+        m -> ((intents: Seq[OrderIntent]) => outputsByMarketAndOrderIntents((m, intents)))
+      }.toMap
+    )
   )
 
-  private def fakeOrderIntentConversion(intents: OrderIntent*)(outputs: BotOutput*): Unit = {
-    outputsByOrderIntents = outputsByOrderIntents.updated(intents, outputs)
+  private def fakeOrderIntentConversion(market: Market, intents: OrderIntent*)(outputs: BotOutput*): Unit = {
+    outputsByMarketAndOrderIntents = outputsByMarketAndOrderIntents.updated((market, intents), outputs)
   }
 
   private def fakeCandleHistory(input: CandleHistoryInput, chs: CandleHistorySegment): Unit = {
@@ -119,27 +123,41 @@ class MultiMarketStrategyBotTest extends BasicTest with Matchers {
     getMessage: bot.MultiMarketStrategy.State => String,
   ): Unit = {
     var state: bot.MultiMarketStrategy.State = null
-    fakeOrderIntentConversion(orderIntent(1))(botOutput(1))
+    for {
+      m <- markets
+    } {
+      fakeOrderIntentConversion(m, orderIntent(1))(botOutput(1))
+    }
+    fakeOrderIntentConversion(markets.head, orderIntent(1))(botOutput(1))
     strategyFunction = s => {
       state = s
-      if (p(s)) Seq(orderIntent(1)) else Seq()
+      if (p(s)) {
+        markets.map(m => (m, Seq(orderIntent(1)))).toMap
+      }
+      else {
+        markets.map(m => (m, Seq())).toMap
+      }
     }
     if (evaluate() != Seq(botOutput(1))) fail(getMessage(state))
   }
 
-  test("the order intents are passed to the conveyor in order to obtain bot outputs") {
+  test("the order intents are passed to the respective conveyor in order to obtain bot outputs per market") {
+    fakeMarkets(market(1), market(2))
     fakeDefaultCandleHistories()
     fakeDefaultTradeHistories()
     fakeDefaultTime()
-    fakeOrderIntentConversion(
-      orderIntent(1),
-      orderIntent(2),
-    )(
+    fakeOrderIntentConversion(market(1), orderIntent(1), orderIntent(2))(
       botOutput(1),
       botOutput(2),
     )
-    strategyFunction = _ => Seq(orderIntent(1), orderIntent(2))
-    evaluate() shouldEqual Seq(botOutput(1), botOutput(2))
+    fakeOrderIntentConversion(market(2), orderIntent(3))(
+      botOutput(3),
+    )
+    strategyFunction = _ => Map(
+      market(1) -> Seq(orderIntent(1), orderIntent(2)),
+      market(2) -> Seq(orderIntent(3)),
+    )
+    evaluate() shouldEqual Seq(botOutput(1), botOutput(2), botOutput(3))
   }
 
   test("the candle history evals are made available by market") {
@@ -248,97 +266,97 @@ class MultiMarketStrategyBotTest extends BasicTest with Matchers {
     )
   }
 
-    test("the given run configuration is part of the state") {
-      fakeMarkets(market(1))
-      startTime = sec(10)
-      endTime = sec(110)
-      candleLength = secs(10)
-      fakeDefaultTime()
-      initialBalancesByLedgerRef = Map(
-        market(1).baseLedger -> dec(10),
-        market(1).quoteLedger -> dec(20),
-      )
-      initialPricesByMarket = Map(market(1) -> dec(123))
-      fakeDefaultTradeHistories()
-      fakeDefaultCandleHistories()
-      val expectedRunConfiguration = MultiMarketStrategyBotRunConfiguration(
-        operationPeriod = TimePeriod(startTime, endTime),
-        initialPricesByMarket = initialPricesByMarket,
-        initialBalances = initialBalancesByLedgerRef,
-      )
-      assertState(
-        _.runConfiguration == expectedRunConfiguration,
-        s => s"run configuration was not as expected. got ${s.runConfiguration}",
-      )
-    }
+  test("the given run configuration is part of the state") {
+    fakeMarkets(market(1))
+    startTime = sec(10)
+    endTime = sec(110)
+    candleLength = secs(10)
+    fakeDefaultTime()
+    initialBalancesByLedgerRef = Map(
+      market(1).baseLedger -> dec(10),
+      market(1).quoteLedger -> dec(20),
+    )
+    initialPricesByMarket = Map(market(1) -> dec(123))
+    fakeDefaultTradeHistories()
+    fakeDefaultCandleHistories()
+    val expectedRunConfiguration = MultiMarketStrategyBotRunConfiguration(
+      operationPeriod = TimePeriod(startTime, endTime),
+      initialPricesByMarket = initialPricesByMarket,
+      initialBalances = initialBalancesByLedgerRef,
+    )
+    assertState(
+      _.runConfiguration == expectedRunConfiguration,
+      s => s"run configuration was not as expected. got ${s.runConfiguration}",
+    )
+  }
 
-    test("the balances are exposed as evals as well") {
-      val eid = exchangeId(1)
-      val baseLedgerA = ledgerRef(eid, "BASE_A")
-      val quoteLedger = ledgerRef(eid, "QUOTE")
-      val marketA = market(eid, "BASE_A", "QUOTE")
+  test("the balances are exposed as evals as well") {
+    val eid = exchangeId(1)
+    val baseLedgerA = ledgerRef(eid, "BASE_A")
+    val quoteLedger = ledgerRef(eid, "QUOTE")
+    val marketA = market(eid, "BASE_A", "QUOTE")
 
-      fakeMarkets(marketA)
-      initialBalancesByLedgerRef = Map(
-        baseLedgerA -> dec(1),
-        quoteLedger -> dec(10),
-      )
-      startTime = sec(10)
-      fakeDefaultCandleHistories()
+    fakeMarkets(marketA)
+    initialBalancesByLedgerRef = Map(
+      baseLedgerA -> dec(1),
+      quoteLedger -> dec(10),
+    )
+    startTime = sec(10)
+    fakeDefaultCandleHistories()
 
-      val buy2AFor4 = trade(
-        id = "buy2AFor4",
-        market = marketA,
-        time = sec(11),
-        quantity = dec(2),
-        price = dec(2),
-      )
+    val buy2AFor4 = trade(
+      id = "buy2AFor4",
+      market = marketA,
+      time = sec(11),
+      quantity = dec(2),
+      price = dec(2),
+    )
 
-      fakeTradeHistory(marketA)(buy2AFor4)
+    fakeTradeHistory(marketA)(buy2AFor4)
 
-      val (baseBalance, _) = context.evaluate(makeBot().balanceEvalsByLedgerRef(baseLedgerA))
-      baseBalance.get shouldEqual dec(3)
-      val (quoteBalance, _) = context.evaluate(makeBot().balanceEvalsByLedgerRef(quoteLedger))
-      quoteBalance.get shouldEqual dec(6)
-    }
+    val (baseBalance, _) = context.evaluate(makeBot().balanceEvalsByLedgerRef(baseLedgerA))
+    baseBalance.get shouldEqual dec(3)
+    val (quoteBalance, _) = context.evaluate(makeBot().balanceEvalsByLedgerRef(quoteLedger))
+    quoteBalance.get shouldEqual dec(6)
+  }
 
-    test("it exposes the trade history eval with correct market and start") {
-      fakeMarkets(market(1), market(2))
-      startTime = sec(100)
-      endTime = sec(200)
-      makeBot().tradeHistoryEvalsByMarket shouldEqual Map(
-        market(1) -> InputEval(TradeHistoryInput(market(1), sec(100))),
-        market(2) -> InputEval(TradeHistoryInput(market(2), sec(100))),
-      )
-    }
+  test("it exposes the trade history eval with correct market and start") {
+    fakeMarkets(market(1), market(2))
+    startTime = sec(100)
+    endTime = sec(200)
+    makeBot().tradeHistoryEvalsByMarket shouldEqual Map(
+      market(1) -> InputEval(TradeHistoryInput(market(1), sec(100))),
+      market(2) -> InputEval(TradeHistoryInput(market(2), sec(100))),
+    )
+  }
 
-    test("before the bot start no order intents are passed to the conveyor but outputs are generated") {
-      fakeMarkets(market(1))
-      candleLength = secs(10)
-      minimumCandleHistoryLength = secs(10)
-      startTime = sec(10)
-      fakeDefaultCandleHistories()
-      fakeTime(candleLength, sec(0))
-      strategyFunction = _ => Seq(orderIntent(1), orderIntent(2))
-      fakeDefaultTradeHistories()
-      fakeOrderIntentConversion()(botOutput(1))
-      evaluate() shouldEqual Seq(botOutput(1))
-    }
+  test("before the bot start no order intents are passed to the conveyor but outputs are generated") {
+    fakeMarkets(market(1))
+    candleLength = secs(10)
+    minimumCandleHistoryLength = secs(10)
+    startTime = sec(10)
+    fakeDefaultCandleHistories()
+    fakeTime(candleLength, sec(0))
+    strategyFunction = _ => Map(market(1) -> Seq(orderIntent(1), orderIntent(2)))
+    fakeDefaultTradeHistories()
+    fakeOrderIntentConversion(market(1))(botOutput(1))
+    evaluate() shouldEqual Seq(botOutput(1))
+  }
 
-    test("from the end on no order intents are passed to the conveyor but outputs are generated") {
-      fakeMarkets(market(1))
-      candleLength = secs(10)
-      minimumCandleHistoryLength = secs(10)
-      startTime = sec(10)
-      endTime = sec(30)
-      fakeDefaultTradeHistories()
-      fakeDefaultCandleHistories()
-      strategyFunction = _ => Seq(orderIntent(1), orderIntent(2))
-      fakeTime(candleLength, sec(30))
-      fakeOrderIntentConversion()(botOutput(1))
-      evaluate() shouldEqual Seq(botOutput(1))
-      fakeTime(candleLength, sec(40))
-      evaluate() shouldEqual Seq(botOutput(1))
-    }
+  test("from the end on no order intents are passed to the conveyor but outputs are generated") {
+    fakeMarkets(market(1))
+    candleLength = secs(10)
+    minimumCandleHistoryLength = secs(10)
+    startTime = sec(10)
+    endTime = sec(30)
+    fakeDefaultTradeHistories()
+    fakeDefaultCandleHistories()
+    strategyFunction = _ => Map(market(1) -> Seq(orderIntent(1), orderIntent(2)))
+    fakeTime(candleLength, sec(30))
+    fakeOrderIntentConversion(market(1))(botOutput(1))
+    evaluate() shouldEqual Seq(botOutput(1))
+    fakeTime(candleLength, sec(40))
+    evaluate() shouldEqual Seq(botOutput(1))
+  }
 
 }

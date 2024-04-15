@@ -9,7 +9,7 @@ import io.liquirium.eval.{Eval, InputEval}
 case class MultiMarketStrategyBot(
   strategy: MultiMarketStrategy,
   runConfiguration: MultiMarketStrategyBotRunConfiguration,
-  orderIntentConveyorEval: Eval[Seq[OrderIntent] => Iterable[BotOutput]],
+  orderIntentConveyorsByMarketEval: Eval[Map[Market, Seq[OrderIntent] => Iterable[BotOutput]]],
 ) extends EvalBot {
 
   val candleHistoryEvalsByMarket: Map[Market, Eval[CandleHistorySegment]] =
@@ -75,17 +75,18 @@ case class MultiMarketStrategyBot(
 
   override def eval: Eval[Iterable[BotOutput]] =
     for {
-      conveyor <- orderIntentConveyorEval
+      conveyorsByMarket <- orderIntentConveyorsByMarketEval
       state <- stateEval
     } yield {
-      val intents =
+      val intentsByMarket =
         if (
           (state.time isBefore runConfiguration.operationPeriod.start)
             || !(state.time isBefore runConfiguration.operationPeriod.end)
-        ) Seq()
+        ) runConfiguration.markets.map(m => m -> Seq()).toMap
         else strategy(state)
-      conveyor(intents)
+      runConfiguration.markets.flatMap { market =>
+        conveyorsByMarket(market)(intentsByMarket(market))
+      }
     }
-
 
 }

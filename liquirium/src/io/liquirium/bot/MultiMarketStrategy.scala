@@ -16,7 +16,7 @@ object MultiMarketStrategy {
 
 }
 
-trait MultiMarketStrategy extends (MultiMarketStrategy.State => Seq[OrderIntent]) {
+trait MultiMarketStrategy extends (MultiMarketStrategy.State => Map[Market, Seq[OrderIntent]]) {
 
   def candleLength: Duration
 
