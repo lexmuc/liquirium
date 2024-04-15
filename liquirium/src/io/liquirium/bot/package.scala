@@ -123,4 +123,64 @@ package object bot {
 
   }
 
+  def multiMarketStrategyBotFactory(
+    candleHistoryLoaderProvider: CandleHistoryLoaderProvider,
+    orderConstraints: OrderConstraints,
+    strategy: MultiMarketStrategy,
+    markets: Seq[Market],
+    orderIntentConveyorFactory: OrderIntentConveyorFactory,
+  )(
+    implicit executionContext: ExecutionContext,
+  ): BotFactory[MultiMarketStrategyBot] = new BotFactory[MultiMarketStrategyBot] {
+
+    def makeBot(
+      operationPeriod: TimePeriod,
+      totalValue: BigDecimal,
+    ): Future[MultiMarketStrategyBot] = {
+
+      val initialPricesByMarketFuture = Future.sequence(
+        markets.map { market =>
+          getInitialPrice(market, strategy.candleLength, operationPeriod.start).map(p => market -> p)
+        }
+      ).map(_.toMap)
+
+      for {
+        initialPricesByMarket <- initialPricesByMarketFuture
+      } yield {
+        val runConfiguration = MultiMarketStrategyBotRunConfiguration(
+          operationPeriod = operationPeriod,
+          initialPricesByMarket = initialPricesByMarket,
+          initialBalances = strategy.calculateInitialBalances(
+            totalQuoteValue = totalValue,
+            initialPrices = initialPricesByMarket,
+          ),
+        )
+        val orderIntentConveyorsByMarketEval = Eval.sequence(
+          markets.map { market =>
+            orderIntentConveyorFactory.apply(
+              market,
+              orderConstraints,
+              operationPeriod.start,
+            ).map(market -> _)
+          }
+        ).map(_.toMap)
+        MultiMarketStrategyBot(
+          strategy = strategy,
+          runConfiguration = runConfiguration,
+          orderIntentConveyorsByMarketEval = orderIntentConveyorsByMarketEval,
+        )
+      }
+    }
+
+    private def getInitialPrice(market: Market, candleLength: Duration, startTime: Instant): Future[BigDecimal] =
+      for {
+        loader <- candleHistoryLoaderProvider.getHistoryLoader(market, candleLength)
+        history <- loader.load(
+          start = startTime.minusSeconds(60 * 60 * 12),
+          end = startTime,
+        )
+      } yield history.lastPrice.get
+
+  }
+
 }
