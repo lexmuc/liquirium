@@ -6,6 +6,7 @@ import io.liquirium.util.TimePeriod
 
 case class MultiMarketStrategyBotRunConfiguration(
   operationPeriod: TimePeriod,
+  initialValue: BigDecimal,
   initialPricesByMarket: Map[Market, BigDecimal],
   initialBalances: Map[LedgerRef, BigDecimal],
 ) {

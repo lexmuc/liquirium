@@ -149,6 +149,7 @@ package object bot {
       } yield {
         val runConfiguration = MultiMarketStrategyBotRunConfiguration(
           operationPeriod = operationPeriod,
+          initialValue = totalValue,
           initialPricesByMarket = initialPricesByMarket,
           initialBalances = strategy.calculateInitialBalances(
             totalQuoteValue = totalValue,
