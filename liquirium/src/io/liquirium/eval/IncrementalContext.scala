@@ -7,18 +7,6 @@ trait IncrementalContext extends UpdatableContext {
 
 }
 
-object DependencyCollector {
-
-  def empty(e: Eval[_]): DependencyCollector = DependencyCollector(e, Set())
-
-}
-
-case class DependencyCollector(eval: Eval[_], dependencies: Set[Eval[_]]) {
-
-  def add(dep: Eval[_]): DependencyCollector = copy(dependencies = dependencies + dep)
-
-}
-
 object IncrementalContext {
 
   def apply(): IncrementalContext = Impl(Map(), Map(), None, DependencyGraph.empty)
@@ -26,7 +14,7 @@ object IncrementalContext {
   private case class Impl(
     inputValues: Map[Input[_], _],
     cachedValues: Map[Eval[_], EvalResult[_]],
-    dependencyCollector: Option[DependencyCollector],
+    collectedDependencies: Option[Set[Eval[_]]],
     dependencyGraph: DependencyGraph[Eval[_]],
   ) extends IncrementalContext {
 
@@ -40,17 +28,17 @@ object IncrementalContext {
         case be: BaseEval[M] => (evaluateBaseEval(be), this)
       }
       (res, contextAfterEval.copy(
-        dependencyCollector = contextAfterEval.dependencyCollector.map(_.add(eval))
+        collectedDependencies = contextAfterEval.collectedDependencies.map(_ + eval)
       ))
     }
 
     private def evaluateDerivedEval[M](dm: DerivedEval[M], oldValue: Option[M]): (EvalResult[M], Impl) = {
       val oldDependencies = this.dependencyGraph.getDependencies(dm)
-      val contextWithCollector = copy(dependencyCollector = Some(DependencyCollector.empty(dm)))
+      val contextWithCollector = copy(collectedDependencies = Some(Set()))
       val (result, contextAfterEval) = dm.eval(contextWithCollector, oldValue)
-      val newDependencies = contextAfterEval.asInstanceOf[Impl].dependencyCollector.get.dependencies
+      val newDependencies = contextAfterEval.asInstanceOf[Impl].collectedDependencies.get
       val finalContext =
-        contextAfterEval.asInstanceOf[Impl].copy(dependencyCollector = this.dependencyCollector)
+        contextAfterEval.asInstanceOf[Impl].copy(collectedDependencies = this.collectedDependencies)
         .cache(dm, result)
         .setDependencies(dm, newDependencies)
         .dropDependencies(oldDependencies -- newDependencies)
