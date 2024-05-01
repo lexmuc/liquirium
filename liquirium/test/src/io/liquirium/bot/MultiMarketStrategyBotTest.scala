@@ -24,6 +24,7 @@ class MultiMarketStrategyBotTest extends BasicTest with Matchers {
   private var endTime: Instant = Instant.ofEpochSecond(1000)
   private var initialPricesByMarket: Map[Market, BigDecimal] = Map()
   private var initialBalancesByLedgerRef: Map[LedgerRef, BigDecimal] = Map()
+  private var initialValue: BigDecimal = BigDecimal(1)
   private var candleLength: Duration = Duration.ofSeconds(1)
   private var minimumCandleHistoryLength = Duration.ofSeconds(0)
   private var strategyFunction: bot.MultiMarketStrategy.State => Map[Market, Seq[OrderIntent]] =
@@ -59,6 +60,7 @@ class MultiMarketStrategyBotTest extends BasicTest with Matchers {
       operationPeriod = TimePeriod(startTime, endTime),
       initialPricesByMarket = initialPricesByMarket,
       initialBalances = initialBalancesByLedgerRef,
+      initialValue = initialValue,
     ),
     orderIntentConveyorsByMarketEval = Eval.unit(
       markets.map { m =>
@@ -103,14 +105,13 @@ class MultiMarketStrategyBotTest extends BasicTest with Matchers {
     fakeTime(candleLength, startTime)
   }
 
-  private def fakeDefaultCandleHistories(): Unit = {
+  private def fakeDefaultCandleHistories(): Unit =
     for (m <- markets) {
       fakeCandleHistory(
         CandleHistoryInput(m, candleLength, startTime minus minimumCandleHistoryLength),
         candleHistorySegment(startTime minus minimumCandleHistoryLength, candleLength)(),
       )
     }
-  }
 
   def evaluate(): Seq[BotOutput] = {
     val (output, newContext) = context.evaluate(makeBot().eval)
@@ -277,12 +278,14 @@ class MultiMarketStrategyBotTest extends BasicTest with Matchers {
       market(1).quoteLedger -> dec(20),
     )
     initialPricesByMarket = Map(market(1) -> dec(123))
+    initialValue = dec(1234)
     fakeDefaultTradeHistories()
     fakeDefaultCandleHistories()
     val expectedRunConfiguration = MultiMarketStrategyBotRunConfiguration(
       operationPeriod = TimePeriod(startTime, endTime),
       initialPricesByMarket = initialPricesByMarket,
       initialBalances = initialBalancesByLedgerRef,
+      initialValue = dec(1234),
     )
     assertState(
       _.runConfiguration == expectedRunConfiguration,

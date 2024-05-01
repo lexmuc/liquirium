@@ -20,6 +20,7 @@ class MultiMarketStrategyBotRunConfigurationTest extends BasicTest {
         market(2).quoteLedger -> dec(1),
         market(2).baseLedger -> dec(1),
       ),
+      initialValue = dec(1),
     ).markets shouldEqual Set(market(1), market(2))
   }
 
