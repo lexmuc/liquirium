@@ -1,7 +1,7 @@
 package io.liquirium.eval
 
 import io.liquirium.core.helpers.BasicTest
-import io.liquirium.eval.helpers.EvalHelpers.{derivedEval, input, inputEval, inputRequest}
+import io.liquirium.eval.helpers.EvalHelpers.{derivedEval, derivedEvalWithEvalCounter, input, inputEval, inputRequest}
 
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -27,16 +27,16 @@ class IncrementalContextTest extends BasicTest {
 
   private def im(n: Int) = inputEval(n)
 
-  private def derivedEvalWithEvalCounter[M](baseEval: Eval[M]): (Eval[M], AtomicInteger) = {
-    val counter = new AtomicInteger(0)
-    val m = new DerivedEval[M] {
-      override def eval(context: Context, oldValue: Option[M]): (EvalResult[M], Context) = {
-        counter.getAndIncrement()
-        context.evaluate(baseEval)
-      }
-    }
-    (m, counter)
-  }
+//  private def derivedEvalWithEvalCounter[M](baseEval: Eval[M]): (Eval[M], AtomicInteger) = {
+//    val counter = new AtomicInteger(0)
+//    val m = new DerivedEval[M] {
+//      override def eval(context: Context, oldValue: Option[M]): (EvalResult[M], Context) = {
+//        counter.getAndIncrement()
+//        context.evaluate(baseEval)
+//      }
+//    }
+//    (m, counter)
+//  }
 
   test("it can evaluate constants") {
     context.apply(Constant(3)) shouldEqual Value(3)

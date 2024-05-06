@@ -15,6 +15,8 @@ sealed trait Eval[+M] {
 
   def mark(m : String): Eval[M] = MarkedEval(this, m)
 
+  def cached: Eval[M] = CachedEval(this)
+
 }
 
 case class MarkedEval[M](baseEval: Eval[M], mark: String) extends DerivedEval[M] {
@@ -167,6 +169,13 @@ case class IncrementalFoldEval[I, IV <: IncrementalValue[I, IV], T](
 trait CaseEval[M] extends DerivedEval[M] {
 
   protected def baseEval: Eval[M]
+
+  final override def eval(context: Context, oldValue: Option[M]): (EvalResult[M], Context) =
+    context.evaluate(baseEval)
+
+}
+
+case class CachedEval[M](baseEval: Eval[M]) extends DerivedEval[M] {
 
   final override def eval(context: Context, oldValue: Option[M]): (EvalResult[M], Context) =
     context.evaluate(baseEval)

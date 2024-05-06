@@ -33,6 +33,21 @@ class EvalTest_Mixed extends EvalTest {
     trace(TestCaseEval(3)).last shouldEqual Constant(17)
   }
 
+  test("a cached eval only wraps a derived eval in a case class") {
+    val base = testEvalWithDefault(17)
+    evaluate(CachedEval[Int](base)).get shouldEqual 17
+  }
+
+  test("the context is properly conveyed in a cached eval") {
+    val base = Constant(17)
+    trace(CachedEval(base)).head shouldEqual CachedEval(base)
+    trace(CachedEval(base)).last shouldEqual base
+  }
+
+  test("an eval can be conveniently wrapped in a cached eval") {
+    Constant(17).cached shouldEqual CachedEval(Constant(17))
+  }
+
   test("Eval.unit is synonym for Constant") {
     Eval.unit(7) shouldEqual Constant(7)
   }

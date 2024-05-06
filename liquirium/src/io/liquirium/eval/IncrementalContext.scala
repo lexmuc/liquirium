@@ -58,7 +58,7 @@ object IncrementalContext {
     }
 
     private def propagateChange(m: Eval[_]): Impl =
-      dependencyGraph.getProvisions(m).foldLeft(this) {
+      dependencyGraph.getDirectDependents(m).foldLeft(this) {
         case (c, am) => c.reevaluateAndPropagateIfChanged(am)
       }
 

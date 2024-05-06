@@ -8,7 +8,7 @@ class DependencyGraphTest extends BasicTest {
 
   test("the empty graph returns the empty dependencies and set of nodes depending on a node for a given node") {
     emptyGraph.getDependencies(1) shouldEqual Set()
-    emptyGraph.getProvisions(2) shouldEqual Set()
+    emptyGraph.getDirectDependents(2) shouldEqual Set()
   }
 
   test("added dependencies can be obtained by the depending node") {
@@ -49,8 +49,13 @@ class DependencyGraphTest extends BasicTest {
 
   test("nodes depending on a given node can be obtained and are updated upon removal of dependencies") {
     val g = emptyGraph.add(1, 10).add(2, 10).add(3, 11)
-    g.getProvisions(10) shouldEqual Set(1, 2)
-    g.remove(1, 10).getProvisions(10) shouldEqual Set(2)
+    g.getDirectDependents(10) shouldEqual Set(1, 2)
+    g.remove(1, 10).getDirectDependents(10) shouldEqual Set(2)
+  }
+
+  test("the set of all (including indirect) dependents of a node can be obtained") {
+    val g = emptyGraph.add(1, 10).add(2, 10).add(3, 11).add(10, 100).add(100, 1000)
+    g.getAllDependents(1000) shouldEqual Set(100, 10, 1, 2)
   }
 
   test("unused nodes can be dropped recursively") {

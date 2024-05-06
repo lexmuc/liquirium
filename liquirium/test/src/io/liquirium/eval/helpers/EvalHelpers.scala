@@ -3,6 +3,7 @@ package io.liquirium.eval.helpers
 import io.liquirium.eval._
 import org.scalatest.Matchers
 
+import java.util.concurrent.atomic.AtomicInteger
 import scala.reflect.ClassTag
 
 object EvalHelpers extends Matchers {
@@ -14,7 +15,7 @@ object EvalHelpers extends Matchers {
       throw new RuntimeException(s"Apparently no value has been provided for test eval $n")
   }
 
-  def testEval[M](n: Int): Eval[Nothing] = TestEval(n)
+  def testEval[_](n: Int): Eval[Nothing] = TestEval(n)
 
   def intEval(n: Int): Eval[Int] = TestEval(n)
 
@@ -25,6 +26,17 @@ object EvalHelpers extends Matchers {
   }
 
   def derivedEval[M](subEval: Eval[M], n: Int = 0): DerivedTestEval[M] = DerivedTestEval(subEval, n)
+
+  def derivedEvalWithEvalCounter[M](baseEval: Eval[M]): (Eval[M], AtomicInteger) = {
+    val counter = new AtomicInteger(0)
+    val m = new DerivedEval[M] {
+      override def eval(context: Context, oldValue: Option[M]): (EvalResult[M], Context) = {
+        counter.getAndIncrement()
+        context.evaluate(baseEval)
+      }
+    }
+    (m, counter)
+  }
 
   case class DerivedEvalWithSideEffect[M](subEval: Eval[M], sideEffect: () => Unit) extends DerivedEval[M] {
     override def eval(context: Context, oldValue: Option[M]): (EvalResult[M], Context) = {
