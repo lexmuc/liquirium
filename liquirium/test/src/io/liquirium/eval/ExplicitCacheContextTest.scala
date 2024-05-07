@@ -1,7 +1,7 @@
 package io.liquirium.eval
 
 import io.liquirium.core.helpers.BasicTest
-import io.liquirium.eval.helpers.EvalHelpers.{derivedEval, derivedEvalWithEvalCounter, input, inputEval, inputRequest}
+import io.liquirium.eval.helpers.EvalHelpers.{derivedEvalWithEvalCounter, input, inputEval, inputRequest}
 
 class ExplicitCacheContextTest extends BasicTest {
 
@@ -40,8 +40,7 @@ class ExplicitCacheContextTest extends BasicTest {
   }
 
   test("several inputs can be updated at once") {
-    updateInputs(i(1) -> 11)
-    updateInputs(i(2) -> 22)
+    updateInputs(i(1) -> 11, i(2) -> 22)
     val eval = Eval.map2(ie(1), ie(2))(_ + _)
     context(eval) shouldEqual Value(33)
   }
@@ -192,7 +191,60 @@ class ExplicitCacheContextTest extends BasicTest {
     evaluate(newCachedEval) shouldEqual Value(28)
   }
 
-  test("nested cached values are actually cached") {
+  /////////////////////////////////////////
+
+  // TEMPORARY TEST! Not sure why the new eval has two dependencies
+  // I think I found out, now the test can be completed (make fail first)
+  // same as the test below but make sure a change is triggered if required. i.e. it is added to the dependencies
+  test("an already cached dirty eval with unchanged inputs is not reevaluated when added to the dependencies of another eval") {
+    val existingCachedEval = ie(1).map(_ % 2).cached
+    updateInputs(i(1) -> 1)
+    evaluate(existingCachedEval) shouldEqual Value(1)
+    updateInputs(i(1) -> 3)
+
+    val newCachedEval = existingCachedEval.map(_ * 7).cached
+    evaluate(newCachedEval) shouldEqual Value(7)
+    updateInputs(i(1) -> 2)
+    println("evaluating again")
+    evaluate(newCachedEval) shouldEqual Value(0)
+  }
+
+  test("an eval can depend on an already cached dirty eval with unchanged inputs") {
+    // just test that in this special case the dependencies are properly managed
+    val existingCachedEval = ie(1).map(_ % 2).cached.cached
+    updateInputs(i(1) -> 1)
+    evaluate(existingCachedEval) shouldEqual Value(1)
+    updateInputs(i(1) -> 3)
+
+    val newCachedEval = existingCachedEval.map(_ * 7).cached
+    println("======= starting NEW CACHED EVAL")
+    evaluate(newCachedEval) shouldEqual Value(7)
+    updateInputs(i(1) -> 2)
+    println("======= REEVALUATING")
+    evaluate(newCachedEval) shouldEqual Value(0)
+  }
+
+  /////////////////////////////////////////
+
+  test("an eval depending on an already cached dirty eval with unchanged inputs can exploit unchanged inputs") {
+    // just test that in this special case the dependencies are properly managed
+    val existingCachedEval = ie(1).map(_ % 2).cached
+    updateInputs(i(1) -> 1)
+    evaluate(existingCachedEval) shouldEqual Value(1)
+    updateInputs(i(1) -> 3)
+
+    val (dependentEval, counter) = derivedEvalWithEvalCounter(existingCachedEval.map(_ * 7))
+    val newCachedEval = dependentEval.cached
+    evaluate(newCachedEval) shouldEqual Value(7)
+    counter.get() shouldEqual 1
+    updateInputs(i(1) -> 5)
+    println("")
+    println("reevaluating")
+    evaluate(newCachedEval) shouldEqual Value(7)
+    counter.get() shouldEqual 1
+  }
+
+  test("nested cached values are actually cached and not reevaluated more often than necessary") {
     val (branch1, branch1Counter) = derivedEvalWithEvalCounter(ie(1).map(_ * 2))
     val (branch2, branch2Counter) = derivedEvalWithEvalCounter(ie(2).map(_ * 2))
     val eval = Eval.map2(branch1.cached.cached, branch2.cached.cached)(_ + _).cached
@@ -207,21 +259,26 @@ class ExplicitCacheContextTest extends BasicTest {
     branch2Counter.get() shouldEqual 1
   }
 
-//  test("a cached eval is not evaluated when a cached eval it depends on has not changed after an update") {
-//    val (innerCounterEval, innerCounter) = derivedEvalWithEvalCounter(ie(1).map(_ % 2))
-//    val innerCachedEval = innerCounterEval.cached
-//    val (outerCounterEval, outerCounter) = derivedEvalWithEvalCounter(innerCachedEval.map(_ + 1))
-//    val outerCachedEval = outerCounterEval.cached
-//
-//    updateInputs(i(1) -> 2)
-//    evaluate(outerCachedEval) shouldEqual Value(1)
-//
-//    outerCounter.set(0)
-//    innerCounter.set(0)
-//    updateInputs(i(1) -> 4)
-//    evaluate(outerCachedEval) shouldEqual Value(1)
-//    outerCounter.get() shouldEqual 0
-//    innerCounter.get() shouldEqual 1
-//  }
+  test("a cached eval is not evaluated when a cached eval it depends on has not changed after an update") {
+    val (innerCounterEval, innerCounter) = derivedEvalWithEvalCounter(ie(1).map(_ % 2))
+    val innerCachedEval = innerCounterEval.cached
+    val (outerCounterEval, outerCounter) = derivedEvalWithEvalCounter(innerCachedEval.map(_ + 1))
+    val outerCachedEval = outerCounterEval.cached
+
+    updateInputs(i(1) -> 2)
+    evaluate(outerCachedEval) shouldEqual Value(1)
+
+    outerCounter.set(0)
+    innerCounter.set(0)
+    updateInputs(i(1) -> 4)
+    evaluate(outerCachedEval) shouldEqual Value(1)
+    outerCounter.get() shouldEqual 0
+    innerCounter.get() shouldEqual 1
+  }
+
+  // dependencies are always evaluated in the order they are added to the context
+  // => and when there is a change they should not be reevaluated further!
+
+  // cached evals are collected as dependency if they are dirty but inputs are unchanged
 
 }
