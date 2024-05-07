@@ -268,15 +268,42 @@ class ExplicitCacheContextTest extends BasicTest {
     for {index <- 1 to numberOfInputs} updateInputs(i(index) -> index)
     evaluate(relayEval) shouldEqual Value(numberOfInputs * (numberOfInputs + 1))
     // if this input is evaluated first, all the counters should be 1
-    for {index <- 1 to numberOfInputs} updateInputs(i(index) -> index * 2)
     updateInputs(i(0) -> 2)
+    for {index <- 1 to numberOfInputs} updateInputs(i(index) -> index * 2)
     evaluate(relayEval) shouldEqual Value(0)
     for {index <- 1 to numberOfInputs } counters(index - 1).get() shouldEqual 1
   }
 
-  // dependencies are always evaluated in the order they are added to the context
-  // => and when there is a change they should not be reevaluated further!
+  test("evals wrapped in cached evals are supplied with the old value when they are reevaluated") {
+    val ie = inputEval(1)
+    val probeEval = new DerivedEval[Int] {
+      override def eval(context: Context, oldValue: Option[Int]): (EvalResult[Int], Context) =
+        oldValue match {
+          case Some(ov) => (Value(ov + 1), context)
+          case None => context.evaluate(ie)
+        }
+    }.cached
+    updateInputs(i(1) -> 10)
+    evaluate(probeEval) shouldEqual Value(10)
+    updateInputs(i(1) -> 1)
+    evaluate(probeEval) shouldEqual Value(11)
+  }
 
-  // cached evals are collected as dependency if they are dirty but inputs are unchanged
+  test("evals wrapped in cached evals are not supplied with any old value when they yielded an input request") {
+    val ie1 = inputEval(1)
+    val probeEval = new DerivedEval[Int] {
+      override def eval(context: Context, oldValue: Option[Int]): (EvalResult[Int], Context) =
+        oldValue match {
+          case Some(ov) => (Value(ov + 1), context)
+          case None =>
+            val (_, c) = context.evaluate(ie1)
+            (InputRequest(Set(input(2))), c)
+        }
+    }.cached
+    updateInputs(i(1) -> 1)
+    evaluate(probeEval) shouldEqual InputRequest(Set(input(2)))
+    updateInputs(i(1) -> 3)
+    evaluate(probeEval) shouldEqual InputRequest(Set(input(2)))
+  }
 
 }
