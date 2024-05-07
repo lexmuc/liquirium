@@ -191,24 +191,6 @@ class ExplicitCacheContextTest extends BasicTest {
     evaluate(newCachedEval) shouldEqual Value(28)
   }
 
-  /////////////////////////////////////////
-
-  // TEMPORARY TEST! Not sure why the new eval has two dependencies
-  // I think I found out, now the test can be completed (make fail first)
-  // same as the test below but make sure a change is triggered if required. i.e. it is added to the dependencies
-  test("an already cached dirty eval with unchanged inputs is not reevaluated when added to the dependencies of another eval") {
-    val existingCachedEval = ie(1).map(_ % 2).cached
-    updateInputs(i(1) -> 1)
-    evaluate(existingCachedEval) shouldEqual Value(1)
-    updateInputs(i(1) -> 3)
-
-    val newCachedEval = existingCachedEval.map(_ * 7).cached
-    evaluate(newCachedEval) shouldEqual Value(7)
-    updateInputs(i(1) -> 2)
-    println("evaluating again")
-    evaluate(newCachedEval) shouldEqual Value(0)
-  }
-
   test("an eval can depend on an already cached dirty eval with unchanged inputs") {
     // just test that in this special case the dependencies are properly managed
     val existingCachedEval = ie(1).map(_ % 2).cached.cached
@@ -217,14 +199,10 @@ class ExplicitCacheContextTest extends BasicTest {
     updateInputs(i(1) -> 3)
 
     val newCachedEval = existingCachedEval.map(_ * 7).cached
-    println("======= starting NEW CACHED EVAL")
     evaluate(newCachedEval) shouldEqual Value(7)
     updateInputs(i(1) -> 2)
-    println("======= REEVALUATING")
     evaluate(newCachedEval) shouldEqual Value(0)
   }
-
-  /////////////////////////////////////////
 
   test("an eval depending on an already cached dirty eval with unchanged inputs can exploit unchanged inputs") {
     // just test that in this special case the dependencies are properly managed
@@ -238,8 +216,6 @@ class ExplicitCacheContextTest extends BasicTest {
     evaluate(newCachedEval) shouldEqual Value(7)
     counter.get() shouldEqual 1
     updateInputs(i(1) -> 5)
-    println("")
-    println("reevaluating")
     evaluate(newCachedEval) shouldEqual Value(7)
     counter.get() shouldEqual 1
   }
@@ -274,6 +250,28 @@ class ExplicitCacheContextTest extends BasicTest {
     evaluate(outerCachedEval) shouldEqual Value(1)
     outerCounter.get() shouldEqual 0
     innerCounter.get() shouldEqual 1
+  }
+
+  test("when checking for changes in the dependencies they are evaluated in the original order") {
+    val numberOfInputs = 10
+    val (sumOfManyInputsWithCountersEval, counters) = {
+      val evalsWithCounters = (1 to numberOfInputs).map(i => derivedEvalWithEvalCounter(ie(i).map(_ * 2)))
+      val evals = evalsWithCounters.map(_._1)
+      val sumEval = Eval.sequence(evals).map(_.sum)
+      (sumEval, evalsWithCounters.map(_._2))
+    }
+    val relayEval = ie(0).flatMap(x => {
+      if (x == 1) sumOfManyInputsWithCountersEval
+      else Constant(0)
+    }).cached
+    updateInputs(i(0) -> 1)
+    for {index <- 1 to numberOfInputs} updateInputs(i(index) -> index)
+    evaluate(relayEval) shouldEqual Value(numberOfInputs * (numberOfInputs + 1))
+    // if this input is evaluated first, all the counters should be 1
+    for {index <- 1 to numberOfInputs} updateInputs(i(index) -> index * 2)
+    updateInputs(i(0) -> 2)
+    evaluate(relayEval) shouldEqual Value(0)
+    for {index <- 1 to numberOfInputs } counters(index - 1).get() shouldEqual 1
   }
 
   // dependencies are always evaluated in the order they are added to the context
