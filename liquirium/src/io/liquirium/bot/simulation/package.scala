@@ -106,9 +106,10 @@ package object simulation {
   def initialContextForSimulation(
     simulationStart: Instant,
     withTradeHistoryInput: Boolean = true, // deactivate when tracking the performance of a bot running in production
+    baseContext: UpdatableContext = IncrementalContext(),
   ): UpdatableContext =
     ContextWithInputResolution(
-      baseContext = IncrementalContext(),
+      baseContext = baseContext,
       resolve = {
         case CompletedOperationRequestsInSession => Some(IncrementalSeq.empty)
         case OrderSnapshotHistoryInput(_) => Some(

@@ -154,7 +154,7 @@ case class IncrementalFoldEval[I, IV <: IncrementalValue[I, IV], T](
       }
       (newEr, ctx)
     }
-  }
+  }.cached
 
   override def eval(context: Context, oldValue: Option[T]): (EvalResult[T], Context) = {
     val (er, c) = context.evaluate(foldStateEval)

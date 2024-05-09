@@ -34,13 +34,13 @@ class IncrementalFoldEvalTest extends EvalTest {
   private def seq(ints: Int*) = IncrementalSeq.from(ints.map(WrappedIntImpl.apply))
 
   test("it evaluates the given metric and applies the fold") {
-    val c0 = IncrementalContext().update(InputUpdate(Map(listInput -> seq(3, 2, 1))))
+    val c0 = BaseContext(Map()).update(InputUpdate(Map(listInput -> seq(3, 2, 1))))
     val (er, _) = c0.evaluate(foldMetric)
     er shouldEqual Value(6)
   }
 
   test("input requests are forwarded") {
-    val c0 = IncrementalContext()
+    val c0 = BaseContext(Map())
     val (er, _) = c0.evaluate(foldMetric)
     er shouldEqual InputRequest(Set(listInput))
   }
@@ -50,9 +50,21 @@ class IncrementalFoldEvalTest extends EvalTest {
     trace(foldMetric) should contain(baseMetric)
   }
 
-  test("it takes advantage of the base metric being incremental and only folds new elements") {
+  test("it exploits the incremental base eval and only folds new elements in an incremental context") {
     val seq0 = seq(1, 2, 3)
     val c0 = IncrementalContext().update(InputUpdate(Map(listInput -> seq0)))
+    val (_, c1) = c0.evaluate(foldMetric)
+    val seq1 = seq0.inc(WrappedIntImpl(4))
+    accessCounter = 0
+    val c2 = c1.update(InputUpdate(Map(listInput -> seq1)))
+    val (er, _) = c2.evaluate(foldMetric)
+    er shouldEqual Value(10)
+    accessCounter shouldEqual 1
+  }
+
+  test("it exploits the incremental base eval and only folds new elements in an explicit cache context") {
+    val seq0 = seq(1, 2, 3)
+    val c0 = ExplicitCacheContext().update(InputUpdate(Map(listInput -> seq0)))
     val (_, c1) = c0.evaluate(foldMetric)
     val seq1 = seq0.inc(WrappedIntImpl(4))
     accessCounter = 0
