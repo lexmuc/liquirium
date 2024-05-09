@@ -11,40 +11,60 @@ trait ExplicitCacheContext extends UpdatableContext {
 
 object ExplicitCacheContext {
 
-  def apply(): ExplicitCacheContext = Impl(
-    inputValues = Map(),
-    cachedValues = Map(),
-    lastDependencyValues = Map(),
-    dirtyEvals = Set(),
-    collectedDependencies = None,
-    dependencyGraph = DependencyGraph.empty,
-  )
+  def apply(): ExplicitCacheContext = Impl()
 
-  private case class Impl(
-    inputValues: Map[Input[_], _],
-    cachedValues: Map[Eval[_], EvalResult[_]],
-    lastDependencyValues: Map[Eval[_], Seq[(Eval[_], EvalResult[_])]],
-    dirtyEvals: Set[Eval[_]],
-    collectedDependencies: Option[Seq[Eval[_]]],
-    dependencyGraph: DependencyGraph[Eval[_]],
-  ) extends ExplicitCacheContext {
+  private object Impl {
 
-    override def evaluate[M](eval: Eval[M]): (EvalResult[M], Impl) = doEvaluate(eval, None)
+    // Some methods are defined in the companion object, so we don't accidentally access members of the wrong context.
+    // We are always forced to explicitly denote the context we are working with.
 
-    private def doEvaluate[M](eval: Eval[M], oldValue: Option[M]): (EvalResult[M], Impl) = {
+    private def evaluate[M](context: Impl, eval: Eval[M], oldValue: Option[M]): (EvalResult[M], Impl) = {
       val (res, contextAfterEval) = eval match {
         case ce: CachedEval[M] =>
-          val (res, ctx) = evaluateCachedEval(ce)
-          (res, ctx.collectDependencyIfCollecting(ce))
+          val (res, newContext) = context.evaluateCachedEval(ce)
+          (res, newContext.collectDependencyIfCollecting(ce))
         case de: DerivedEval[M] =>
-          de.eval(this, oldValue).asInstanceOf[(EvalResult[M], Impl)]
+          de.eval(context, oldValue).asInstanceOf[(EvalResult[M], Impl)]
         case ie: InputEval[M] =>
-          val (res, ctx) = evaluateInputEval(ie)
-          (res, ctx.collectDependencyIfCollecting(ie))
-        case Constant(c) => (Value(c), this)
+          val (res, newContext) = context.evaluateInputEval(ie)
+          (res, newContext.collectDependencyIfCollecting(ie))
+        case Constant(c) => (Value(c), context)
       }
       (res, contextAfterEval)
     }
+
+    private def actuallyEvaluateCachedEvalAndUpdateCacheAndDependencies[M](
+      context: Impl,
+      ce: CachedEval[M],
+    ): (EvalResult[M], Impl) = {
+      val (evalResult, contextAfterEvaluation) =
+        Impl.evaluate(
+          context = context.copy(collectedDependencies = Some(Seq())),
+          eval = ce.baseEval,
+          oldValue = context.cachedValues.get(ce).flatMap(x => x match {
+            case Value(v) => Some(v.asInstanceOf[M])
+            case _ => None
+          }))
+      val newDependencies = contextAfterEvaluation.collectedDependencies.get
+      val newContext =
+        contextAfterEvaluation
+          .saveEvaluation(ce, evalResult, newDependencies)
+          .copy(collectedDependencies = context.collectedDependencies)
+      (evalResult, newContext)
+    }
+
+  }
+
+  private case class Impl(
+    inputValues: Map[Input[_], _] = Map(),
+    cachedValues: Map[Eval[_], EvalResult[_]] = Map(),
+    lastDependencyValues: Map[Eval[_], Seq[(Eval[_], EvalResult[_])]] = Map(),
+    dirtyEvals: Set[Eval[_]] = Set(),
+    collectedDependencies: Option[Seq[Eval[_]]] = None,
+    dependencyGraph: DependencyGraph[Eval[_]] = DependencyGraph.empty,
+  ) extends ExplicitCacheContext {
+
+    override def evaluate[M](eval: Eval[M]): (EvalResult[M], Impl) = Impl.evaluate(this, eval, None)
 
     private def evaluateInputEval[M](inputEval: InputEval[M]): (EvalResult[M], Impl) = {
       val input = inputEval.input
@@ -63,7 +83,7 @@ object ExplicitCacheContext {
         } else {
           val (hasChanged, newContext) = checkIfValuesHaveChanged(lastDependencyValues(ce))
           if (hasChanged) {
-            newContext.actuallyEvaluateCachedEvalAndUpdateCacheAndDependencies(ce)
+            Impl.actuallyEvaluateCachedEvalAndUpdateCacheAndDependencies(newContext, ce)
           }
           else {
             val evalResult = cachedValues(ce).asInstanceOf[EvalResult[M]]
@@ -71,7 +91,7 @@ object ExplicitCacheContext {
           }
         }
       } else {
-        actuallyEvaluateCachedEvalAndUpdateCacheAndDependencies(ce)
+        Impl.actuallyEvaluateCachedEvalAndUpdateCacheAndDependencies(this, ce)
       }
 
     private def checkIfValuesHaveChanged(evalsWithLastValues: Seq[(Eval[_], EvalResult[_])]): (Boolean, Impl) = {
@@ -85,22 +105,9 @@ object ExplicitCacheContext {
           else go(rest.tail, newContext)
         }
       }
+
       val (resultBool, ctx) = go(evalsWithLastValues, this.copy(collectedDependencies = None))
       (resultBool, ctx.copy(collectedDependencies = this.collectedDependencies)) // restore dependencies
-    }
-
-    private def actuallyEvaluateCachedEvalAndUpdateCacheAndDependencies[M](ce: CachedEval[M]): (EvalResult[M], Impl) = {
-      val (evalResult, contextAfterEvaluation) = copy(collectedDependencies = Some(Seq()))
-        .doEvaluate(ce.baseEval, cachedValues.get(ce).flatMap(x => x match {
-          case Value(v) => Some(v.asInstanceOf[M])
-          case _ => None
-        }))
-      val newDependencies = contextAfterEvaluation.collectedDependencies.get
-      val newContext =
-        contextAfterEvaluation
-          .saveEvaluation(ce, evalResult, newDependencies)
-          .copy(collectedDependencies = this.collectedDependencies)
-      (evalResult, newContext)
     }
 
     private def saveEvaluation(eval: Eval[_], result: EvalResult[_], dependencies: Seq[Eval[_]]) =
