@@ -81,7 +81,7 @@ case class DollarCostAverageStrategy(
   // How much money should we have spent at this point in time?
   private def getSpendingTarget(state: SingleMarketStrategy.State): BigDecimal = {
     val startMoney = state.runConfiguration.initialResources.quoteBalance
-    val secondsPassed = Duration.between(state.runConfiguration.startTime, state.time).toSeconds
+    val secondsPassed = Duration.between(state.runConfiguration.operationPeriod.start, state.time).toSeconds
     val secondsTotal = duration.toSeconds
     startMoney.toDouble / secondsTotal.toDouble * secondsPassed.toDouble
   }
