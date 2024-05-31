@@ -7,7 +7,7 @@ import io.liquirium.core.orderTracking.BasicOrderTrackingState.ErrorState.Incons
 object SameFullQuantityInObservations extends ConsistencyRule {
 
   def check(state: BasicOrderTrackingState): Option[ErrorState] = {
-    val reverseNonEmptyObservations = state.observationHistory.changes.filter(_.order.isDefined).reverse.toList
+    val reverseNonEmptyObservations = state.observationChanges.filter(_.order.isDefined).reverse.toList
 
     for {
       lastObservation <- reverseNonEmptyObservations.headOption

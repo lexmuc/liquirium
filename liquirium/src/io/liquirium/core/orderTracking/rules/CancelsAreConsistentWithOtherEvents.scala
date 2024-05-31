@@ -13,7 +13,7 @@ object CancelsAreConsistentWithOtherEvents extends ConsistencyRule {
     }
     else state.cancellation match {
       case Some(cancel@OrderTrackingEvent.Cancel(_, _, Some(AbsoluteQuantity(absoluteRest)))) =>
-        val conflictingObservation = state.observationHistory.changes.reverseIterator collectFirst {
+        val conflictingObservation = state.observationChanges.reverseIterator collectFirst {
           case e@OrderTrackingEvent.ObservationChange(_, Some(o)) if o.fullQuantity.abs < absoluteRest => e
         }
         val conflictingCreation = state.creation collectFirst {

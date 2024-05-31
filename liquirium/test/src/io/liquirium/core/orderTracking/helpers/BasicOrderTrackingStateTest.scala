@@ -1,16 +1,12 @@
 package io.liquirium.core.orderTracking.helpers
 
 import io.liquirium.core.Order
-import io.liquirium.core.helpers.CoreHelpers.dec
-import io.liquirium.core.helpers.{BasicTest, OrderHelpers, TradeHelpers}
 import io.liquirium.core.orderTracking.BasicOrderTrackingState.{ErrorState, SyncReason}
-import io.liquirium.core.orderTracking.{BasicOrderTrackingState, OrderTrackingEvent, SingleOrderObservationHistory}
-import io.liquirium.util.AbsoluteQuantity
+import io.liquirium.core.orderTracking.OrderTrackingEvent
 
 import java.time.Instant
 
 class BasicOrderTrackingStateTest extends SingleOrderTrackingTest {
-
 
   protected def assertIsCurrentlyNotObserved(): Unit = basicState.isCurrentlyObserved shouldBe false
 

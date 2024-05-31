@@ -7,11 +7,12 @@ import io.liquirium.core.orderTracking.OrderTrackingEvent.ObservationChange
 
 object FullQuantityAtCreationMatchesTheLatestPresentObservation extends ConsistencyRule {
 
-  def check(state: BasicOrderTrackingState): Option[ErrorState] =
-    (state.creation, state.observationHistory.latestPresentChange) match {
+  def check(state: BasicOrderTrackingState): Option[ErrorState] = {
+    (state.creation, state.latestPresentObservationChange) match {
       case (Some(c), Some(obs@ObservationChange(_, Some(o)) )) if c.order.fullQuantity != o.fullQuantity =>
         Some(InconsistentEvents(c, obs))
       case _ => None
     }
+  }
 
 }

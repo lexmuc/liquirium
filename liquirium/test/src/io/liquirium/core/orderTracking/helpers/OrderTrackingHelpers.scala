@@ -31,8 +31,8 @@ object OrderTrackingHelpers extends Matchers {
   ): BasicOrderTrackingState =
     BasicOrderTrackingState(
       operationEvents = operationEvents,
-      observationHistory = observationHistory,
       tradeEvents = tradeEvents,
+      observationChanges = observationHistory.changes,
     )
 
   def singleOrderObservationHistory(changes: ObservationChange*): SingleOrderObservationHistory =

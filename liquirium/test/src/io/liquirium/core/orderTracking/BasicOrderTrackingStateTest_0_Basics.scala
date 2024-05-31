@@ -71,4 +71,40 @@ class BasicOrderTrackingStateTest_0_Basics extends BasicOrderTrackingStateTest {
     assertIsCurrentlyObserved()
   }
 
+  test("the latest present order observation change is available as an option") {
+    basicState.latestPresentObservationChange shouldBe None
+    observe(absence(sec(0)))
+    basicState.latestPresentObservationChange shouldBe None
+    observe(change(sec(1), o(10, of = 10)))
+    basicState.latestPresentObservationChange shouldEqual Some(change(sec(1), o(10, of = 10)))
+    observe(change(sec(2), o(8, of = 10)))
+    basicState.latestPresentObservationChange shouldEqual Some(change(sec(2), o(8, of = 10)))
+    observe(absence(sec(3)))
+    basicState.latestPresentObservationChange shouldEqual Some(change(sec(2), o(8, of = 10)))
+  }
+
+  test("the latest present order state is available as an option") {
+    basicState.latestPresentState shouldBe None
+    observe(absence(sec(0)))
+    basicState.latestPresentState shouldBe None
+    observe(change(sec(1), o(10, of = 10)))
+    basicState.latestPresentState shouldEqual Some(o(10, of = 10))
+    observe(change(sec(2), o(8, of = 10)))
+    basicState.latestPresentState shouldEqual Some(o(8, of = 10))
+    observe(absence(sec(3)))
+    basicState.latestPresentState shouldEqual Some(o(8, of = 10))
+  }
+
+  test("it exposes a flag that indicates whether the order is currently observed") {
+    basicState.isCurrentlyObserved shouldBe false
+    observe(absence(sec(0)))
+    basicState.isCurrentlyObserved shouldBe false
+    observe(change(sec(1), o(10, of = 10)))
+    basicState.isCurrentlyObserved shouldBe true
+    observe(change(sec(2), o(8, of = 10)))
+    basicState.isCurrentlyObserved shouldBe  true
+    observe(absence(sec(3)))
+    basicState.isCurrentlyObserved shouldBe false
+  }
+
 }

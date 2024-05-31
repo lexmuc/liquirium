@@ -3,7 +3,7 @@ package io.liquirium.core.orderTracking.helpers
 import io.liquirium.core.Order
 import io.liquirium.core.helpers.CoreHelpers.dec
 import io.liquirium.core.helpers.{BasicTest, OrderHelpers, TradeHelpers}
-import io.liquirium.core.orderTracking.{BasicOrderTrackingState, OrderTrackingEvent, SingleOrderObservationHistory}
+import io.liquirium.core.orderTracking.{BasicOrderTrackingState, OrderTrackingEvent}
 import io.liquirium.util.AbsoluteQuantity
 
 import java.time.Instant
@@ -54,8 +54,8 @@ class SingleOrderTrackingTest extends BasicTest {
   protected def basicState: BasicOrderTrackingState =
     BasicOrderTrackingState(
       operationEvents = operationEvents,
-      observationHistory = SingleOrderObservationHistory(observationChanges),
       tradeEvents = tradeEvents,
+      observationChanges = observationChanges,
     )
 
 }

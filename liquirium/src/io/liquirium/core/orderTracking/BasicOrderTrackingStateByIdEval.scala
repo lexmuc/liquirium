@@ -18,17 +18,17 @@ object BasicOrderTrackingStateByIdEval {
     openOrdersHistory
       .map(_.emptySingleOrderHistory)
       .flatMap { emptySingleOrderHistory =>
-      val emptyState = BasicOrderTrackingState(Seq(), emptySingleOrderHistory , Seq())
-      allStates(
-        operationsWithOrdersEval(
-          orderHistoriesById = openOrdersHistory.map(_.definedHistoriesById),
-          operationsById = operationsById,
+        val emptyState = BasicOrderTrackingState(Seq(), Seq(), emptySingleOrderHistory.changes)
+        allStates(
+          operationsWithOrdersEval(
+            orderHistoriesById = openOrdersHistory.map(_.definedHistoriesById),
+            operationsById = operationsById,
+            emptyOrderTrackingState = emptyState,
+          ),
+          tradeEventsByIdEval(trades),
           emptyOrderTrackingState = emptyState,
-        ),
-        tradeEventsByIdEval(trades),
-        emptyOrderTrackingState = emptyState,
-      )
-    }
+        )
+      }
   }
 
   private def tradeEventsByIdEval(
@@ -49,8 +49,8 @@ object BasicOrderTrackingStateByIdEval {
     ) {
       case (im, (id, newOrderHistory)) =>
         val newState = im.mapValue.get(id) match {
-          case None => BasicOrderTrackingState(Seq(), newOrderHistory.get, Seq())
-          case Some(s) => s.copy(observationHistory = newOrderHistory.get)
+          case None => BasicOrderTrackingState(Seq(), Seq(), newOrderHistory.get.changes)
+          case Some(s) => s.copy(observationChanges = newOrderHistory.get.changes)
         }
         im.update(id, newState)
     } {

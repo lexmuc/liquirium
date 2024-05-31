@@ -27,7 +27,7 @@ object NoQuantityIncrease extends ConsistencyRule {
     }
 
   override def check(state: BasicOrderTrackingState): Option[ErrorState] = {
-    val reverseNonEmptyObservations = state.observationHistory.changes.filter(_.order.isDefined).reverse.toList
+    val reverseNonEmptyObservations = state.observationChanges.filter(_.order.isDefined).reverse.toList
     findInconsistentObservations(reverseNonEmptyObservations)
   }
 
