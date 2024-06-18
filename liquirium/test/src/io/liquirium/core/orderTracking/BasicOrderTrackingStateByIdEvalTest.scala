@@ -84,7 +84,6 @@ class BasicOrderTrackingStateByIdEvalTest
       ),
       "B" -> basicOrderTrackingState(
         observationHistory = singleOrderObservationHistory(
-          oc(sec(1)),
           oc(sec(2), "B", 20),
         ),
       ),
@@ -114,7 +113,7 @@ class BasicOrderTrackingStateByIdEvalTest
     )
   }
 
-  test("order changes for orders not observed in the history are requested for ids in trades or trade requests") {
+  test("order changes for orders not observed in the history are empty") {
     fakeNewOpenOrdersSnapshot(sec(1))
     fakeNewTrade(t(1, "A"))
     fakeNewOperation(creationEvent("B", 2))
@@ -124,7 +123,6 @@ class BasicOrderTrackingStateByIdEvalTest
           te(1, "A")
         ),
         observationHistory = singleOrderObservationHistory(
-          oc(sec(1))
         ),
       ),
       "B" -> basicOrderTrackingState(
@@ -132,7 +130,6 @@ class BasicOrderTrackingStateByIdEvalTest
           creationEvent("B", 2),
         ),
         observationHistory = singleOrderObservationHistory(
-          oc(sec(1))
         ),
       )
     )

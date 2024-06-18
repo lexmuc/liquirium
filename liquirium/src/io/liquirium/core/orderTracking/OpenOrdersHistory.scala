@@ -4,8 +4,6 @@ import io.liquirium.core.Order
 import io.liquirium.core.orderTracking.OrderTrackingEvent.ObservationChange
 import io.liquirium.eval.{BasicIncrementalValue, IncrementalMap}
 
-import java.time.Instant
-
 trait OpenOrdersHistory extends BasicIncrementalValue[OpenOrdersSnapshot, OpenOrdersHistory] {
 
   def lastSnapshot: OpenOrdersSnapshot
@@ -15,8 +13,6 @@ trait OpenOrdersHistory extends BasicIncrementalValue[OpenOrdersSnapshot, OpenOr
   def observedIds: Set[String]
 
   def singleOrderHistory(orderId: String): SingleOrderObservationHistory
-
-  def emptySingleOrderHistory: SingleOrderObservationHistory
 
   def definedHistoriesById: IncrementalMap[String, SingleOrderObservationHistory]
 
@@ -32,7 +28,6 @@ object OpenOrdersHistory {
       previousHistory = None,
       changes = firstChanges(snapshot),
       definedHistoriesById = firstHistories(snapshot),
-      emptySingleOrderHistory = emptySingleOrderHistory(snapshot.timestamp),
     )
 
   private def firstChanges(snapshot: OpenOrdersSnapshot): Map[String, IndexedSeq[ObservationChange]] = {
@@ -50,10 +45,6 @@ object OpenOrdersHistory {
     }
   }
 
-  private def emptySingleOrderHistory(timestamp: Instant): SingleOrderObservationHistory =
-    SingleOrderObservationHistory(IndexedSeq(ObservationChange(timestamp, None)))
-
-
   private case class OpenOrdersHistoryImpl(
     firstSnapshot: OpenOrdersSnapshot,
     lastSnapshot: OpenOrdersSnapshot,
@@ -61,7 +52,6 @@ object OpenOrdersHistory {
     previousHistory: Option[OpenOrdersHistoryImpl],
     changes: Map[String, Seq[ObservationChange]],
     definedHistoriesById: IncrementalMap[String, SingleOrderObservationHistory],
-    emptySingleOrderHistory: SingleOrderObservationHistory,
   ) extends OpenOrdersHistory {
 
     previousHistory match {
@@ -95,7 +85,7 @@ object OpenOrdersHistory {
     : IncrementalMap[String, SingleOrderObservationHistory] = {
       val relevantIds = newSnapshot.orderIds ++ lastSnapshot.orderIds
       relevantIds.foldLeft(definedHistoriesById) { (c, id) =>
-        val oldHist = definedHistoriesById.mapValue.getOrElse(id, emptySingleOrderHistory)
+        val oldHist = definedHistoriesById.mapValue.getOrElse(id, SingleOrderObservationHistory(Seq()))
         val newHist = oldHist.append(ObservationChange(newSnapshot.timestamp, newSnapshot.get(id)))
         if (oldHist != newHist) c.update(id, newHist) else c
       }

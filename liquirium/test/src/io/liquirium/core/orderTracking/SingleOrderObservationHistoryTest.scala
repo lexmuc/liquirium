@@ -10,19 +10,20 @@ class SingleOrderObservationHistoryTest extends BasicTest {
 
   private def history(changes: ObservationChange*) = SingleOrderObservationHistory(changes)
 
-  test("an exception is thrown when created empty") {
-    an[Exception] shouldBe thrownBy(history())
+  test("it may be created empty") {
+    history()
   }
 
   test("new observation changes can be appended") {
-    val h0 = history(observationChange(sec(10)))
-    val h1 = h0.append(observationChange(sec(11), order("A", 1)))
-    val h2 = h1.append(observationChange(sec(12), order("A", 2)))
-    h1 shouldEqual history(
+    val h0 = history()
+    val h1 = h0.append(observationChange(sec(10)))
+    val h2 = h1.append(observationChange(sec(11), order("A", 1)))
+    val h3 = h2.append(observationChange(sec(12), order("A", 2)))
+    h2 shouldEqual history(
       observationChange(sec(10)),
       observationChange(sec(11), order("A", 1)),
     )
-    h2 shouldEqual history(
+    h3 shouldEqual history(
       observationChange(sec(10)),
       observationChange(sec(11), order("A", 1)),
       observationChange(sec(12), order("A", 2)),

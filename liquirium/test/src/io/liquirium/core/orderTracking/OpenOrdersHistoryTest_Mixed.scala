@@ -84,18 +84,4 @@ class OpenOrdersHistoryTest_Mixed extends BasicTest {
     ).observedIds shouldEqual Set("A", "B")
   }
 
-  test("the empty single history can be accessed directly without order id and always remains the same") {
-    val h = history(
-      snapshot(sec(1), o("A")),
-    )
-    h.emptySingleOrderHistory.changes shouldEqual Seq(
-      observationChange(sec(1)),
-    )
-    val eh = h.emptySingleOrderHistory
-    val h2 = h.appendIfChanged(
-      snapshot(sec(2), o("B")),
-    )
-    h2.emptySingleOrderHistory shouldBe theSameInstanceAs(eh)
-  }
-
 }

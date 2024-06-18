@@ -13,22 +13,16 @@ object BasicOrderTrackingStateByIdEval {
     successfulOperations: Eval[IncrementalSeq[OrderTrackingEvent.OperationEvent]],
   ): Eval[IncrementalMap[String, BasicOrderTrackingState]] = {
     val operationsById = successfulOperations.groupByIncremental(_.orderId)
-    // it is important that we map to the empty single order history first, so we always work with the same instance
-    // of the empty order tracking state. Otherwise we would get a new instance whenever the open orders history changes
-    openOrdersHistory
-      .map(_.emptySingleOrderHistory)
-      .flatMap { emptySingleOrderHistory =>
-        val emptyState = BasicOrderTrackingState(Seq(), Seq(), emptySingleOrderHistory.changes)
-        allStates(
-          operationsWithOrdersEval(
-            orderHistoriesById = openOrdersHistory.map(_.definedHistoriesById),
-            operationsById = operationsById,
-            emptyOrderTrackingState = emptyState,
-          ),
-          tradeEventsByIdEval(trades),
-          emptyOrderTrackingState = emptyState,
-        )
-      }
+    val emptyState = BasicOrderTrackingState(Seq(), Seq(), Seq())
+    allStates(
+      operationsWithOrdersEval(
+        orderHistoriesById = openOrdersHistory.map(_.definedHistoriesById),
+        operationsById = operationsById,
+        emptyOrderTrackingState = emptyState,
+      ),
+      tradeEventsByIdEval(trades),
+      emptyOrderTrackingState = emptyState,
+    )
   }
 
   private def tradeEventsByIdEval(
