@@ -51,7 +51,7 @@ class BinanceModelConverter(exchangeId: ExchangeId) {
       || s.endsWith("RUB") || s.endsWith("TRY") || s.endsWith("ZAR") || s.endsWith("UAH") || s.endsWith("DAI")
       || s.endsWith("AUD") || s.endsWith("BRL") || s.endsWith("EUR") || s.endsWith("GBP") || s.endsWith("VAI")
       || s.endsWith("UST") || s.endsWith("DOT") || s.endsWith("PLN") || s.endsWith("RON") || s.endsWith("ARS")
-      || s.endsWith("MXN"))
+      || s.endsWith("MXN") || s.endsWith("CZK") || s.endsWith("JPY") || s.endsWith("COP"))
       Market(exchangeId, TradingPair(base = s.substring(0, s.length - 3), quote = s.substring(s.length - 3)))
     else if (s.endsWith("USDT") || s.endsWith("BUSD") || s.endsWith("TUSD") || s.endsWith("USDC") ||
       s.endsWith("USDS") || s.endsWith("BKRW") || s.endsWith("IDRT") || s.endsWith("BIDR") || s.endsWith("BVND") ||
