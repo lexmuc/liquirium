@@ -25,14 +25,14 @@ object OrderTrackingHelpers extends Matchers {
   }
 
   def basicOrderTrackingState(
-    observationHistory: SingleOrderObservationHistory,
+    orderObservationChanges: Seq[OrderTrackingEvent.ObservationChange],
     operationEvents: Seq[OrderTrackingEvent.OperationEvent] = Seq(),
     tradeEvents: Seq[OrderTrackingEvent.NewTrade] = Seq(),
   ): BasicOrderTrackingState =
     BasicOrderTrackingState(
       operationEvents = operationEvents,
       tradeEvents = tradeEvents,
-      observationChanges = observationHistory.changes,
+      observationChanges = orderObservationChanges,
     )
 
   def singleOrderObservationHistory(changes: ObservationChange*): SingleOrderObservationHistory =
@@ -76,7 +76,7 @@ object OrderTrackingHelpers extends Matchers {
 
   def syncedStateWithReportableOrder(o: Order): BasicOrderTrackingState = {
     val result = basicOrderTrackingState(
-      observationHistory = singleOrderObservationHistory(observationChange(sec(0), o)),
+      orderObservationChanges = Seq(observationChange(sec(0), o)),
     )
     result.errorState shouldBe None
     result.syncReasons.size shouldBe 0
@@ -87,7 +87,7 @@ object OrderTrackingHelpers extends Matchers {
   def syncedStateWithoutReportableOrder(orderId: String): BasicOrderTrackingState = {
     val order = OrderHelpers.order(id = orderId, quantity = 1)
     val result = basicOrderTrackingState(
-      observationHistory = singleOrderObservationHistory(
+      orderObservationChanges = Seq(
         observationChange(sec(0), order),
         observationChange(sec(1)),
       ),
@@ -103,7 +103,7 @@ object OrderTrackingHelpers extends Matchers {
 
   def stateWithSyncReasonUnknownWhyGone(order: Order, t: Instant): BasicOrderTrackingState = {
     val result = basicOrderTrackingState(
-      observationHistory = singleOrderObservationHistory(
+      orderObservationChanges = Seq(
         observationChange(sec(0), order),
         observationChange(t),
       ),
@@ -126,8 +126,7 @@ object OrderTrackingHelpers extends Matchers {
       originalQuantity = fullQuantity,
     )
     val result = basicOrderTrackingState(
-      observationHistory = singleOrderObservationHistory(
-        observationChange(t minus millis(2)),
+      orderObservationChanges = Seq(
         observationChange(t minus millis(1), fullOrder),
         observationChange(t, fullOrder.copy(openQuantity = fullQuantity - expectedTradeQuantity)),
       ),
@@ -143,8 +142,7 @@ object OrderTrackingHelpers extends Matchers {
     t: Instant,
   ): BasicOrderTrackingState = {
     val result = basicOrderTrackingState(
-      observationHistory = singleOrderObservationHistory(
-        observationChange(t minus millis(2)),
+      orderObservationChanges = Seq(
         observationChange(t minus millis(1), order),
       ),
       tradeEvents = Seq(
@@ -159,8 +157,7 @@ object OrderTrackingHelpers extends Matchers {
 
   def stateWithReappearingOrderError(order: Order, t: Instant): BasicOrderTrackingState = {
     val result = basicOrderTrackingState(
-      observationHistory = singleOrderObservationHistory(
-        observationChange(t minus millis(3)),
+      orderObservationChanges = Seq(
         observationChange(t minus millis(2), order),
         observationChange(t minus millis(1)),
         observationChange(t, order),
@@ -176,7 +173,7 @@ object OrderTrackingHelpers extends Matchers {
     t: Instant,
   ): BasicOrderTrackingState = {
     val result = basicOrderTrackingState(
-      observationHistory = singleOrderObservationHistory(
+      orderObservationChanges = Seq(
         observationChange(t minus millis(1), order),
         observationChange(t plus millis(1)),
       ),
@@ -195,9 +192,7 @@ object OrderTrackingHelpers extends Matchers {
     t: Instant,
   ): BasicOrderTrackingState = {
     val result = basicOrderTrackingState(
-      observationHistory = singleOrderObservationHistory(
-        observationChange(t plus millis(1)),
-      ),
+      orderObservationChanges = Seq(),
       operationEvents = Seq(
         creationEvent(t, order),
       ),

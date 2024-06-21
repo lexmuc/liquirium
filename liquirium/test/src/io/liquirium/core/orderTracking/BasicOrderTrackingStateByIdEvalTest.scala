@@ -77,13 +77,13 @@ class BasicOrderTrackingStateByIdEvalTest
     fakeEmptyOperations()
     eval().mapValue shouldEqual Map(
       "A" -> basicOrderTrackingState(
-        observationHistory = singleOrderObservationHistory(
+        orderObservationChanges = Seq(
           oc(sec(1), "A", 10),
           oc(sec(2)),
         ),
       ),
       "B" -> basicOrderTrackingState(
-        observationHistory = singleOrderObservationHistory(
+        orderObservationChanges = Seq(
           oc(sec(2), "B", 20),
         ),
       ),
@@ -102,7 +102,7 @@ class BasicOrderTrackingStateByIdEvalTest
           creationEvent("A", 1),
           cancelEvent("A", 2),
         ),
-        observationHistory = singleOrderObservationHistory(
+        orderObservationChanges = Seq(
           oc(sec(1), "A", 10),
         ),
         tradeEvents = Seq(
@@ -122,14 +122,14 @@ class BasicOrderTrackingStateByIdEvalTest
         tradeEvents = Seq(
           te(1, "A")
         ),
-        observationHistory = singleOrderObservationHistory(
+        orderObservationChanges = Seq(
         ),
       ),
       "B" -> basicOrderTrackingState(
         operationEvents = Seq(
           creationEvent("B", 2),
         ),
-        observationHistory = singleOrderObservationHistory(
+        orderObservationChanges = Seq(
         ),
       )
     )
@@ -143,7 +143,7 @@ class BasicOrderTrackingStateByIdEvalTest
     eval().mapValue shouldEqual Map(
       "A" -> basicOrderTrackingState(
         tradeEvents = Seq(te(1, "A")),
-        observationHistory = singleOrderObservationHistory(
+        orderObservationChanges = Seq(
           oc(sec(1), "A", 10),
         ),
       )
