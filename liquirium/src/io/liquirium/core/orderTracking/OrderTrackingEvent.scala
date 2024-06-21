@@ -15,7 +15,21 @@ object OrderTrackingEvent {
     override def timestamp: Instant = t.time
   }
 
-  case class ObservationChange(timestamp: Instant, order: Option[Order]) extends OrderTrackingEvent
+  sealed trait OrderObservationEvent extends OrderTrackingEvent {
+    def orderId: String
+
+    def maybeOrder: Option[Order]
+  }
+
+  case class ObservationChange(timestamp: Instant, order: Order) extends OrderObservationEvent {
+    override def orderId: String = order.id
+
+    override def maybeOrder: Option[Order] = Some(order)
+  }
+
+  case class Disappearance(timestamp: Instant, orderId: String) extends OrderObservationEvent {
+    override def maybeOrder: Option[Order] = None
+  }
 
   trait OperationEvent extends OrderTrackingEvent {
     def orderId: String

@@ -44,7 +44,7 @@ object BasicOrderTrackingStateByIdEval {
       case (im, (id, newOrderHistory)) =>
         val newState = im.mapValue.get(id) match {
           case None => BasicOrderTrackingState(Seq(), Seq(), newOrderHistory.get.changes)
-          case Some(s) => s.copy(observationChanges = newOrderHistory.get.changes)
+          case Some(s) => s.copy(observationEvents = newOrderHistory.get.changes)
         }
         im.update(id, newState)
     } {

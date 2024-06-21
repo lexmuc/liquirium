@@ -9,7 +9,7 @@ class FullQuantityAtCreationMatchesTheLatestPresentObservationTest extends Consi
 
   test("the check passes when no creation or observation has occurred") {
     observe(
-      absence(sec(0)),
+      disappearance(sec(0)),
       trade(sec(1), 10),
     )
     assertPassed()
@@ -24,7 +24,7 @@ class FullQuantityAtCreationMatchesTheLatestPresentObservationTest extends Consi
 
   test("the check passes if only a creation has been observed") {
     observe(
-      absence(sec(0)),
+      disappearance(sec(0)),
       creation(sec(1), o(10, of = 10)),
     )
     assertPassed()
@@ -32,7 +32,7 @@ class FullQuantityAtCreationMatchesTheLatestPresentObservationTest extends Consi
 
   test("the check passes if the creation matches a single observation") {
     observe(
-      absence(sec(0)),
+      disappearance(sec(0)),
       creation(sec(1), o(10, of = 10)),
       change(sec(2), o(10, of = 10)),
     )
@@ -41,7 +41,7 @@ class FullQuantityAtCreationMatchesTheLatestPresentObservationTest extends Consi
 
   test("the check fails if the creation does not match a single observation") {
     observe(
-      absence(sec(0)),
+      disappearance(sec(0)),
       creation(sec(1), o(10, of = 10)),
       change(sec(2), o(9, of = 9)),
     )
@@ -53,7 +53,7 @@ class FullQuantityAtCreationMatchesTheLatestPresentObservationTest extends Consi
 
   test("the check passes if the latest present observation is matched but not an earlier observation") {
     observe(
-      absence(sec(0)),
+      disappearance(sec(0)),
       creation(sec(1), o(10, of = 10)),
       change(sec(2), o(8, of = 8)),
       change(sec(3), o(10, of = 10)),

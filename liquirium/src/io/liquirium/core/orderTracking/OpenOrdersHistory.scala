@@ -1,7 +1,7 @@
 package io.liquirium.core.orderTracking
 
 import io.liquirium.core.Order
-import io.liquirium.core.orderTracking.OrderTrackingEvent.ObservationChange
+import io.liquirium.core.orderTracking.OrderTrackingEvent.{Disappearance, ObservationChange, OrderObservationEvent}
 import io.liquirium.eval.{BasicIncrementalValue, IncrementalMap}
 
 trait OpenOrdersHistory extends BasicIncrementalValue[OpenOrdersSnapshot, OpenOrdersHistory] {
@@ -30,8 +30,8 @@ object OpenOrdersHistory {
       definedHistoriesById = firstHistories(snapshot),
     )
 
-  private def firstChanges(snapshot: OpenOrdersSnapshot): Map[String, IndexedSeq[ObservationChange]] = {
-    def changes(o: Order) = IndexedSeq(ObservationChange(snapshot.timestamp, Some(o)))
+  private def firstChanges(snapshot: OpenOrdersSnapshot): Map[String, IndexedSeq[OrderObservationEvent]] = {
+    def changes(o: Order) = IndexedSeq(ObservationChange(snapshot.timestamp, o))
 
     snapshot.orders.map(o => (o.id, changes(o))).toMap
   }
@@ -40,7 +40,7 @@ object OpenOrdersHistory {
     val emptyMap = IncrementalMap.empty[String, SingleOrderObservationHistory]
     snapshot.orders.foldLeft(emptyMap) {
       case (m, order) =>
-        val sh = SingleOrderObservationHistory(IndexedSeq(ObservationChange(snapshot.timestamp, Some(order))))
+        val sh = SingleOrderObservationHistory(IndexedSeq(ObservationChange(snapshot.timestamp, order)))
         m.update(order.id, sh)
     }
   }
@@ -50,7 +50,7 @@ object OpenOrdersHistory {
     lastSnapshot: OpenOrdersSnapshot,
     observedIds: Set[String],
     previousHistory: Option[OpenOrdersHistoryImpl],
-    changes: Map[String, Seq[ObservationChange]],
+    changes: Map[String, Seq[OrderObservationEvent]],
     definedHistoriesById: IncrementalMap[String, SingleOrderObservationHistory],
   ) extends OpenOrdersHistory {
 
@@ -71,11 +71,15 @@ object OpenOrdersHistory {
         definedHistoriesById = updatedHistoriesById(s),
       )
 
-    private def updatedChanges(newSnapshot: OpenOrdersSnapshot): Map[String, Seq[ObservationChange]] = {
+    private def updatedChanges(newSnapshot: OpenOrdersSnapshot): Map[String, Seq[OrderObservationEvent]] = {
       val relevantIds = newSnapshot.orderIds ++ lastSnapshot.orderIds
       relevantIds.foldLeft(changes) { (c, id) =>
         if (newSnapshot.get(id) != lastSnapshot.get(id)) {
-          c.updated(id, singleOrderHistory(id).changes :+ ObservationChange(newSnapshot.timestamp, newSnapshot.get(id)))
+          val newChange = newSnapshot.get(id) match {
+            case Some(o) => ObservationChange(newSnapshot.timestamp, o)
+            case None => Disappearance(newSnapshot.timestamp, id)
+          }
+          c.updated(id, singleOrderHistory(id).changes :+ newChange)
         }
         else c
       }
@@ -86,7 +90,11 @@ object OpenOrdersHistory {
       val relevantIds = newSnapshot.orderIds ++ lastSnapshot.orderIds
       relevantIds.foldLeft(definedHistoriesById) { (c, id) =>
         val oldHist = definedHistoriesById.mapValue.getOrElse(id, SingleOrderObservationHistory(Seq()))
-        val newHist = oldHist.append(ObservationChange(newSnapshot.timestamp, newSnapshot.get(id)))
+        val newChange = newSnapshot.get(id) match {
+          case Some(o) => ObservationChange(newSnapshot.timestamp, o)
+          case None => Disappearance(newSnapshot.timestamp, id)
+        }
+        val newHist = oldHist.append(newChange)
         if (oldHist != newHist) c.update(id, newHist) else c
       }
     }
@@ -94,7 +102,7 @@ object OpenOrdersHistory {
     @deprecated
     override def singleOrderHistory(orderId: String): SingleOrderObservationHistory =
       SingleOrderObservationHistory(
-        changes.getOrElse(orderId, IndexedSeq(ObservationChange(firstSnapshot.timestamp, None)))
+        changes.getOrElse(orderId, IndexedSeq())
       )
 
     override def prev: Option[OpenOrdersHistory] = previousHistory

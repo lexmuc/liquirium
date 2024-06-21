@@ -8,7 +8,7 @@ class BasicOrderTrackingStateTest_4_WithCancel extends BasicOrderTrackingStateTe
   test("when only a cancel event is present, no order is reported") {
     observe(
       cancellation(sec(1)),
-      absence(sec(1)),
+      disappearance(sec(1)),
     )
     assertNotReported()
   }
@@ -16,7 +16,7 @@ class BasicOrderTrackingStateTest_4_WithCancel extends BasicOrderTrackingStateTe
   test("when only a cancel event is present, it is syncing because it is unknown if trades still appear") {
     observe(
       cancellation(sec(1)),
-      absence(sec(1)),
+      disappearance(sec(1)),
     )
     assertSyncReasons(unknownIfMoreTradesBeforeCancel(sec(1)))
 
@@ -24,7 +24,7 @@ class BasicOrderTrackingStateTest_4_WithCancel extends BasicOrderTrackingStateTe
 
     observe(
       cancellation(sec(1), absoluteRest = Some(10)),
-      absence(sec(1)),
+      disappearance(sec(1)),
     )
     assertSyncReasons(unknownIfMoreTradesBeforeCancel(sec(1)))
   }
@@ -33,7 +33,7 @@ class BasicOrderTrackingStateTest_4_WithCancel extends BasicOrderTrackingStateTe
     observe(
       trade(sec(0), 1),
       cancellation(sec(1)),
-      absence(sec(1)),
+      disappearance(sec(1)),
     )
     assertNotReported()
   }
@@ -42,7 +42,7 @@ class BasicOrderTrackingStateTest_4_WithCancel extends BasicOrderTrackingStateTe
     observe(
       trade(sec(0), 1),
       cancellation(sec(1)),
-      absence(sec(1)),
+      disappearance(sec(1)),
     )
     assertSyncReasons(unknownIfMoreTradesBeforeCancel(sec(1)))
 
@@ -51,7 +51,7 @@ class BasicOrderTrackingStateTest_4_WithCancel extends BasicOrderTrackingStateTe
     observe(
       trade(sec(0), 1),
       cancellation(sec(1), absoluteRest = Some(10)),
-      absence(sec(1)),
+      disappearance(sec(1)),
     )
     assertSyncReasons(unknownIfMoreTradesBeforeCancel(sec(1)))
   }
@@ -60,7 +60,7 @@ class BasicOrderTrackingStateTest_4_WithCancel extends BasicOrderTrackingStateTe
     observe(
       change(sec(1), o(10, of = 10)), // immediately observed
       cancellation(sec(1), Some(10)),
-      absence(sec(2)),
+      disappearance(sec(2)),
     )
     assertNotReported()
     assertInSync()
@@ -68,10 +68,10 @@ class BasicOrderTrackingStateTest_4_WithCancel extends BasicOrderTrackingStateTe
     resetEvents()
 
     observe(
-      absence(sec(0)),
+      disappearance(sec(0)),
       change(sec(1), o(10, of = 10)), // not observed at first
       cancellation(sec(1), Some(10)),
-      absence(sec(2)),
+      disappearance(sec(2)),
     )
     assertNotReported()
     assertInSync()
@@ -79,7 +79,7 @@ class BasicOrderTrackingStateTest_4_WithCancel extends BasicOrderTrackingStateTe
 
   test("if the order is still there after a cancel it is expecting an observation change and order is reported gone") {
     observe(
-      absence(sec(0)),
+      disappearance(sec(0)),
       cancellation(sec(1), Some(10)),
       change(sec(2), o(10, of = 10)),
     )
@@ -91,7 +91,7 @@ class BasicOrderTrackingStateTest_4_WithCancel extends BasicOrderTrackingStateTe
     observe(
       change(sec(2), o(10, of = 10)),
       cancellation(sec(3), absoluteRest = Some(2)),
-      absence(sec(4)),
+      disappearance(sec(4)),
     )
     assertNotReported()
     assertSyncReasons(expectingTrades(sec(3), 8))
@@ -101,7 +101,7 @@ class BasicOrderTrackingStateTest_4_WithCancel extends BasicOrderTrackingStateTe
     observe(
       change(sec(2), o(-10, of = -10)),
       cancellation(sec(3), absoluteRest = Some(2)),
-      absence(sec(4)),
+      disappearance(sec(4)),
     )
     assertNotReported()
     assertSyncReasons(expectingTrades(sec(3), -8))
@@ -114,7 +114,7 @@ class BasicOrderTrackingStateTest_4_WithCancel extends BasicOrderTrackingStateTe
     )
     assertSyncReasons(expectingTrades(sec(3), 8), expectingObservationChange(sec(3), None))
 
-    observe(absence(sec(4)))
+    observe(disappearance(sec(4)))
     assertSyncReasons(expectingTrades(sec(3), 8))
   }
 
@@ -123,7 +123,7 @@ class BasicOrderTrackingStateTest_4_WithCancel extends BasicOrderTrackingStateTe
       change(sec(2), o(10, of = 10)),
       cancellation(sec(3), absoluteRest = Some(2)),
       trade(sec(3), 5),
-      absence(sec(4)),
+      disappearance(sec(4)),
     )
     assertSyncReasons(expectingTrades(sec(3), 3))
 
@@ -133,7 +133,7 @@ class BasicOrderTrackingStateTest_4_WithCancel extends BasicOrderTrackingStateTe
       change(sec(2), o(-10, of = -10)),
       cancellation(sec(3), absoluteRest = Some(2)),
       trade(sec(3), -5),
-      absence(sec(4)),
+      disappearance(sec(4)),
     )
     assertSyncReasons(expectingTrades(sec(3), -3))
   }
@@ -143,7 +143,7 @@ class BasicOrderTrackingStateTest_4_WithCancel extends BasicOrderTrackingStateTe
       change(sec(2), o(10, of = 10)),
       cancellation(sec(3), absoluteRest = Some(2)),
       trade(sec(3), 8),
-      absence(sec(4)),
+      disappearance(sec(4)),
     )
     assertInSync()
 
@@ -154,7 +154,7 @@ class BasicOrderTrackingStateTest_4_WithCancel extends BasicOrderTrackingStateTe
       cancellation(sec(3), absoluteRest = Some(2)),
       trade(sec(3), -4),
       trade(sec(4), -4),
-      absence(sec(4)),
+      disappearance(sec(4)),
     )
     assertInSync()
   }
@@ -164,7 +164,7 @@ class BasicOrderTrackingStateTest_4_WithCancel extends BasicOrderTrackingStateTe
       change(sec(2), o(10, of = 10)),
       cancellation(sec(3), absoluteRest = Some(4)),
       change(sec(4), o(5, of = 10)),
-      absence(sec(5)),
+      disappearance(sec(5)),
     )
     assertSyncReasons(expectingTrades(sec(3), 6))
 
@@ -174,7 +174,7 @@ class BasicOrderTrackingStateTest_4_WithCancel extends BasicOrderTrackingStateTe
       change(sec(2), o(-10, of = -10)),
       cancellation(sec(3), absoluteRest = Some(4)),
       change(sec(4), o(-5, of = -10)),
-      absence(sec(5)),
+      disappearance(sec(5)),
     )
     assertSyncReasons(expectingTrades(sec(3), -6))
   }
@@ -184,7 +184,7 @@ class BasicOrderTrackingStateTest_4_WithCancel extends BasicOrderTrackingStateTe
       change(sec(2), o(10, of = 10)),
       cancellation(sec(3), absoluteRest = Some(9)),
       change(sec(4), o(5, of = 10)),
-      absence(sec(5)),
+      disappearance(sec(5)),
     )
     assertSyncReasons(expectingTrades(sec(4), 5))
 
@@ -194,7 +194,7 @@ class BasicOrderTrackingStateTest_4_WithCancel extends BasicOrderTrackingStateTe
       change(sec(2), o(-10, of = -10)),
       cancellation(sec(3), absoluteRest = Some(9)),
       change(sec(4), o(-5, of = -10)),
-      absence(sec(5)),
+      disappearance(sec(5)),
     )
     assertSyncReasons(expectingTrades(sec(4), -5))
   }
@@ -204,7 +204,7 @@ class BasicOrderTrackingStateTest_4_WithCancel extends BasicOrderTrackingStateTe
       change(sec(2), o(10, of = 10)),
       cancellation(sec(3), absoluteRest = Some(9)),
       change(sec(4), o(9, of = 10)),
-      absence(sec(5)),
+      disappearance(sec(5)),
     )
     assertSyncReasons(expectingTrades(sec(3), 1))
 
@@ -214,7 +214,7 @@ class BasicOrderTrackingStateTest_4_WithCancel extends BasicOrderTrackingStateTe
       change(sec(2), o(10, of = 10)),
       change(sec(3), o(9, of = 10)),
       cancellation(sec(4), absoluteRest = Some(9)),
-      absence(sec(5)),
+      disappearance(sec(5)),
     )
     assertSyncReasons(expectingTrades(sec(3), 1))
   }
@@ -225,7 +225,7 @@ class BasicOrderTrackingStateTest_4_WithCancel extends BasicOrderTrackingStateTe
       trade(sec(3), 1),
       trade(sec(4), 1),
       cancellation(sec(5), absoluteRest = Some(9)),
-      absence(sec(6)),
+      disappearance(sec(6)),
     )
     assertOverfill(eventsA(2), totalFill = dec(2), maxFill = dec(1))
     assertNotReported()
@@ -237,7 +237,7 @@ class BasicOrderTrackingStateTest_4_WithCancel extends BasicOrderTrackingStateTe
       trade(sec(3), -1),
       trade(sec(4), -1),
       cancellation(sec(5), absoluteRest = Some(9)),
-      absence(sec(6)),
+      disappearance(sec(6)),
     )
     assertOverfill(eventsB(2), totalFill = dec(-2), maxFill = dec(-1))
     assertNotReported()
@@ -263,7 +263,7 @@ class BasicOrderTrackingStateTest_4_WithCancel extends BasicOrderTrackingStateTe
 
   test("if cancel quantity is greater than full quantity from creation it yields inconsistent events") {
     val eventsA = observe(
-      absence(sec(0)),
+      disappearance(sec(0)),
       creation(sec(1), o(10, of = 10)),
       cancellation(sec(2), absoluteRest = Some(11)),
     )
@@ -273,7 +273,7 @@ class BasicOrderTrackingStateTest_4_WithCancel extends BasicOrderTrackingStateTe
     resetEvents()
 
     val eventsB = observe(
-      absence(sec(0)),
+      disappearance(sec(0)),
       cancellation(sec(1), absoluteRest = Some(11)),
       creation(sec(2), o(-10, of = -10)),
     )
@@ -283,7 +283,7 @@ class BasicOrderTrackingStateTest_4_WithCancel extends BasicOrderTrackingStateTe
 
   test("it yields inconsistent events when there are several cancels (last two)") {
     val events = observe(
-      absence(sec(0)),
+      disappearance(sec(0)),
       cancellation(sec(2), absoluteRest = Some(10)),
       cancellation(sec(3), absoluteRest = Some(10)),
       cancellation(sec(4), absoluteRest = Some(10)),
@@ -294,7 +294,7 @@ class BasicOrderTrackingStateTest_4_WithCancel extends BasicOrderTrackingStateTe
 
   test("if the cancel quantity is unknown the state is syncing because trades might still be seen") {
     observe(
-      absence(sec(0)),
+      disappearance(sec(0)),
       creation(sec(1), o(10, of = 10)),
       cancellation(sec(2), absoluteRest = None),
     )

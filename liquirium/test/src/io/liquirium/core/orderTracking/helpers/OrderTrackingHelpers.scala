@@ -4,7 +4,7 @@ import io.liquirium.core.helpers.CoreHelpers.{dec, millis, sec}
 import io.liquirium.core.helpers.{OrderHelpers, TradeHelpers}
 import io.liquirium.core.orderTracking.BasicOrderTrackingState.ErrorState.ReappearingOrderInconsistency
 import io.liquirium.core.orderTracking.BasicOrderTrackingState.SyncReason
-import io.liquirium.core.orderTracking.OrderTrackingEvent.{NewTrade, ObservationChange}
+import io.liquirium.core.orderTracking.OrderTrackingEvent.{Disappearance, NewTrade, ObservationChange, OrderObservationEvent}
 import io.liquirium.core.orderTracking._
 import io.liquirium.core.{Order, OrderSet, orderTracking}
 import io.liquirium.util.AbsoluteQuantity
@@ -25,22 +25,22 @@ object OrderTrackingHelpers extends Matchers {
   }
 
   def basicOrderTrackingState(
-    orderObservationChanges: Seq[OrderTrackingEvent.ObservationChange],
+    orderObservationChanges: Seq[OrderTrackingEvent.OrderObservationEvent],
     operationEvents: Seq[OrderTrackingEvent.OperationEvent] = Seq(),
     tradeEvents: Seq[OrderTrackingEvent.NewTrade] = Seq(),
   ): BasicOrderTrackingState =
     BasicOrderTrackingState(
       operationEvents = operationEvents,
       tradeEvents = tradeEvents,
-      observationChanges = orderObservationChanges,
+      observationEvents = orderObservationChanges,
     )
 
-  def singleOrderObservationHistory(changes: ObservationChange*): SingleOrderObservationHistory =
+  def singleOrderObservationHistory(changes: OrderObservationEvent*): SingleOrderObservationHistory =
     SingleOrderObservationHistory(changes)
 
-  def observationChange(t: Instant): ObservationChange = ObservationChange(t, None)
+  def disappearance(t: Instant, orderId: String): OrderObservationEvent = Disappearance(t, orderId)
 
-  def observationChange(t: Instant, order: Order): ObservationChange = ObservationChange(t, Some(order))
+  def observationChange(t: Instant, order: Order): OrderObservationEvent = ObservationChange(t, order)
 
   def tradeEvent(
     n: Int,
@@ -89,7 +89,7 @@ object OrderTrackingHelpers extends Matchers {
     val result = basicOrderTrackingState(
       orderObservationChanges = Seq(
         observationChange(sec(0), order),
-        observationChange(sec(1)),
+        disappearance(sec(1), orderId),
       ),
       operationEvents = Seq(
         cancelEvent(sec(1), order.id, absoluteRestQuantity = Some(1)),
@@ -105,7 +105,7 @@ object OrderTrackingHelpers extends Matchers {
     val result = basicOrderTrackingState(
       orderObservationChanges = Seq(
         observationChange(sec(0), order),
-        observationChange(t),
+        disappearance(t, order.id),
       ),
     )
     result.errorState shouldBe None
@@ -159,7 +159,7 @@ object OrderTrackingHelpers extends Matchers {
     val result = basicOrderTrackingState(
       orderObservationChanges = Seq(
         observationChange(t minus millis(2), order),
-        observationChange(t minus millis(1)),
+        disappearance(t minus millis(1), order.id),
         observationChange(t, order),
       ),
     )
@@ -175,7 +175,7 @@ object OrderTrackingHelpers extends Matchers {
     val result = basicOrderTrackingState(
       orderObservationChanges = Seq(
         observationChange(t minus millis(1), order),
-        observationChange(t plus millis(1)),
+        disappearance(t plus millis(1), order.id),
       ),
       operationEvents = Seq(
         cancelEvent(t, order.id),

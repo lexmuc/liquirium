@@ -1,11 +1,12 @@
 package io.liquirium.core.orderTracking
 
-import io.liquirium.core.orderTracking.OrderTrackingEvent.ObservationChange
+import io.liquirium.core.orderTracking.OrderTrackingEvent.OrderObservationEvent
 
-case class SingleOrderObservationHistory(changes: Seq[ObservationChange]) {
+case class SingleOrderObservationHistory(changes: Seq[OrderObservationEvent]) {
 
-  def append(observationChange: ObservationChange): SingleOrderObservationHistory = {
-    if (changes.nonEmpty && changes.last.order == observationChange.order) this else copy(changes :+ observationChange)
+  def append(observationChange: OrderObservationEvent): SingleOrderObservationHistory = {
+    if (changes.nonEmpty && changes.last.maybeOrder == observationChange.maybeOrder) this
+    else copy(changes :+ observationChange)
   }
 
 }

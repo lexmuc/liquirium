@@ -59,9 +59,9 @@ class BasicOrderTrackingStateByIdEvalTest
 
   private def o(id: String, p: Int) = OrderHelpers.order(id = id, price = dec(p))
 
-  private def oc(t: Instant, id: String, p: Int) = OrderTrackingEvent.ObservationChange(t, Some(o(id, p)))
+  private def oc(t: Instant, id: String, p: Int) = OrderTrackingEvent.ObservationChange(t, o(id, p))
 
-  private def oc(t: Instant) = OrderTrackingEvent.ObservationChange(t, None)
+  private def oc(t: Instant, id: String) = OrderTrackingEvent.Disappearance(t, id)
 
   private def te(n: Int, orderId: String) = OrderTrackingEvent.NewTrade(t(n, orderId))
 
@@ -79,7 +79,7 @@ class BasicOrderTrackingStateByIdEvalTest
       "A" -> basicOrderTrackingState(
         orderObservationChanges = Seq(
           oc(sec(1), "A", 10),
-          oc(sec(2)),
+          oc(sec(2), "A"),
         ),
       ),
       "B" -> basicOrderTrackingState(

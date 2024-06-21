@@ -3,6 +3,7 @@ package io.liquirium.core.orderTracking
 import io.liquirium.core.Order
 import io.liquirium.core.orderTracking.BasicOrderTrackingState.SyncReason._
 import io.liquirium.core.orderTracking.BasicOrderTrackingState._
+import io.liquirium.core.orderTracking.OrderTrackingEvent.ObservationChange
 import io.liquirium.core.orderTracking.rules._
 import io.liquirium.util.AbsoluteQuantity
 
@@ -45,7 +46,7 @@ object BasicOrderTrackingState {
 case class BasicOrderTrackingState(
   operationEvents: Seq[OrderTrackingEvent.OperationEvent],
   tradeEvents: Seq[OrderTrackingEvent.NewTrade],
-  observationChanges: Seq[OrderTrackingEvent.ObservationChange],
+  observationEvents: Seq[OrderTrackingEvent.OrderObservationEvent],
 ) {
 
   val creationEvents: Seq[OrderTrackingEvent.Creation] =
@@ -65,14 +66,14 @@ case class BasicOrderTrackingState(
   val totalTradeQuantity: BigDecimal = tradeEvents.map(_.t.quantity).sum
 
   val latestPresentObservationChange: Option[OrderTrackingEvent.ObservationChange] =
-    observationChanges.filter(_.order.isDefined).lastOption
+    observationEvents.collect { case oc: ObservationChange => oc}.lastOption
 
-  val latestPresentState: Option[Order] = latestPresentObservationChange.flatMap(_.order)
+  val latestPresentState: Option[Order] = latestPresentObservationChange.map(_.order)
 
   val orderWithFullQuantity: Option[Order] =
     latestPresentState.map(_.resetQuantity) orElse creation.map(_.order.resetQuantity)
 
-  val isCurrentlyObserved: Boolean = observationChanges.lastOption.exists(_.order.isDefined)
+  val isCurrentlyObserved: Boolean = observationEvents.lastOption.exists(x => x.isInstanceOf[ObservationChange])
 
   private val consistencyRules = Seq(
     AtMostOneCreation,
@@ -148,7 +149,7 @@ case class BasicOrderTrackingState(
       }
 
       val impliedTradeQuantityFromObservationWithTime: Option[(BigDecimal, Instant)] =
-        latestPresentObservationChange.map(c => (c.order.get.filledQuantity, c.timestamp))
+        latestPresentObservationChange.map(c => (c.order.filledQuantity, c.timestamp))
 
       val impliedTradeQuantityWithTime: Option[(BigDecimal, Instant)] =
         (impliedTradeQuantityFromCancelWithTime, impliedTradeQuantityFromObservationWithTime) match {
@@ -181,7 +182,7 @@ case class BasicOrderTrackingState(
 
     val optionalUnknownWhyGone =
       if (!isCurrentlyObserved && totalTradeQuantity != fullOrder.fullQuantity && cancellation.isEmpty)
-        Some(UnknownWhyOrderIsGone(observationChanges.last.timestamp))
+        Some(UnknownWhyOrderIsGone(observationEvents.last.timestamp))
       else None
 
     val optionalUnknownIfMoreTradesBeforeCancel = {

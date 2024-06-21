@@ -35,7 +35,7 @@ class OpenOrdersHistoryTest_DefinedHistoriesById extends BasicTest {
     ).definedHistoriesById.mapValue shouldEqual Map(
       "A" -> singleOrderObservationHistory(
         observationChange(sec(1), o("A", 1)),
-        observationChange(sec(2)),
+        disappearance(sec(2), "A"),
       ),
       "B" -> singleOrderObservationHistory(
         observationChange(sec(1), o("B", 2)),
