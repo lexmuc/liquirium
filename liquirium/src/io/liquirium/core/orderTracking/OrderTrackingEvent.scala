@@ -7,17 +7,22 @@ import java.time.Instant
 
 sealed trait OrderTrackingEvent {
   def timestamp: Instant
+  def orderId: String
 }
 
 object OrderTrackingEvent {
 
   case class NewTrade(t: Trade) extends OrderTrackingEvent {
+    if (t.orderId.isEmpty) {
+      throw new IllegalArgumentException("Trade must have an orderId")
+    }
+
     override def timestamp: Instant = t.time
+
+    override def orderId: String = t.orderId.get
   }
 
   sealed trait OrderObservationEvent extends OrderTrackingEvent {
-    def orderId: String
-
     def maybeOrder: Option[Order]
   }
 

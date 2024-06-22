@@ -8,7 +8,17 @@ import io.liquirium.core.helpers.TradeHelpers.trade
 class OrderTrackingEventTest extends BasicTest {
 
   test("a trade event has the timestamp of the trade") {
-    OrderTrackingEvent.NewTrade(trade(time=sec(123))).timestamp shouldEqual sec(123)
+    OrderTrackingEvent.NewTrade(trade("T1", time=sec(123), orderId = Some("O1"))).timestamp shouldEqual sec(123)
+  }
+
+  test("a trade event has the orderId of the trade if there is an orderId") {
+    OrderTrackingEvent.NewTrade(trade(id = "T1", orderId = Some("O123"))).orderId shouldEqual "O123"
+  }
+
+  test("an exception is thrown when a trade event is to be created for a trade without an orderId") {
+    intercept[IllegalArgumentException] {
+      OrderTrackingEvent.NewTrade(trade(id = "T1", orderId = None)).orderId
+    }
   }
 
   test("an order creation event has the orderId of the order") {
