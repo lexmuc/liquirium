@@ -106,7 +106,7 @@ package object simulation {
   def initialContextForSimulation(
     simulationStart: Instant,
     withTradeHistoryInput: Boolean = true, // deactivate when tracking the performance of a bot running in production
-    baseContext: UpdatableContext = IncrementalContext(),
+    baseContext: UpdatableContext = ExplicitCacheContext(),
   ): UpdatableContext =
     ContextWithInputResolution(
       baseContext = baseContext,
