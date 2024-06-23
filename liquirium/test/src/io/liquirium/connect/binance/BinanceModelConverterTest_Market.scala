@@ -26,6 +26,10 @@ class BinanceModelConverterTest_Market extends BinanceModelConverterTest {
     convert("MANAPAX").tradingPair shouldEqual TradingPair("MANA", "PAX")
     convert("HNTBUSD").tradingPair shouldEqual TradingPair("HNT", "BUSD")
     convert("HNTFDUSD").tradingPair shouldEqual TradingPair("HNT", "FDUSD")
+    convert("USDTMXN").tradingPair shouldEqual TradingPair("USDT", "MXN")
+    convert("USDTCZK").tradingPair shouldEqual TradingPair("USDT", "CZK")
+    convert("USDTJPY").tradingPair shouldEqual TradingPair("USDT", "JPY")
+    convert("USDTCOP").tradingPair shouldEqual TradingPair("USDT", "COP")
     an[Exception] shouldBe thrownBy(convert("AAAAXXX"))
   }
 

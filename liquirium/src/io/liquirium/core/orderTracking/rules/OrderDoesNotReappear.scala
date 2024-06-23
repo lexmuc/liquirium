@@ -8,8 +8,8 @@ object OrderDoesNotReappear extends ConsistencyRule {
 
   override def check(state: BasicOrderTrackingState): Option[ErrorState] = {
     val eventsAfterSeeingTheOrder =
-      state.observationHistory.changes.dropWhile(_.order.isEmpty).dropWhile(_.order.isDefined)
-    eventsAfterSeeingTheOrder.find(_.order.isDefined).map { surprisingAppearance =>
+      state.observationEvents.dropWhile(_.maybeOrder.isEmpty).dropWhile(_.maybeOrder.isDefined)
+    eventsAfterSeeingTheOrder.find(_.maybeOrder.isDefined).map { surprisingAppearance =>
       ReappearingOrderInconsistency(surprisingAppearance)
     }
   }

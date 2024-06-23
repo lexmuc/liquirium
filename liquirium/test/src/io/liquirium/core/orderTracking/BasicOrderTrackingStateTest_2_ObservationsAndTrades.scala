@@ -6,7 +6,7 @@ import io.liquirium.core.orderTracking.helpers.BasicOrderTrackingStateTest
 class BasicOrderTrackingStateTest_2_ObservationsAndTrades extends BasicOrderTrackingStateTest {
 
   test("when only trades are observed the reporting state is absent and it is syncing since the last trade") {
-    observe(absence(sec(1)))
+    observe(disappearance(sec(1)))
     observe(trade(sec(2), 1))
     assertNotReported()
     assertSyncReasons(unknownWhyOrderIsGone(sec(2)))
@@ -94,7 +94,7 @@ class BasicOrderTrackingStateTest_2_ObservationsAndTrades extends BasicOrderTrac
   test("when an order is fully filled and actually disappeared, the sync state is in sync and no order is reported") {
     observe(change(sec(1), o(10, of = 10)))
     observe(trade(sec(2), 10))
-    observe(absence(sec(3)))
+    observe(disappearance(sec(3)))
     assertInSync()
     assertNotReported()
 
@@ -102,7 +102,7 @@ class BasicOrderTrackingStateTest_2_ObservationsAndTrades extends BasicOrderTrac
 
     observe(change(sec(1), o(-10, of = -10)))
     observe(trade(sec(2), -10))
-    observe(absence(sec(3)))
+    observe(disappearance(sec(3)))
     assertInSync()
     assertNotReported()
   }
@@ -110,7 +110,7 @@ class BasicOrderTrackingStateTest_2_ObservationsAndTrades extends BasicOrderTrac
   test("when an order disappears without being fully filled, it is reported gone but syncing (unknown why gone)") {
     observe(change(sec(1), o(10, of = 10)))
     observe(trade(sec(2), 8))
-    observe(absence(sec(3)))
+    observe(disappearance(sec(3)))
     assertNotReported()
     assertSyncReasons(unknownWhyOrderIsGone(sec(3)))
 
@@ -118,7 +118,7 @@ class BasicOrderTrackingStateTest_2_ObservationsAndTrades extends BasicOrderTrac
 
     observe(change(sec(1), o(-10, of = -10)))
     observe(trade(sec(2), -8))
-    observe(absence(sec(3)))
+    observe(disappearance(sec(3)))
     assertNotReported()
     assertSyncReasons(unknownWhyOrderIsGone(sec(3)))
   }

@@ -78,7 +78,7 @@ class BasicOrderTrackingStateTest_1_OnlyObservations extends BasicOrderTrackingS
   test("a reappearing order inconsistency is found when an order has disappeared and is observed again") {
     val events = observe(
      change(sec(1), o(5, of = 10)),
-     absence(sec(2)),
+     disappearance(sec(2)),
      change(sec(3), o(4, of = 10)),
     )
     assertReportedState(o(10, of = 10))
@@ -88,7 +88,7 @@ class BasicOrderTrackingStateTest_1_OnlyObservations extends BasicOrderTrackingS
   test("when an order disappears without being filled it is reported as gone, sync state is unknown why gone") {
     observe(
       change(sec(1), o(10, of = 10)),
-      absence(sec(2)),
+      disappearance(sec(2)),
     )
     assertNotReported()
     assertSyncReasons(unknownWhyOrderIsGone(sec(2)))
@@ -97,7 +97,7 @@ class BasicOrderTrackingStateTest_1_OnlyObservations extends BasicOrderTrackingS
   test("when trades are expected for a disappeared order, both sync reasons are given") {
     observe(change(sec(1), o(10, of = 10)))
     observe(change(sec(2), o(8, of = 10)))
-    observe(absence(sec(3)))
+    observe(disappearance(sec(3)))
     assertNotReported()
     assertSyncReasons(
       unknownWhyOrderIsGone(sec(3)),
@@ -108,7 +108,7 @@ class BasicOrderTrackingStateTest_1_OnlyObservations extends BasicOrderTrackingS
 
     observe(change(sec(1), o(-10, of = -10)))
     observe(change(sec(2), o(-8, of = -10)))
-    observe(absence(sec(3)))
+    observe(disappearance(sec(3)))
     assertNotReported()
     assertSyncReasons(
       unknownWhyOrderIsGone(sec(3)),

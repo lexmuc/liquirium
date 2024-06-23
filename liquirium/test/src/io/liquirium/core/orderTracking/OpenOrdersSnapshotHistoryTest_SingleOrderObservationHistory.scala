@@ -3,8 +3,8 @@ package io.liquirium.core.orderTracking
 import io.liquirium.core.Order
 import io.liquirium.core.helpers.CoreHelpers.{dec, sec}
 import io.liquirium.core.helpers.{BasicTest, OrderHelpers}
-import io.liquirium.core.orderTracking.OrderTrackingEvent.ObservationChange
-import io.liquirium.core.orderTracking.helpers.OrderTrackingHelpers.{openOrdersSnapshot => snapshot, openOrdersHistory => history}
+import io.liquirium.core.orderTracking.OrderTrackingEvent.{Disappearance, ObservationChange, OrderObservationEvent}
+import io.liquirium.core.orderTracking.helpers.OrderTrackingHelpers.{openOrdersHistory => history, openOrdersSnapshot => snapshot}
 
 import java.time.Instant
 
@@ -12,14 +12,14 @@ class OpenOrdersSnapshotHistoryTest_SingleOrderObservationHistory extends BasicT
 
   def o(id: String, q: Int = 1): Order = OrderHelpers.order(id = id, quantity = dec(q))
 
-  private def change(t: Instant, obs: Option[Order]) = ObservationChange(t, obs)
+  private def change(t: Instant, o: Order) = ObservationChange(t, o)
+  private def disappearance(t: Instant, id: String) = Disappearance(t, id)
 
-  test("an order that has not been seen has one change at the first timestamp (it's not there)") {
+  test("an order that has not been seen has no events") {
     val h = history(
       snapshot(sec(1), o("A")),
     )
     h.singleOrderHistory("B").changes shouldEqual Seq(
-      change(sec(1), None),
     )
   }
 
@@ -28,7 +28,7 @@ class OpenOrdersSnapshotHistoryTest_SingleOrderObservationHistory extends BasicT
       snapshot(sec(1), o("A")),
     )
     h.singleOrderHistory("A").changes shouldEqual Seq(
-      change(sec(1), Some(o("A"))),
+      change(sec(1), o("A")),
     )
   }
 
@@ -42,22 +42,10 @@ class OpenOrdersSnapshotHistoryTest_SingleOrderObservationHistory extends BasicT
       snapshot(sec(6), o("A", 3)),
     )
     h.singleOrderHistory("A").changes shouldEqual Seq(
-      change(sec(1), Some(o("A", 1))),
-      change(sec(3), Some(o("A", 3))),
-      change(sec(4), None),
-      change(sec(6), Some(o("A", 3))),
-    )
-  }
-
-  test("an order that appears at some point has the first (empty) observation at the first snapshot timestamp") {
-    val h = history(
-      snapshot(sec(1), o("A", 1)),
-      snapshot(sec(2), o("A", 1)),
-      snapshot(sec(3), o("A", 1), o("B", 1)),
-    )
-    h.singleOrderHistory("B").changes shouldEqual Seq(
-      change(sec(1), None),
-      change(sec(3), Some(o("B", 1))),
+      change(sec(1), o("A", 1)),
+      change(sec(3), o("A", 3)),
+      disappearance(sec(4), "A"),
+      change(sec(6), o("A", 3)),
     )
   }
 

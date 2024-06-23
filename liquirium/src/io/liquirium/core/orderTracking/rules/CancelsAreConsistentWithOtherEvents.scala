@@ -2,6 +2,7 @@ package io.liquirium.core.orderTracking.rules
 
 import io.liquirium.core.orderTracking.BasicOrderTrackingState.ErrorState
 import io.liquirium.core.orderTracking.BasicOrderTrackingState.ErrorState.InconsistentEvents
+import io.liquirium.core.orderTracking.OrderTrackingEvent.ObservationChange
 import io.liquirium.core.orderTracking.{BasicOrderTrackingState, OrderTrackingEvent}
 import io.liquirium.util.AbsoluteQuantity
 
@@ -13,8 +14,8 @@ object CancelsAreConsistentWithOtherEvents extends ConsistencyRule {
     }
     else state.cancellation match {
       case Some(cancel@OrderTrackingEvent.Cancel(_, _, Some(AbsoluteQuantity(absoluteRest)))) =>
-        val conflictingObservation = state.observationHistory.changes.reverseIterator collectFirst {
-          case e@OrderTrackingEvent.ObservationChange(_, Some(o)) if o.fullQuantity.abs < absoluteRest => e
+        val conflictingObservation = state.observationEvents.reverseIterator collectFirst {
+          case e@ObservationChange(_, o) if o.fullQuantity.abs < absoluteRest => e
         }
         val conflictingCreation = state.creation collectFirst {
           case e@OrderTrackingEvent.Creation(_, o) if o.fullQuantity.abs < absoluteRest => e

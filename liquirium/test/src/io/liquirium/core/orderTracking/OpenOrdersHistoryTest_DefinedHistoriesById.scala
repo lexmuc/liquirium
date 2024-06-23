@@ -35,7 +35,7 @@ class OpenOrdersHistoryTest_DefinedHistoriesById extends BasicTest {
     ).definedHistoriesById.mapValue shouldEqual Map(
       "A" -> singleOrderObservationHistory(
         observationChange(sec(1), o("A", 1)),
-        observationChange(sec(2)),
+        disappearance(sec(2), "A"),
       ),
       "B" -> singleOrderObservationHistory(
         observationChange(sec(1), o("B", 2)),
@@ -47,13 +47,14 @@ class OpenOrdersHistoryTest_DefinedHistoriesById extends BasicTest {
     )
   }
 
-  test("orders appearing later start with an empty observation with the first timestamp") {
+  test("orders appearing later start with the first observation") {
     openOrdersHistory(
       openOrdersSnapshot(sec(1)),
       openOrdersSnapshot(sec(2), o("B", 2)),
+      openOrdersSnapshot(sec(3), o("B", 1)),
     ).definedHistoriesById.mapValue("B") shouldEqual singleOrderObservationHistory(
-      observationChange(sec(1)),
       observationChange(sec(2), o("B", 2)),
+      observationChange(sec(3), o("B", 1)),
     )
   }
 
