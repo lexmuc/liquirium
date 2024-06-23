@@ -15,7 +15,7 @@ case class BalanceEval(
   tradeMarkets: Iterable[Market],
 ) extends CaseEval[BigDecimal] {
 
-  override protected def baseEval: Eval[BigDecimal] = {
+  override protected val baseEval: Eval[BigDecimal] = {
     val tradeHistoryEvals = tradeMarkets.map { market =>
       InputEval(TradeHistoryInput(market, startTime))
     }
