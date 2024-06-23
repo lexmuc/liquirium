@@ -9,68 +9,39 @@ object BasicOrderTrackingStateByIdEval {
 
   def apply(
     trades: Eval[TradeHistorySegment],
-    openOrdersHistory: Eval[OpenOrdersHistory],
+    observationEvents: Eval[IncrementalSeq[OrderTrackingEvent.OrderObservationEvent]],
     successfulOperations: Eval[IncrementalSeq[OrderTrackingEvent.OperationEvent]],
   ): Eval[IncrementalMap[String, BasicOrderTrackingState]] = {
-    val operationsById = successfulOperations.groupByIncremental(_.orderId)
-    val emptyState = BasicOrderTrackingState(Seq(), Seq(), Seq())
-    allStates(
-      operationsWithOrdersEval(
-        orderHistoriesById = openOrdersHistory.map(_.definedHistoriesById),
-        operationsById = operationsById,
-        emptyOrderTrackingState = emptyState,
-      ),
-      tradeEventsByIdEval(trades),
-      emptyOrderTrackingState = emptyState,
+    val tradeEvents: Eval[IncrementalSeq[OrderTrackingEvent]] =
+      trades
+        .filterIncremental(_.orderId.nonEmpty)
+        .mapIncremental(t => NewTrade(t))
+    val tradesWithObservations = mergeSequences[OrderTrackingEvent](
+      tradeEvents,
+      observationEvents.asInstanceOf[Eval[IncrementalSeq[OrderTrackingEvent]]],
     )
+    val allEvents = mergeSequences(
+      tradesWithObservations,
+      successfulOperations.asInstanceOf[Eval[IncrementalSeq[OrderTrackingEvent]]]
+    )
+    val groupedEvents = allEvents.groupByIncremental(_.orderId)
+    val emptyMap = IncrementalMap.empty[String, BasicOrderTrackingState]
+    groupedEvents.foldIncremental(_ => emptyMap) {
+      case (im, (id, events)) =>
+        val newState = BasicOrderTrackingState(
+          operationEvents = events.get.collect { case o: OrderTrackingEvent.OperationEvent => o },
+          tradeEvents = events.get.collect { case o: OrderTrackingEvent.NewTrade => o },
+          observationEvents = events.get.collect { case o: OrderTrackingEvent.OrderObservationEvent => o },
+        )
+        im.update(id, newState)
+    }
   }
 
-  private def tradeEventsByIdEval(
-    trades: Eval[TradeHistorySegment],
-  ): Eval[IncrementalMap[String, IncrementalSeq[NewTrade]]] =
-    trades
-      .filterIncremental(_.orderId.isDefined)
-      .mapIncremental(NewTrade.apply)
-      .groupByIncremental(_.t.orderId.get)
-
-  private def operationsWithOrdersEval(
-    orderHistoriesById: Eval[IncrementalMap[String, SingleOrderObservationHistory]],
-    operationsById: Eval[IncrementalMap[String, IncrementalSeq[OrderTrackingEvent.OperationEvent]]],
-    emptyOrderTrackingState: BasicOrderTrackingState,
-  ): Eval[IncrementalMap[String, BasicOrderTrackingState]] =
-    orderHistoriesById.mergeFoldIncremental(operationsById)(
-      (_, _) => IncrementalMap.empty[String, BasicOrderTrackingState]
-    ) {
-      case (im, (id, newOrderHistory)) =>
-        val newState = im.mapValue.get(id) match {
-          case None => BasicOrderTrackingState(Seq(), Seq(), newOrderHistory.get.changes)
-          case Some(s) => s.copy(observationEvents = newOrderHistory.get.changes)
-        }
-        im.update(id, newState)
-    } {
-      case (im, (id, newOperations)) =>
-        val newState = im.mapValue.getOrElse(id, emptyOrderTrackingState).copy(operationEvents = newOperations.get)
-        im.update(id, newState)
-    }
-
-  private def allStates(
-    statesWithoutTrades: Eval[IncrementalMap[String, BasicOrderTrackingState]],
-    tradesById: Eval[IncrementalMap[String, IncrementalSeq[NewTrade]]],
-    emptyOrderTrackingState: BasicOrderTrackingState,
-  ): Eval[IncrementalMap[String, BasicOrderTrackingState]] =
-    statesWithoutTrades.mergeFoldIncremental(tradesById)(
-      (_, _) => IncrementalMap.empty[String, BasicOrderTrackingState]
-    ) {
-      case (im, (id, stateUpdate)) =>
-        val newState = im.mapValue.get(id) match {
-          case None => stateUpdate.get
-          case Some(s) => stateUpdate.get.copy(tradeEvents = s.tradeEvents)
-        }
-        im.update(id, newState)
-    } {
-      case (im, (id, tradeEvents)) =>
-        val newState = im.mapValue.getOrElse(id, emptyOrderTrackingState).copy(tradeEvents = tradeEvents.get)
-        im.update(id, newState)
-    }
+  private def mergeSequences[E](
+    a: Eval[IncrementalSeq[E]],
+    b: Eval[IncrementalSeq[E]],
+  ): Eval[IncrementalSeq[E]] = {
+    a.mergeFoldIncremental(b)( (_, _) => IncrementalSeq.empty[E]) { case (x, e) => x.inc(e) }{ case (x, e) => x.inc(e) }
+  }
 
 }

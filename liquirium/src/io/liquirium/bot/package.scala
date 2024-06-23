@@ -23,7 +23,7 @@ package object bot {
     ): Eval[OrderIntentConveyor] = {
       val orderStatesByIdEval = BasicOrderTrackingStateByIdEval(
         trades = InputEval(TradeHistoryInput(market, start)),
-        openOrdersHistory = InputEval(OrderSnapshotHistoryInput(market)),
+        observationEvents = InputEval(OrderSnapshotHistoryInput(market)).map(_.allObservationEvents),
         successfulOperations = SuccessfulTradeRequestEvents(market),
       )
 
