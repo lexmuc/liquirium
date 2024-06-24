@@ -1,7 +1,7 @@
 package io.liquirium.examples.simulation
 
 import io.liquirium.bot.BotInput._
-import io.liquirium.bot.{SimpleBotEvaluator, SingleMarketStrategy}
+import io.liquirium.bot.{ProductionOrderIntentConveyorFactory, SimpleBotEvaluator, SingleMarketStrategy}
 import io.liquirium.bot.simulation._
 import io.liquirium.connect.ExchangeConnector
 import io.liquirium.core._
@@ -86,6 +86,7 @@ object RunSimulation extends App {
       ),
       strategy = strategy,
       market = market,
+      orderIntentConveyorFactory = new ProductionOrderIntentConveyorFactory(syncInterval = Duration.ofSeconds(150)),
     )(DefaultConcurrencyContext.executionContext)
 
     val botFuture = botFactory.makeBot(simulationPeriod, totalValue)
@@ -146,7 +147,9 @@ object RunSimulation extends App {
     val connectorExchangeId = connector.exchangeId
     val exchangeConnectorProvider = new(ExchangeId => Future[ExchangeConnector]) {
       override def apply(exchangeId: ExchangeId): Future[ExchangeConnector] = exchangeId match {
-        case `connectorExchangeId` => Future { connector }(DefaultConcurrencyContext.executionContext)
+        case `connectorExchangeId` => Future {
+          connector
+        }(DefaultConcurrencyContext.executionContext)
         case _ => throw new RuntimeException("Exchange not supported: " + exchangeId)
       }
     }

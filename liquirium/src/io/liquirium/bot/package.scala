@@ -2,7 +2,7 @@ package io.liquirium
 
 import io.liquirium.bot.BotInput._
 import io.liquirium.core.orderTracking._
-import io.liquirium.core.{BotId, Market, OrderConstraints}
+import io.liquirium.core.{BotId, Market, OperationIntent, OrderConstraints}
 import io.liquirium.eval.IncrementalFoldHelpers.IncrementalEval
 import io.liquirium.eval.{Constant, Eval, InputEval}
 import io.liquirium.util.TimePeriod
@@ -72,11 +72,21 @@ package object bot {
 
   }
 
+  class DummyOrderIntentConveyorFactory() extends OrderIntentConveyorFactory {
+    private val dummyConveyor = new OrderIntentConveyor {
+      override def apply(v1: Seq[OperationIntent.OrderIntent]): Iterable[BotOutput] = Seq()
+    }
+
+    override def apply(v1: Market, v2: OrderConstraints, v3: Instant): Eval[OrderIntentConveyor] =
+      Constant(dummyConveyor)
+  }
+
   def singleMarketStrategyBotFactory(
     candleHistoryLoaderProvider: CandleHistoryLoaderProvider,
     orderConstraints: OrderConstraints,
     strategy: SingleMarketStrategy,
     market: Market,
+    orderIntentConveyorFactory: OrderIntentConveyorFactory,
   )(
     implicit executionContext: ExecutionContext,
   ): BotFactory[SingleMarketStrategyBot] = new BotFactory[SingleMarketStrategyBot] {
@@ -97,17 +107,10 @@ package object bot {
             initialPrice = p,
           ),
         )
-        val orderIntentConveyorFactory = new ProductionOrderIntentConveyorFactory(
-          syncInterval = Duration.ofSeconds(150),
-        )
         SingleMarketStrategyBot(
           strategy = strategy,
           runConfiguration = runConfiguration,
-          orderIntentConveyorEval = orderIntentConveyorFactory.apply(
-            market = market,
-            orderConstraints = orderConstraints,
-            start = operationPeriod.start,
-          ),
+          orderIntentConveyorEval = orderIntentConveyorFactory.apply(market, orderConstraints, operationPeriod.start),
         )
       }
 
