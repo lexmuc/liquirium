@@ -9,13 +9,15 @@ object NextRequestIdsEval {
   def apply(
     botIdEval: Eval[BotId],
     pastMessagesEval: Eval[IncrementalSeq[BotOutput]],
-  ): Eval[Stream[CompoundOperationRequestId]] =
+  ): Eval[Stream[CompoundOperationRequestId]] = {
+    // We have to pull this out of the for comprehension in order for caching to work
+    val operationRequestMessagesEval = pastMessagesEval.collectIncremental({ case orm: OperationRequestMessage => orm })
     for {
       botId <- botIdEval
-      pastMessages <- pastMessagesEval.collectIncremental({ case orm: OperationRequestMessage => orm })
+      operationRequestMessages <- operationRequestMessagesEval
     } yield {
       val nextIndex =
-        pastMessages
+        operationRequestMessages
           .reverseIterator
           .filter(_.id.asInstanceOf[CompoundOperationRequestId].botId == botId)
           .take(1).toList.headOption
@@ -23,5 +25,6 @@ object NextRequestIdsEval {
           .getOrElse(1)
       Stream.iterate(nextIndex)(_ + 1).map(index => CompoundOperationRequestId(botId, index))
     }
+  }
 
 }

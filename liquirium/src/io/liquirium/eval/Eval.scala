@@ -140,25 +140,34 @@ case class IncrementalFoldEval[I, IV <: IncrementalValue[I, IV], T](
   fold: IncrementalFold[I, IV, T],
 ) extends DerivedEval[T] {
 
-  private val foldStateEval = new DerivedEval[IncrementalFold.State[I, IV, T]] {
-    override def eval(
-      context: Context,
-      oldValue: Option[IncrementalFold.State[I, IV, T]],
-    ): (EvalResult[IncrementalFold.State[I, IV, T]], Context) = {
-      val (evalResult, ctx) = context.evaluate(baseEval)
-      val newEr = evalResult match {
-        case Value(x) =>
-          if (oldValue.isEmpty) Value(fold.fold(x))
-          else Value(oldValue.get.update(x))
-        case ir: InputRequest => ir
-      }
-      (newEr, ctx)
-    }
-  }.cached
+  private val foldStateEval = FoldStateEval(baseEval, fold).cached
 
   override def eval(context: Context, oldValue: Option[T]): (EvalResult[T], Context) = {
     val (er, c) = context.evaluate(foldStateEval)
     (er.map(_.value), c)
+  }
+
+  override val hashCode: Int = scala.util.hashing.MurmurHash3.productHash(this)
+
+}
+
+case class FoldStateEval[I, IV <: IncrementalValue[I, IV], T](
+  baseEval: Eval[IV],
+  fold: IncrementalFold[I, IV, T],
+) extends DerivedEval[IncrementalFold.State[I, IV, T]] {
+
+  override def eval(
+    context: Context,
+    oldValue: Option[IncrementalFold.State[I, IV, T]],
+  ): (EvalResult[IncrementalFold.State[I, IV, T]], Context) = {
+    val (evalResult, ctx) = context.evaluate(baseEval)
+    val newEr = evalResult match {
+      case Value(x) =>
+        if (oldValue.isEmpty) Value(fold.fold(x))
+        else Value(oldValue.get.update(x))
+      case ir: InputRequest => ir
+    }
+    (newEr, ctx)
   }
 
   override val hashCode: Int = scala.util.hashing.MurmurHash3.productHash(this)
