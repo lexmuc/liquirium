@@ -76,6 +76,8 @@ object BinanceTestHelpers {
 
   def symbolInfo(
     symbol: String = "ETCBTC",
+    baseAsset: String = "ETC",
+    quoteAsset: String = "BTC",
     tickSize: BigDecimal = dec(1),
     stepSize: BigDecimal = dec(1),
     minPrice: BigDecimal = dec(1),
@@ -84,6 +86,8 @@ object BinanceTestHelpers {
     maxQuantity: BigDecimal = dec(1)
   ): BinanceSymbolInfo = BinanceSymbolInfo(
     symbol = symbol,
+    baseAsset = baseAsset,
+    quoteAsset = quoteAsset,
     tickSize = tickSize,
     minPrice = minPrice,
     maxPrice = maxPrice,

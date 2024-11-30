@@ -10,6 +10,8 @@ class BinanceJsonConverterTest_SymbolInfo extends BasicTest {
 
   private def symbolInfoJson(
     symbol: String = "ETHBTC",
+    baseAsset: String = "ADA",
+    quoteAsset: String = "USD",
     tickSize: String = "1",
     stepSize: String = "1",
     minPrice: String = "1",
@@ -19,6 +21,8 @@ class BinanceJsonConverterTest_SymbolInfo extends BasicTest {
   ) = Json.parse(
     s"""{
        |"symbol": "$symbol",
+       |"baseAsset": "$baseAsset",
+       |"quoteAsset": "$quoteAsset",
        |"filters": [
        |{"filterType": "PRICE_FILTER", "tickSize": "$tickSize", "minPrice": "$minPrice", "maxPrice": "$maxPrice"},
        |{"filterType": "LOT_SIZE", "stepSize": "$stepSize", "minQty": "$minQuantity", "maxQty": "$maxQuantity"}
@@ -26,8 +30,15 @@ class BinanceJsonConverterTest_SymbolInfo extends BasicTest {
        |}""".stripMargin)
 
 
-  test("it parses the symbol field") {
-    convertSymbolInfo(symbolInfoJson(symbol = "LTCBTC")).symbol shouldEqual "LTCBTC"
+  test("it parses the symbol field with base and quote asset") {
+    val infoJson = symbolInfoJson(
+      symbol = "LTCBTC",
+      baseAsset = "MANA",
+      quoteAsset = "ETH",
+    )
+    convertSymbolInfo(infoJson).symbol shouldEqual "LTCBTC"
+    convertSymbolInfo(infoJson).baseAsset shouldEqual "MANA"
+    convertSymbolInfo(infoJson).quoteAsset shouldEqual "ETH"
   }
 
   test("it parses the tick size") {

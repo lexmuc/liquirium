@@ -108,7 +108,13 @@ class BinanceApiAdapter(
   override def getOrderConstraintsByMarket(): Future[Map[Market, OrderConstraints]] = {
     val request = BinanceRestApi.GetExchangeInfo()
     restApi.sendRequest(request).map { binanceSymbolInfos =>
-      binanceSymbolInfos.map(si => (modelConverter.getMarket(si.symbol), modelConverter.convertSymbolInfo(si))).toMap
+      binanceSymbolInfos.map(si => {
+        val market = Market(
+          exchangeId = io.liquirium.connect.binance.exchangeId,
+          tradingPair = TradingPair(base = si.baseAsset, quote = si.quoteAsset)
+        )
+        (market, modelConverter.convertSymbolInfo(si))
+      }).toMap
     }
   }
 

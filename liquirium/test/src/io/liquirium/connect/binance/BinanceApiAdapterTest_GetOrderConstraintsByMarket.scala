@@ -1,6 +1,7 @@
 package io.liquirium.connect.binance
 
 import io.liquirium.connect.binance.helpers.BinanceTestHelpers.symbolInfo
+import io.liquirium.connect.binance.{exchangeId => binanceExchangeId}
 import io.liquirium.core.helpers.MarketHelpers.{market, orderConstraints}
 
 class BinanceApiAdapterTest_GetOrderConstraintsByMarket extends BinanceApiAdapterTest {
@@ -10,18 +11,18 @@ class BinanceApiAdapterTest_GetOrderConstraintsByMarket extends BinanceApiAdapte
 
   private def replyWith(symbolInfos: Seq[BinanceSymbolInfo]): Unit = fakeRestApi.completeNext(symbolInfos)
 
-  test("the returned symbol infos are converted and returned as market infos") {
-    val symbolInfos = Seq(symbolInfo(1), symbolInfo(2))
-    fakeSymbolInfoConversion(symbolInfo(1), orderConstraints(1))
-    fakeSymbolInfoConversion(symbolInfo(2), orderConstraints(2))
-    fakeSymbolToMarketConversion(symbolInfo(1).symbol, market(1))
-    fakeSymbolToMarketConversion(symbolInfo(2).symbol, market(2))
+  test("the returned symbol infos are converted and returned by the markets extracted from the infos") {
+    val adaSymbolInfo = symbolInfo(symbol="A", baseAsset = "ADA", quoteAsset = "ETH")
+    val manaSymbolInfo = symbolInfo(symbol="A", baseAsset = "MANA", quoteAsset = "ETH")
+    val symbolInfos = Seq(adaSymbolInfo, manaSymbolInfo)
+    fakeSymbolInfoConversion(adaSymbolInfo, orderConstraints(1))
+    fakeSymbolInfoConversion(manaSymbolInfo, orderConstraints(2))
 
     val f = getOrderConstraints()
     replyWith(symbolInfos)
     f.value.get.get shouldEqual Map(
-      market(1) -> orderConstraints(1),
-      market(2) -> orderConstraints(2),
+      market(binanceExchangeId, "ADA", "ETH") -> orderConstraints(1),
+      market(binanceExchangeId, "MANA", "ETH") -> orderConstraints(2),
     )
   }
 

@@ -93,25 +93,19 @@ class BinanceJsonConverter() {
   }
 
   def convertSymbolInfo(v: JsValue): BinanceSymbolInfo = {
-    val symbol = v("symbol").as[String]
     val filters = v("filters").as[Seq[JsValue]]
     val priceFilter = filters.find(v => v("filterType").as[String] == "PRICE_FILTER").get
-    val tickSize = BigDecimal(priceFilter("tickSize").as[String])
-    val minPrice = BigDecimal(priceFilter("minPrice").as[String])
-    val maxPrice = BigDecimal(priceFilter("maxPrice").as[String])
     val lotSize = filters.find(v => v("filterType").as[String] == "LOT_SIZE").get
-    val stepSize = BigDecimal(lotSize("stepSize").as[String])
-    val minQuantity = BigDecimal(lotSize("minQty").as[String])
-    val maxQuantity = BigDecimal(lotSize("maxQty").as[String])
-
     BinanceSymbolInfo(
-      symbol = symbol,
-      tickSize = tickSize,
-      minPrice = minPrice,
-      maxPrice = maxPrice,
-      stepSize = stepSize,
-      minQuantity = minQuantity,
-      maxQuantity = maxQuantity,
+      symbol = v("symbol").as[String],
+      baseAsset = v("baseAsset").as[String],
+      quoteAsset = v("quoteAsset").as[String],
+      tickSize = BigDecimal(priceFilter("tickSize").as[String]),
+      minPrice = BigDecimal(priceFilter("minPrice").as[String]),
+      maxPrice = BigDecimal(priceFilter("maxPrice").as[String]),
+      stepSize = BigDecimal(lotSize("stepSize").as[String]),
+      minQuantity = BigDecimal(lotSize("minQty").as[String]),
+      maxQuantity = BigDecimal(lotSize("maxQty").as[String]),
     )
   }
 
