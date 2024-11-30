@@ -1,6 +1,7 @@
 package io.liquirium.connect.deribit
 
 import io.liquirium.core.helpers.BasicTest
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class DeribitInstrumentTest extends BasicTest {
 

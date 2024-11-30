@@ -1,6 +1,7 @@
 package io.liquirium.core
 
 import io.liquirium.core.helpers.BasicTest
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class ResourcesTest extends BasicTest {
 

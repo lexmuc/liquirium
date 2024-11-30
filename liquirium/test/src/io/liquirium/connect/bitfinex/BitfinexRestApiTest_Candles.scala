@@ -6,6 +6,9 @@ import io.liquirium.connect.bitfinex.helpers.BitfinexTestHelpers.candle
 import io.liquirium.core.helpers.CoreHelpers.{ex, milli}
 import io.liquirium.helpers.JsonTestHelper.json
 import io.liquirium.util.ResultOrder
+import org.scalatest.matchers.must.Matchers.contain
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.matchPattern
 import play.api.libs.json.JsValue
 
 import java.time.Instant

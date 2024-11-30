@@ -7,6 +7,7 @@ import io.liquirium.core.helpers.BasicTest
 import io.liquirium.core.helpers.CoreHelpers.dec
 import io.liquirium.core.helpers.OperationIntentHelpers.{orderIntent => oi}
 import io.liquirium.core.helpers.OrderHelpers.basicOrderData
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class OrderMatcherTest extends BasicTest {
 

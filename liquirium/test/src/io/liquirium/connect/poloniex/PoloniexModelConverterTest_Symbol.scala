@@ -2,6 +2,7 @@ package io.liquirium.connect.poloniex
 
 import io.liquirium.core.TradingPair
 import io.liquirium.core.helpers.MarketHelpers.pair
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class PoloniexModelConverterTest_Symbol extends PoloniexModelConverterTest {
 

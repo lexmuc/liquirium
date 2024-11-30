@@ -5,6 +5,7 @@ import io.liquirium.core.helpers.BasicTest
 import io.liquirium.core.helpers.CoreHelpers.dec
 import io.liquirium.core.helpers.MarketHelpers.eid
 import io.liquirium.core.{Order, Side}
+import org.scalatest.matchers.should.Matchers.{convertToAnyShouldWrapper, equal}
 
 class CoinbaseModelConverterTest_Order extends BasicTest {
 

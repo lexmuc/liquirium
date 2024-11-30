@@ -8,7 +8,8 @@ import io.liquirium.core.helpers.CoreHelpers.{dec, ex}
 import io.liquirium.core.helpers.MarketHelpers
 import io.liquirium.core.helpers.MarketHelpers.pair
 import io.liquirium.core.helpers.OrderHelpers.order
-import io.liquirium.core.{OrderRequestConfirmation, Side, OperationRequest}
+import io.liquirium.core.{OperationRequest, OrderRequestConfirmation, Side}
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 import scala.util.Failure
 

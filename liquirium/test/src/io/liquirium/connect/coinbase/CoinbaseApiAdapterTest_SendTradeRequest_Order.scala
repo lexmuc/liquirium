@@ -7,6 +7,8 @@ import io.liquirium.core._
 import io.liquirium.core.helpers.CoreHelpers.{dec, ex}
 import io.liquirium.core.helpers.MarketHelpers.{pair, market => m}
 import io.liquirium.core.helpers.OrderHelpers.order
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.matchPattern
 
 import scala.util.Failure
 

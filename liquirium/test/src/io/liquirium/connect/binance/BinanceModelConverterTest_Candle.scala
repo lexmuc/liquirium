@@ -2,6 +2,7 @@ package io.liquirium.connect.binance
 
 import io.liquirium.core.helpers.CoreHelpers.{dec, milli, sec}
 import io.liquirium.connect.binance.helpers.BinanceTestHelpers.{candle => bc}
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 import java.time.Duration
 

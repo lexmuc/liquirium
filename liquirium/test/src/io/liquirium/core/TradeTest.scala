@@ -5,6 +5,9 @@ import io.liquirium.core.helpers.MarketHelpers.{eid, market}
 import io.liquirium.core.helpers.TradeHelpers.trade
 import io.liquirium.core.helpers.BasicTest
 import io.liquirium.core.helpers.CoreHelpers.{dec, sec}
+import org.scalatest.matchers.must.Matchers.contain
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class TradeTest extends BasicTest {
 
@@ -60,8 +63,8 @@ class TradeTest extends BasicTest {
   }
 
   test("trades are compared by timestamp or by id if timestamp is equal") {
-    trade(sec(1), "B") shouldBe < (trade(sec(2), "A"))(Ordering.fromLessThan(_ < _))
-    trade(sec(1), "B") shouldBe > (trade(sec(1), "A"))(Ordering.fromLessThan(_ < _))
+    trade(sec(1), "B") shouldBe Matchers.< (trade(sec(2), "A"))(Ordering.fromLessThan(_ < _))
+    trade(sec(1), "B") shouldBe Matchers.> (trade(sec(1), "A"))(Ordering.fromLessThan(_ < _))
   }
 
 }

@@ -2,13 +2,13 @@ package io.liquirium.bot.simulation.helpers
 
 import io.liquirium.bot.simulation.CandleSimulator
 import io.liquirium.core.{Candle, OrderSet, Trade}
-import org.scalatest.Matchers
+import org.scalatest.Assertions.fail
 
 case class FakeCandleSimulator(
   expectedInputs: Seq[(OrderSet, Candle)] = Seq(),
   outputs: Seq[(Seq[Trade], OrderSet)] = Seq(),
 )
-  extends CandleSimulator with Matchers {
+  extends CandleSimulator {
 
   override def fillOrders(orders: OrderSet, candle: Candle): (Seq[Trade], OrderSet, CandleSimulator) = {
     expectedInputs.headOption match {

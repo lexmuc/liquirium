@@ -3,6 +3,7 @@ package io.liquirium.connect.coinbase
 import io.liquirium.core.Side
 import io.liquirium.core.helpers.BasicTest
 import io.liquirium.core.helpers.CoreHelpers.{dec, sec}
+import org.scalatest.matchers.should.Matchers.{an, convertToAnyShouldWrapper, thrownBy}
 import play.api.libs.json.Json
 
 class CoinbaseJsonConverterTest_Trades extends BasicTest {

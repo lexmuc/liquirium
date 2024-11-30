@@ -2,6 +2,7 @@ package io.liquirium.util.helpers
 
 import io.liquirium.core.helpers.BasicTest
 import io.liquirium.util.JsonSerializer
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.libs.json.{JsValue, Json}
 
 

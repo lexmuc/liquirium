@@ -4,6 +4,7 @@ import io.liquirium.connect.bitfinex.helpers.BitfinexTestHelpers.{candle => bitf
 import io.liquirium.core.helpers.BasicTest
 import io.liquirium.core.helpers.CoreHelpers.{dec, sec}
 import io.liquirium.core.helpers.MarketHelpers.eid
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 import java.time.Duration
 

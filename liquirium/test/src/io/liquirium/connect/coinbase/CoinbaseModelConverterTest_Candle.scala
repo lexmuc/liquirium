@@ -2,6 +2,7 @@ package io.liquirium.connect.coinbase
 
 import io.liquirium.connect.coinbase.helpers.CoinbaseTestHelpers.{coinbaseCandle => cc}
 import io.liquirium.core.helpers.CoreHelpers.{dec, milli, millis, sec}
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 import java.time.Duration
 

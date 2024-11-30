@@ -3,6 +3,7 @@ package io.liquirium.bot.simulation
 import io.liquirium.bot.helpers.BotInputHelpers.timeInput
 import io.liquirium.core.helpers.BasicTest
 import io.liquirium.core.helpers.CoreHelpers.{sec, secs}
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 import java.time.{Duration, Instant}
 

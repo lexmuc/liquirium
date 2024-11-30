@@ -3,6 +3,8 @@ package io.liquirium.connect.binance
 import io.liquirium.connect.binance.BinanceHttpRequest.PublicGet
 import io.liquirium.connect.binance.helpers.BinanceTestHelpers.symbolInfo
 import io.liquirium.helpers.JsonTestHelper.json
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.matchPattern
 import play.api.libs.json.{JsValue, Json}
 
 class BinanceRestApiTest_GetExchangeInfo extends BinanceRestApiTest {

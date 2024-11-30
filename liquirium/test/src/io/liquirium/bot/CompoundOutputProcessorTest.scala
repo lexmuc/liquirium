@@ -2,11 +2,13 @@ package io.liquirium.bot
 
 import io.liquirium.bot.helpers.BotOutputHelpers.output
 import io.liquirium.core.helpers.{BasicTest, TestWithMocks}
+import org.mockito.Mockito.mock
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class CompoundOutputProcessorTest extends BasicTest with TestWithMocks {
 
   private def fakeProcessor(output: BotOutput, result: Boolean) = {
-    val p = mock[BotOutputProcessor]
+    val p = mock(classOf[BotOutputProcessor])
     p.processOutput(output) returns result
     p
   }

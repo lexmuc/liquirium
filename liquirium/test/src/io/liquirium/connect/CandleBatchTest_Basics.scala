@@ -3,6 +3,7 @@ package io.liquirium.connect
 import io.liquirium.core.helpers.BasicTest
 import io.liquirium.core.helpers.CandleHelpers.{c10, c5, candleBatch}
 import io.liquirium.core.helpers.CoreHelpers.{sec, secs}
+import org.scalatest.matchers.should.Matchers.{an, thrownBy}
 
 class CandleBatchTest_Basics extends BasicTest {
 

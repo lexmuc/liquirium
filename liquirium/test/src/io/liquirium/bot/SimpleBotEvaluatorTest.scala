@@ -5,6 +5,7 @@ import io.liquirium.bot.helpers.BotHelpers.{botOutput => out}
 import io.liquirium.core.helpers.BasicTest
 import io.liquirium.eval._
 import io.liquirium.eval.helpers.EvalHelpers.{inputRequest, testEval}
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 
 class SimpleBotEvaluatorTest extends BasicTest {

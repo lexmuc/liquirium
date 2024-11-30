@@ -3,6 +3,7 @@ package io.liquirium.connect.coinbase
 import io.liquirium.connect.coinbase.helpers.CoinbaseTestHelpers.{coinbaseOrder => co}
 import io.liquirium.core.helpers.BasicTest
 import io.liquirium.core.helpers.CoreHelpers.dec
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class CoinbaseOrderTest extends BasicTest {
 

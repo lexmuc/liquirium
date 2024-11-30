@@ -2,6 +2,7 @@ package io.liquirium.connect.coinbase
 
 import io.liquirium.core.helpers.BasicTest
 import io.liquirium.core.helpers.CoreHelpers.secs
+import org.scalatest.matchers.should.Matchers.{an, convertToAnyShouldWrapper, thrownBy}
 
 class CoinbaseCandleLengthTest extends BasicTest {
 

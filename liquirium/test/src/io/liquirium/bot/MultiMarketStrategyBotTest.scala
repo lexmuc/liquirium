@@ -14,11 +14,11 @@ import io.liquirium.core.{CandleHistorySegment, LedgerRef, Market, Trade}
 import io.liquirium.eval.helpers.ContextHelpers.inputUpdate
 import io.liquirium.eval.{Eval, IncrementalContext, InputEval, UpdatableContext}
 import io.liquirium.util.TimePeriod
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 import java.time.{Duration, Instant}
 
-class MultiMarketStrategyBotTest extends BasicTest with Matchers {
+class MultiMarketStrategyBotTest extends BasicTest {
 
   private var startTime: Instant = Instant.ofEpochSecond(0)
   private var endTime: Instant = Instant.ofEpochSecond(1000)

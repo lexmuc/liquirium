@@ -5,6 +5,7 @@ import io.liquirium.core.helpers.CoreHelpers.{dec, sec}
 import io.liquirium.core.helpers.{BasicTest, MarketHelpers}
 import io.liquirium.core.helpers.MarketHelpers.eid
 import io.liquirium.core.{ExchangeId, LedgerRef, Market, StringTradeId, TradingPair}
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class BitfinexModelConverterTest_Trade extends BasicTest {
 

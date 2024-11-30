@@ -1,6 +1,7 @@
 package io.liquirium.connect.coinbase
 
 import io.liquirium.core.helpers.BasicTest
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.libs.json.{JsArray, JsValue, Json}
 
 class CoinbaseJsonConverterTest_CancelOrdersResponse extends BasicTest {

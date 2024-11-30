@@ -2,6 +2,7 @@ package io.liquirium.util.store
 
 import io.liquirium.core.helpers.CoreHelpers.sec
 import io.liquirium.core.helpers.async.AsyncTestWithControlledTime
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 import java.sql.DriverManager
 import java.time.Instant

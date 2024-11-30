@@ -3,6 +3,7 @@ package io.liquirium.connect.binance
 import io.liquirium.core.Side
 import io.liquirium.core.helpers.BasicTest
 import io.liquirium.core.helpers.CoreHelpers.dec
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.libs.json.{JsArray, JsValue, Json}
 
 class BinanceJsonConverterTest_Orders extends BasicTest {

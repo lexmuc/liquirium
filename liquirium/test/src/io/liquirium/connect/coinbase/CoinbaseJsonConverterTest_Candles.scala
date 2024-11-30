@@ -2,6 +2,7 @@ package io.liquirium.connect.coinbase
 
 import io.liquirium.core.helpers.BasicTest
 import io.liquirium.core.helpers.CoreHelpers.{dec, milli}
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.libs.json.{JsArray, JsValue, Json}
 
 class CoinbaseJsonConverterTest_Candles extends BasicTest {

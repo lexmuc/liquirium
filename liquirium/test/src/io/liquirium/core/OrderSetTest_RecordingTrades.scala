@@ -3,6 +3,7 @@ package io.liquirium.core
 import io.liquirium.core.helpers.{BasicTest, TradeHelpers}
 import io.liquirium.core.helpers.CoreHelpers.dec
 import io.liquirium.core.helpers.OrderHelpers.order
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class OrderSetTest_RecordingTrades extends BasicTest {
 

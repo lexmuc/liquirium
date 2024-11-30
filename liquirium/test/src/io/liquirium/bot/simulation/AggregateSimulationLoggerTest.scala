@@ -3,6 +3,7 @@ package io.liquirium.bot.simulation
 import io.liquirium.bot.simulation.helpers.FakeSimulationLogger
 import io.liquirium.eval.Eval
 import io.liquirium.eval.helpers.EvalHelpers.testEval
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class AggregateSimulationLoggerTest extends NoEvalSimulationLoggerTest[AggregateSimulationLogger[FakeSimulationLogger]] {
 

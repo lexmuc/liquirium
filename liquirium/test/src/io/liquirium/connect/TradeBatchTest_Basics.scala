@@ -3,6 +3,7 @@ package io.liquirium.connect
 import io.liquirium.core.helpers.BasicTest
 import io.liquirium.core.helpers.CoreHelpers.sec
 import io.liquirium.core.helpers.TradeHelpers.{trade, tradeBatch}
+import org.scalatest.matchers.should.Matchers.{an, thrownBy}
 
 class TradeBatchTest_Basics extends BasicTest {
 

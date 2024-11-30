@@ -3,6 +3,7 @@ package io.liquirium.connect.poloniex
 import io.liquirium.connect.poloniex.helpers.PoloniexTestHelpers.{poloniexTrade => pt, typicalCurrencyPair => typicalPair}
 import io.liquirium.core.helpers.CoreHelpers.{dec, milli}
 import io.liquirium.core.{LedgerRef, Side, StringTradeId, Trade}
+import org.scalatest.matchers.should.Matchers.{convertToAnyShouldWrapper, equal}
 
 //noinspection RedundantDefaultArgument
 class PoloniexModelConverterTest_Trades extends PoloniexModelConverterTest {

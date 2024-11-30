@@ -2,7 +2,7 @@ package io.liquirium.bot.simulation
 
 import io.liquirium.bot.BotInput.{OrderSnapshotHistoryInput, TradeHistoryInput}
 import io.liquirium.core.helpers.CoreHelpers.sec
-import io.liquirium.core.helpers.{FakeOrderSet, TradeHelpers}
+import io.liquirium.core.helpers.TradeHelpers
 import io.liquirium.core.helpers.OrderHelpers.{order => o}
 import io.liquirium.core.helpers.TradeHelpers.{trade => t}
 import io.liquirium.core.orderTracking.helpers.OrderTrackingHelpers.openOrdersSnapshot
@@ -10,10 +10,11 @@ import io.liquirium.core.{Candle, OrderSet, Trade}
 import io.liquirium.eval.Input
 import io.liquirium.eval.helpers.EvalHelpers.{input, inputRequest}
 import io.liquirium.eval.helpers.SimpleFakeContext
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class CandleSimulatorMarketplaceTest_ProcessPriceUpdate extends CandleSimulatorMarketplaceTest {
 
-  def orders(n: Int): FakeOrderSet = FakeOrderSet(Set(o(n), o(n + 1)))
+  def orders(n: Int): OrderSet = OrderSet(Set(o(n), o(n + 1)))
 
   def processPriceUpdate(): Unit = {
     if (currentMarketplace == null) {

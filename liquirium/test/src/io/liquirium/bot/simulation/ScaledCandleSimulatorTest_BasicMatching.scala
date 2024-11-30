@@ -8,6 +8,8 @@ import io.liquirium.core.helpers.CoreHelpers.sec
 import io.liquirium.core.helpers.MarketHelpers.market
 import io.liquirium.core.helpers.OrderHelpers._
 import io.liquirium.core.helpers.TradeHelpers.tradeId
+import org.scalatest.matchers.must.Matchers.contain
+import org.scalatest.matchers.should.Matchers.{convertToAnyShouldWrapper, equal}
 
 class ScaledCandleSimulatorTest_BasicMatching extends BasicTest {
 

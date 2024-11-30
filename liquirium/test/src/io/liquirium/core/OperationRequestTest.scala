@@ -6,6 +6,7 @@ import io.liquirium.core.helpers.BasicTest
 import io.liquirium.core.helpers.CoreHelpers.dec
 import io.liquirium.core.helpers.MarketHelpers.{market => m}
 import io.liquirium.core.helpers.OrderHelpers.{modifiers => mod}
+import org.scalatest.matchers.should.Matchers.{an, convertToAnyShouldWrapper, thrownBy}
 
 class OperationRequestTest extends BasicTest {
 

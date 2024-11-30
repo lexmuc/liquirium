@@ -5,6 +5,7 @@ import io.liquirium.core.helpers.CandleHelpers.{candle, ohlc, ohlcCandle}
 import io.liquirium.core.helpers.CoreHelpers.{dec, sec, secs}
 import io.liquirium.core.helpers.async.AsyncTestWithControlledTime
 import org.scalatest.Assertion
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 import java.sql.{Connection, DriverManager}
 import java.time.{Duration, Instant}

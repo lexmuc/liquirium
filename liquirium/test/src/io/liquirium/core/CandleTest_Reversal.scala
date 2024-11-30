@@ -3,6 +3,7 @@ package io.liquirium.core
 import io.liquirium.core.helpers.BasicTest
 import io.liquirium.core.helpers.CandleHelpers.candle
 import io.liquirium.core.helpers.CoreHelpers.{sec, secs}
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class CandleTest_Reversal extends BasicTest {
 

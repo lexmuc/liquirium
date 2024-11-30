@@ -5,11 +5,13 @@ import io.liquirium.connect.coinbase.CoinbaseHttpRequest.PrivatePost
 import io.liquirium.connect.coinbase.helpers.CoinbaseTestHelpers.{coinbaseCancelOrderResult => ccor}
 import io.liquirium.core.helpers.TestWithMocks
 import io.liquirium.helpers.JsonTestHelper.json
+import org.mockito.Mockito.mock
+import org.scalatest.matchers.should.Matchers.{a, convertToAnyShouldWrapper}
 import play.api.libs.json.{JsArray, JsObject, JsString, JsValue}
 
 class CoinbaseApiRequestTest_CancelOrders extends TestWithMocks {
 
-  val jsonConverter: CoinbaseJsonConverter = mock[CoinbaseJsonConverter]
+  val jsonConverter: CoinbaseJsonConverter = mock(classOf[CoinbaseJsonConverter])
 
   private def fakeSeqConversion(json: JsValue, results: CoinbaseCancelOrderResult*) =
     jsonConverter.convertCancelOrderResults(json) returns results.toSeq

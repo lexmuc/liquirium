@@ -5,6 +5,8 @@ import io.liquirium.core.helpers.async.AsyncTestWithControlledTime
 import io.liquirium.eval.helpers.ContextHelpers.TraceContext
 import io.liquirium.eval.helpers.EvalHelpers.{input, inputEval}
 import io.liquirium.eval.helpers.{EvalHelpers, TestContextWithMockedEval}
+import org.mockito.Mockito.mock
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, Future}
@@ -13,7 +15,7 @@ import scala.util.Failure
 class OneTimeEvaluatorTest extends AsyncTestWithControlledTime with TestWithMocks {
 
   private var evalResultsByInputs: Map[Map[Input[_], Any], EvalResult[Int]] = Map()
-  private val inputProvider = mock[InputProvider]
+  private val inputProvider = mock(classOf[InputProvider])
 
   private val metric = EvalHelpers.testEval[Int](1)
 

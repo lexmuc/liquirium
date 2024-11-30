@@ -8,6 +8,7 @@ import io.liquirium.bot.helpers.BotInputHelpers.intInput
 import io.liquirium.core.helpers.CoreHelpers.{sec, secs}
 import io.liquirium.core.helpers.async.AsyncTestWithControlledTime
 import io.liquirium.helpers.FakeClock
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 import java.time.{Duration, Instant}
 import java.util.concurrent.TimeUnit

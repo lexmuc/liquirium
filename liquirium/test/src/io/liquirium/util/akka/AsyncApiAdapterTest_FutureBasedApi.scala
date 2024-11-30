@@ -4,6 +4,7 @@ import io.liquirium.core.helpers.CoreHelpers.ex
 import io.liquirium.helpers.AsyncTestApi.{AsyncTestRequest, RequestA, RequestB}
 import io.liquirium.helpers.TypedActorTest
 import io.liquirium.util.akka.AsyncRequest.AsyncRequestMessage
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 import scala.util.{Failure, Success}
 

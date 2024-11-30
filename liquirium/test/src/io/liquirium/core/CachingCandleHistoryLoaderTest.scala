@@ -4,6 +4,8 @@ import io.liquirium.core.helpers.CandleHelpers.{c10, candleHistorySegment}
 import io.liquirium.core.helpers.CoreHelpers.sec
 import io.liquirium.core.helpers.TestWithMocks
 import io.liquirium.core.helpers.async.{AsyncTestWithControlledTime, FutureServiceMock}
+import org.mockito.Mockito.mock
+import org.scalatest.matchers.should.Matchers.{a, convertToAnyShouldWrapper}
 
 import java.time.{Duration, Instant}
 import scala.concurrent.Future
@@ -13,7 +15,7 @@ class CachingCandleHistoryLoaderTest extends AsyncTestWithControlledTime with Te
 
   protected var candleLength: Duration = Duration.ofSeconds(1)
 
-  protected val cache: CandleHistoryCache = mock[CandleHistoryCache]
+  protected val cache: CandleHistoryCache = mock(classOf[CandleHistoryCache])
   protected val cacheLoad = new FutureServiceMock[
     CandleHistoryCache,
     Either[(Instant, Instant), CandleHistorySegment],

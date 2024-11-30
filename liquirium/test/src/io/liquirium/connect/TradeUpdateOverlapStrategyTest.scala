@@ -3,6 +3,7 @@ package io.liquirium.connect
 import io.liquirium.core.helpers.{BasicTest, TradeHelpers}
 import io.liquirium.core.helpers.CoreHelpers.{milli, millis}
 import io.liquirium.core.helpers.TradeHelpers.trade
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class TradeUpdateOverlapStrategyTest extends BasicTest {
 

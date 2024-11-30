@@ -3,7 +3,6 @@ package io.liquirium.connect.bitfinex
 import io.liquirium.connect.bitfinex.BitfinexInMessage._
 import play.api.libs.json._
 
-import scala.math.BigDecimal
 
 class BitfinexMessageConverter(jsonConverter: BitfinexJsonConverter) {
 
@@ -20,7 +19,7 @@ class BitfinexMessageConverter(jsonConverter: BitfinexJsonConverter) {
           case _ => IrrelevantMessage(j)
         }
       case arr: JsArray =>
-        arr.value match {
+        arr.value.toSeq match {
           case Seq(`zero`, JsString("os"), json: JsValue) => OrderStateMessage(jsonConverter.convertOrders(json))
           case Seq(`zero`, JsString("on"), json: JsValue) => NewOrderMessage(jsonConverter.convertSingleOrder(json))
           case Seq(`zero`, JsString("ou"), json: JsValue) => OrderUpdateMessage(jsonConverter.convertSingleOrder(json))

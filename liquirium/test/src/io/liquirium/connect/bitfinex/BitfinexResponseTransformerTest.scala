@@ -3,6 +3,8 @@ package io.liquirium.connect.bitfinex
 import io.liquirium.core.helpers.BasicTest
 import io.liquirium.core.helpers.CoreHelpers.ex
 import io.liquirium.util.HttpResponse
+import org.scalatest.matchers.should.Matchers.{convertToAnyShouldWrapper, equal}
+import org.scalatest.matchers.should.Matchers.matchPattern
 import play.api.libs.json.{JsNumber, JsObject}
 
 import scala.util.{Failure, Success}

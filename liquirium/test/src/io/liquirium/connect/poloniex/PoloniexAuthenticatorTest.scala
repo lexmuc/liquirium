@@ -3,6 +3,7 @@ package io.liquirium.connect.poloniex
 import io.liquirium.core.helpers.BasicTest
 import io.liquirium.helpers.FakeClock
 import io.liquirium.util.{ApiCredentials, HmacCalculator}
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 import java.time.Instant
 

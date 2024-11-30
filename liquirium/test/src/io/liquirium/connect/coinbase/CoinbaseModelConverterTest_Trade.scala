@@ -5,6 +5,7 @@ import io.liquirium.core.helpers.BasicTest
 import io.liquirium.core.helpers.CoreHelpers.{dec, milli}
 import io.liquirium.core.helpers.MarketHelpers.eid
 import io.liquirium.core.{Side, StringTradeId, Trade}
+import org.scalatest.matchers.should.Matchers.{convertToAnyShouldWrapper, equal}
 
 class CoinbaseModelConverterTest_Trade extends BasicTest {
   val converter = new CoinbaseModelConverter(eid(123))

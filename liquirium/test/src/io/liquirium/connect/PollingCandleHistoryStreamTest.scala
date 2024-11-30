@@ -11,6 +11,7 @@ import io.liquirium.core.helpers.TestWithMocks
 import io.liquirium.core.helpers.CandleHelpers.{candleHistorySegment => segment}
 import io.liquirium.core.helpers.async.{AsyncTestWithControlledTime, FutureServiceMock}
 import io.liquirium.util.akka.SourceQueueFactory
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 import java.time.Instant
 import scala.concurrent.Future

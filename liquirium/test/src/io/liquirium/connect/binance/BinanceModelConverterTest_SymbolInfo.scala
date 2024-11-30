@@ -3,6 +3,7 @@ package io.liquirium.connect.binance
 import io.liquirium.connect.binance.helpers.BinanceTestHelpers.symbolInfo
 import io.liquirium.core.helpers.CoreHelpers.dec
 import io.liquirium.util.NumberPrecision
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class BinanceModelConverterTest_SymbolInfo extends BinanceModelConverterTest {
 

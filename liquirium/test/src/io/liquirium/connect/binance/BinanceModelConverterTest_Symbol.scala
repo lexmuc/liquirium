@@ -2,6 +2,7 @@ package io.liquirium.connect.binance
 
 import io.liquirium.core.TradingPair
 import io.liquirium.core.helpers.MarketHelpers.pair
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class BinanceModelConverterTest_Symbol extends BinanceModelConverterTest {
 

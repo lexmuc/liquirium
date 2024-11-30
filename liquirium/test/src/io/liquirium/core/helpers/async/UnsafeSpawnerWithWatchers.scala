@@ -3,11 +3,11 @@ package io.liquirium.core.helpers.async
 import akka.actor.testkit.typed.scaladsl.ActorTestKit
 import akka.actor.typed.{ActorRef, Behavior}
 import io.liquirium.util.akka.ActorSpawner
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class UnsafeSpawnerWithWatchers(testKit: ActorTestKit) extends ActorSpawner with Matchers {
+class UnsafeSpawnerWithWatchers(testKit: ActorTestKit) extends ActorSpawner {
 
   implicit val executionContext: ExecutionContext = testKit.system.executionContext
 

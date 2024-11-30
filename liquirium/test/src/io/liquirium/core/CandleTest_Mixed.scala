@@ -3,6 +3,7 @@ package io.liquirium.core
 import io.liquirium.core.helpers.BasicTest
 import io.liquirium.core.helpers.CandleHelpers.candle
 import io.liquirium.core.helpers.CoreHelpers._
+import org.scalatest.matchers.should.Matchers.{convertToAnyShouldWrapper, equal}
 
 class CandleTest_Mixed extends BasicTest {
 

@@ -2,6 +2,8 @@ package io.liquirium.core
 
 import io.liquirium.core.helpers.CoreHelpers.{dec, milli, sec}
 import io.liquirium.core.helpers.TradeHelpers.{trade, tradeHistorySegment => segment}
+import org.scalatest.matchers.must.Matchers.be
+import org.scalatest.matchers.should.Matchers.{an, convertToAnyShouldWrapper, thrownBy}
 
 class TradeHistorySegmentTest_ExtendWith extends TradeHistorySegmentTest {
 

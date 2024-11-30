@@ -6,6 +6,9 @@ import io.liquirium.connect.poloniex.helpers.PoloniexTestHelpers.{poloniexOrder 
 import io.liquirium.core.Side
 import io.liquirium.core.helpers.TestWithMocks
 import io.liquirium.helpers.JsonTestHelper.json
+import org.mockito.Mockito.mock
+import org.scalatest.matchers.must.Matchers.contain
+import org.scalatest.matchers.should.Matchers.{a, convertToAnyShouldWrapper}
 import play.api.libs.json.JsValue
 
 
@@ -25,7 +28,7 @@ class PoloniexApiRequestTest_GetOpenOrders extends TestWithMocks {
     limit = limit,
   )
 
-  val jsonConverter: PoloniexJsonConverter = mock[PoloniexJsonConverter]
+  val jsonConverter: PoloniexJsonConverter = mock(classOf[PoloniexJsonConverter])
 
   private def fakeSeqConversion(json: JsValue, orders: Seq[PoloniexOrder]) =
     jsonConverter.convertOrders(json) returns orders

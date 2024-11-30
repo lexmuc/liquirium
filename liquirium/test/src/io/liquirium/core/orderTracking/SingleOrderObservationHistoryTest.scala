@@ -5,6 +5,7 @@ import io.liquirium.core.helpers.CoreHelpers.sec
 import io.liquirium.core.helpers.OrderHelpers.order
 import io.liquirium.core.orderTracking.OrderTrackingEvent.OrderObservationEvent
 import io.liquirium.core.orderTracking.helpers.OrderTrackingHelpers.{disappearance, observationChange}
+import org.scalatest.matchers.should.Matchers.{convertToAnyShouldWrapper, theSameInstanceAs}
 
 class SingleOrderObservationHistoryTest extends BasicTest {
 

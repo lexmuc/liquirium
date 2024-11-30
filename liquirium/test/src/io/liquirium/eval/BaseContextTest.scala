@@ -2,6 +2,7 @@ package io.liquirium.eval
 
 import io.liquirium.core.helpers.TestWithMocks
 import io.liquirium.eval.helpers.EvalHelpers.{input, inputEval, inputRequest}
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class BaseContextTest extends TestWithMocks {
 

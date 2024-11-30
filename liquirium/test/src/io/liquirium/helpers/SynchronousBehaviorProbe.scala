@@ -3,9 +3,9 @@ package io.liquirium.helpers
 import akka.actor.testkit.typed.scaladsl.{ActorTestKit, TestProbe}
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{Behavior, Terminated}
-import org.scalatest.Matchers
+import org.scalatest.Assertions.fail
 
-class SynchronousBehaviorProbe[T](testKit: ActorTestKit) extends Matchers {
+class SynchronousBehaviorProbe[T](testKit: ActorTestKit) {
 
   var probes: Seq[TestProbe[T]] = Seq[TestProbe[T]]()
 

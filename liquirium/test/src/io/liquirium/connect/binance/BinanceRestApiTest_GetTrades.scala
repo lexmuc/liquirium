@@ -3,8 +3,11 @@ package io.liquirium.connect.binance
 import io.liquirium.connect.binance.BinanceHttpRequest.SignedGet
 import io.liquirium.connect.binance.BinanceRestApi.GetTradesRequest
 import io.liquirium.connect.binance.helpers.BinanceTestHelpers.{trade => bt}
-import io.liquirium.core.helpers.CoreHelpers.{ex, milli, millis}
+import io.liquirium.core.helpers.CoreHelpers.{ex, milli}
 import io.liquirium.helpers.JsonTestHelper.json
+import org.scalatest.matchers.must.Matchers.{contain, not}
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.matchPattern
 import play.api.libs.json.JsValue
 
 import java.time.Instant

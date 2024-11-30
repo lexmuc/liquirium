@@ -6,6 +6,9 @@ import io.liquirium.connect.poloniex.helpers.PoloniexTestHelpers.{poloniexTrade 
 import io.liquirium.core.helpers.CoreHelpers.milli
 import io.liquirium.core.helpers.TestWithMocks
 import io.liquirium.helpers.JsonTestHelper.json
+import org.mockito.Mockito.mock
+import org.scalatest.matchers.must.Matchers.{contain, not}
+import org.scalatest.matchers.should.Matchers.{a, convertToAnyShouldWrapper}
 import play.api.libs.json.JsValue
 
 import java.time.Instant
@@ -29,7 +32,7 @@ class PoloniexApiRequestTest_GetTradeHistory extends TestWithMocks {
     symbols = symbols
   )
 
-  val jsonConverter: PoloniexJsonConverter = mock[PoloniexJsonConverter]
+  val jsonConverter: PoloniexJsonConverter = mock(classOf[PoloniexJsonConverter])
 
   private def fakeSeqConversion(json: JsValue, trades: Seq[PoloniexTrade]) =
     jsonConverter.convertTrades(json) returns trades

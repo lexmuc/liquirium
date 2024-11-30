@@ -3,6 +3,8 @@ package io.liquirium.core
 import io.liquirium.core.helpers.BasicTest
 import io.liquirium.core.helpers.CandleHelpers.{candle, emptyCandle}
 import io.liquirium.core.helpers.CoreHelpers._
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+
 import java.time.{Duration, Instant}
 
 class CandleTest_AggregationInInterval extends BasicTest {

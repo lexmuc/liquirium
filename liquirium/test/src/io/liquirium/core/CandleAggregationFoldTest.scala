@@ -3,6 +3,7 @@ package io.liquirium.core
 import io.liquirium.core.helpers.CandleHelpers.{c5, candleHistorySegment, e5}
 import io.liquirium.core.helpers.CoreHelpers.{sec, secs}
 import io.liquirium.eval.helpers.EvalTest
+import org.scalatest.matchers.should.Matchers.{an, convertToAnyShouldWrapper, thrownBy}
 
 import java.time.Duration
 

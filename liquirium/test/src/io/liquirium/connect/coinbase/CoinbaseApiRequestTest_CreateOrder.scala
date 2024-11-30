@@ -7,11 +7,13 @@ import io.liquirium.core.Side
 import io.liquirium.core.helpers.CoreHelpers.dec
 import io.liquirium.core.helpers.TestWithMocks
 import io.liquirium.helpers.JsonTestHelper.json
+import org.mockito.Mockito.mock
+import org.scalatest.matchers.should.Matchers.{a, convertToAnyShouldWrapper}
 import play.api.libs.json.{JsBoolean, JsString, JsValue}
 
 class CoinbaseApiRequestTest_CreateOrder extends TestWithMocks {
 
-  val jsonConverter: CoinbaseJsonConverter = mock[CoinbaseJsonConverter]
+  val jsonConverter: CoinbaseJsonConverter = mock(classOf[CoinbaseJsonConverter])
 
   private def fakeConversion(json: JsValue, createOrderResponse: CoinbaseCreateOrderResponse) =
     jsonConverter.convertCreateOrderResponse(json) returns createOrderResponse

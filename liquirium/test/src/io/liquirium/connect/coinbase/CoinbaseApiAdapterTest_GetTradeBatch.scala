@@ -6,6 +6,8 @@ import io.liquirium.core.helpers.CoreHelpers.{ex, milli, sec}
 import io.liquirium.core.helpers.MarketHelpers.pair
 import io.liquirium.core.helpers.TradeHelpers.trade
 import io.liquirium.core.{Trade, TradingPair}
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.matchPattern
 
 import java.time.Instant
 import scala.util.Failure

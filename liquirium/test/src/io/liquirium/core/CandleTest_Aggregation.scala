@@ -3,6 +3,7 @@ package io.liquirium.core
 import io.liquirium.core.helpers.CandleHelpers.{candle, emptyCandle}
 import io.liquirium.core.helpers.CoreHelpers._
 import io.liquirium.core.helpers.BasicTest
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class CandleTest_Aggregation extends BasicTest {
 

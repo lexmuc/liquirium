@@ -10,6 +10,8 @@ import io.liquirium.core._
 import io.liquirium.core.helpers.CoreHelpers.dec
 import io.liquirium.eval.helpers.EvalTest
 import io.liquirium.util.NumberPrecision
+import org.mockito.Mockito.mock
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 
 class OrderIntentConveyorTest extends EvalTest with TestWithMocks {
@@ -56,7 +58,7 @@ class OrderIntentConveyorTest extends EvalTest with TestWithMocks {
     openOrders: Set[BasicOrderData],
     orderIntents: Seq[OrderIntent],
   )(operationIntents: OperationIntent*): Unit = {
-    val syncer = mock[OrderIntentSyncer]
+    val syncer = mock(classOf[OrderIntentSyncer])
     syncer.apply(orderIntents, openOrders) returns operationIntents
     fakeEvalValue(orderSyncerEval, syncer)
   }

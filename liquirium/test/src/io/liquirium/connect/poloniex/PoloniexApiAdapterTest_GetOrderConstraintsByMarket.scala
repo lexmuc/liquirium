@@ -2,6 +2,7 @@ package io.liquirium.connect.poloniex
 
 import io.liquirium.connect.poloniex.helpers.PoloniexTestHelpers.symbolInfo
 import io.liquirium.core.helpers.MarketHelpers.{market, orderConstraints}
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class PoloniexApiAdapterTest_GetOrderConstraintsByMarket extends PoloniexApiAdapterTest {
 

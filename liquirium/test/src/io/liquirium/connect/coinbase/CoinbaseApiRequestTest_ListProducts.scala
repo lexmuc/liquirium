@@ -5,11 +5,14 @@ import io.liquirium.connect.coinbase.CoinbaseHttpRequest.PrivateGet
 import io.liquirium.connect.coinbase.helpers.CoinbaseTestHelpers.productInfo
 import io.liquirium.core.helpers.TestWithMocks
 import io.liquirium.helpers.JsonTestHelper.json
+import org.mockito.Mockito.mock
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.matchPattern
 import play.api.libs.json.{JsValue, Json}
 
 class CoinbaseApiRequestTest_ListProducts extends TestWithMocks {
 
-  val jsonConverter: CoinbaseJsonConverter = mock[CoinbaseJsonConverter]
+  val jsonConverter: CoinbaseJsonConverter = mock(classOf[CoinbaseJsonConverter])
 
   private def listProducts = ListProducts()
 

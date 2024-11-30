@@ -6,6 +6,8 @@ import io.liquirium.core.helpers.BasicTest
 import io.liquirium.core.helpers.CoreHelpers.dec
 import io.liquirium.core.helpers.OperationIntentHelpers.{cancelIntent => ci, convenientOrderIntent => oi}
 import io.liquirium.core.helpers.OrderHelpers.TestBasicOrderData
+import org.scalatest.matchers.must.Matchers.contain
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class SimpleOrderIntentSyncerTest extends BasicTest {
 

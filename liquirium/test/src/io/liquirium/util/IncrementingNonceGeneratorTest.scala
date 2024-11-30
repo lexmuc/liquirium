@@ -1,6 +1,7 @@
 package io.liquirium.util
 
 import io.liquirium.core.helpers.BasicTest
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class IncrementingNonceGeneratorTest extends BasicTest {
 

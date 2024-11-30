@@ -5,6 +5,8 @@ import io.liquirium.core.helpers.CandleHelpers.{ohlc, ohlcCandle}
 import io.liquirium.core.helpers.CoreHelpers.{ex, sec, secs}
 import io.liquirium.core.helpers.MarketHelpers.pair
 import io.liquirium.core.{Candle, TradingPair}
+import org.scalatest.matchers.should.Matchers.{an, convertToAnyShouldWrapper, thrownBy}
+import org.scalatest.matchers.should.Matchers.matchPattern
 
 import java.time.{Duration, Instant}
 import scala.util.Failure

@@ -5,6 +5,9 @@ import io.liquirium.connect.coinbase.CoinbaseHttpRequest.PrivateGet
 import io.liquirium.connect.coinbase.helpers.CoinbaseTestHelpers.{coinbaseOrder => order}
 import io.liquirium.core.helpers.TestWithMocks
 import io.liquirium.helpers.JsonTestHelper.json
+import org.mockito.Mockito.mock
+import org.scalatest.matchers.must.Matchers.contain
+import org.scalatest.matchers.should.Matchers.{a, an, convertToAnyShouldWrapper, thrownBy}
 import play.api.libs.json.{JsBoolean, JsObject, JsValue}
 
 class CoinbaseApiRequestTest_GetOpenOrders extends TestWithMocks {
@@ -17,7 +20,7 @@ class CoinbaseApiRequestTest_GetOpenOrders extends TestWithMocks {
     limit = limit,
   )
 
-  val jsonConverter: CoinbaseJsonConverter = mock[CoinbaseJsonConverter]
+  val jsonConverter: CoinbaseJsonConverter = mock(classOf[CoinbaseJsonConverter])
 
   private def fakeSeqConversion(json: JsValue, orders: Seq[CoinbaseOrder]) =
     jsonConverter.convertOrders(json) returns orders

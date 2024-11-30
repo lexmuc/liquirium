@@ -4,6 +4,7 @@ import io.liquirium.core.helpers.BasicTest
 import io.liquirium.core.helpers.CoreHelpers.sec
 import io.liquirium.core.helpers.OrderHelpers.order
 import io.liquirium.core.helpers.TradeHelpers.trade
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class OrderTrackingEventTest extends BasicTest {
 

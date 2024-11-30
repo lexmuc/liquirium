@@ -38,7 +38,7 @@ object liquirium extends LiquiriumModule with PublishModule {
     override def ivyDeps = Agg(
       ivy"org.scalactic::scalactic:3.2.17",
       ivy"org.scalatest::scalatest:3.2.17",
-      ivy"org.mockito:mockito-core:4.7.0",
+      ivy"org.mockito:mockito-core:5.14.2",
       ivy"com.typesafe.akka::akka-stream-testkit:$akkaVersion",
       ivy"com.typesafe.akka::akka-actor-testkit-typed:$akkaVersion",
     )

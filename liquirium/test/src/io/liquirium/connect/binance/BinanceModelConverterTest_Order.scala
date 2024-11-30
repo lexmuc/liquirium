@@ -3,6 +3,7 @@ package io.liquirium.connect.binance
 import io.liquirium.core.Side
 import io.liquirium.connect.binance.helpers.BinanceTestHelpers.{order => bo}
 import io.liquirium.core.helpers.CoreHelpers.dec
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class BinanceModelConverterTest_Order extends BinanceModelConverterTest {
 

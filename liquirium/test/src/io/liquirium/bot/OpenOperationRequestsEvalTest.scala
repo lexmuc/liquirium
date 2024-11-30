@@ -4,6 +4,7 @@ import io.liquirium.bot.BotInput.CompletedOperationRequest
 import io.liquirium.bot.helpers.OperationRequestHelpers.{completedOperationRequest, operationRequestMessage}
 import io.liquirium.eval.helpers.EvalTestWithIncrementalContext
 import io.liquirium.eval.{Eval, IncrementalSeq}
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class OpenOperationRequestsEvalTest extends EvalTestWithIncrementalContext[Set[OperationRequestMessage]] {
 

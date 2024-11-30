@@ -3,13 +3,15 @@ package io.liquirium.core
 import io.liquirium.core.helpers.TestWithMocks
 import io.liquirium.core.helpers.async.{AsyncTestWithControlledTime, FutureServiceMock}
 import io.liquirium.util.store.CandleStore
+import org.mockito.Mockito.mock
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 import java.time.Instant
 import scala.concurrent.Future
 
 class CandleHistoryCacheTest extends AsyncTestWithControlledTime with TestWithMocks {
 
-  protected val store: CandleStore = mock[CandleStore]
+  protected val store: CandleStore = mock(classOf[CandleStore])
   protected val storeAdd = new FutureServiceMock[CandleStore, Unit](_.add(*), Some(store))
   protected val storeGetStartAndEnd = new FutureServiceMock[CandleStore, Option[(Instant, Instant)]](
     _.getFirstStartAndLastEnd, Some(store),

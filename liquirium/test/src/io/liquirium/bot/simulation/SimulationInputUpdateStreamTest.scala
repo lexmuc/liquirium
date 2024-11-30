@@ -6,12 +6,14 @@ import io.liquirium.eval.helpers.ContextHelpers.inputUpdate
 import io.liquirium.eval.helpers.EvalHelpers.{input, inputRequest, unknownInputsException}
 import io.liquirium.eval.{Input, UnknownInputsException}
 import io.liquirium.util.TimePeriod
+import org.mockito.Mockito.mock
+import org.scalatest.matchers.should.Matchers.{a, an, convertToAnyShouldWrapper, the, thrownBy}
 
 import java.time.Instant
 
 class SimulationInputUpdateStreamTest extends TestWithMocks {
 
-  private val streamProvider: SingleInputUpdateStreamProvider = mock[SingleInputUpdateStreamProvider]
+  private val streamProvider: SingleInputUpdateStreamProvider = mock(classOf[SingleInputUpdateStreamProvider])
 
   private def stream(start: Instant, end: Instant) = SimulationInputUpdateStream(
     period = TimePeriod(start, end),

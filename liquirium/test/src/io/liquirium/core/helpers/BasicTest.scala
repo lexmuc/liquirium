@@ -1,5 +1,7 @@
 package io.liquirium.core.helpers
 
-import org.scalatest.{FunSuiteLike, Matchers, OneInstancePerTest}
+import org.scalatest.OneInstancePerTest
+import org.scalatest.funsuite.AnyFunSuiteLike
 
-trait BasicTest extends FunSuiteLike with Matchers with OneInstancePerTest
+
+trait BasicTest extends AnyFunSuiteLike with OneInstancePerTest

@@ -2,6 +2,7 @@ package io.liquirium.connect.poloniex
 
 import io.liquirium.core.helpers.BasicTest
 import io.liquirium.core.helpers.CoreHelpers.{dec, milli}
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.libs.json.{JsArray, JsValue, Json}
 
 class PoloniexJsonConverterTest_Candles extends BasicTest {

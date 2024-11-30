@@ -8,6 +8,7 @@ import io.liquirium.core.helpers.CoreHelpers.{dec, exchangeId, sec}
 import io.liquirium.core.helpers.MarketHelpers.market
 import io.liquirium.eval.{Eval, InputEval}
 import io.liquirium.eval.helpers.EvalHelpers.testEval
+import org.scalatest.matchers.should.Matchers.{convertToAnyShouldWrapper, theSameInstanceAs}
 
 class ChartMetricTest extends BasicTest {
 

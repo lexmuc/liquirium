@@ -2,6 +2,8 @@ package io.liquirium.core
 
 import io.liquirium.core.helpers.CoreHelpers.sec
 import io.liquirium.core.helpers.TradeHelpers.{trade, tradeHistorySegment => segment}
+import org.scalatest.matchers.must.Matchers.be
+import org.scalatest.matchers.should.Matchers.{an, convertToAnyShouldWrapper, thrownBy}
 
 import scala.annotation.tailrec
 

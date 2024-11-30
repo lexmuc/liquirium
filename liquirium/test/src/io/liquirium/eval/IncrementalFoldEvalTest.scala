@@ -2,6 +2,8 @@ package io.liquirium.eval
 
 import io.liquirium.eval.helpers.EvalHelpers.inputEval
 import io.liquirium.eval.helpers.EvalTest
+import org.scalatest.matchers.must.Matchers.contain
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class IncrementalFoldEvalTest extends EvalTest {
 

@@ -4,6 +4,7 @@ import io.liquirium.core.Order
 import io.liquirium.core.helpers.CoreHelpers.{dec, sec}
 import io.liquirium.core.helpers.{BasicTest, OrderHelpers}
 import io.liquirium.core.orderTracking.helpers.OrderTrackingHelpers.openOrdersSnapshot
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class OpenOrdersSnapshotTest extends BasicTest {
 

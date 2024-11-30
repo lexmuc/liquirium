@@ -2,6 +2,8 @@ package io.liquirium.core
 
 import io.liquirium.core.helpers.CandleHelpers.{c10, c5, candleHistorySegment => segment}
 import io.liquirium.core.helpers.CoreHelpers.{sec, secs}
+import org.scalatest.matchers.must.Matchers.be
+import org.scalatest.matchers.should.Matchers.{an, convertToAnyShouldWrapper, thrownBy}
 
 class CandleHistorySegmentTest_ExtendWith extends CandleHistorySegmentTest {
 

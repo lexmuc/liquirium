@@ -3,6 +3,7 @@ package io.liquirium.core
 import io.liquirium.core.helpers.BasicTest
 import io.liquirium.core.helpers.CoreHelpers.sec
 import io.liquirium.core.helpers.HistoryHelpers.{historyEntry => he}
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class HistoryEntryTest extends BasicTest {
 

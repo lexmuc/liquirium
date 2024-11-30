@@ -4,6 +4,7 @@ import io.liquirium.connect.bitfinex.helpers.BitfinexTestHelpers.{order => bitfi
 import io.liquirium.core.helpers.BasicTest
 import io.liquirium.core.helpers.CoreHelpers.dec
 import io.liquirium.core.{ExchangeId, Market, Order, TradingPair}
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class BitfinexModelConverterTest_Order extends BasicTest {
 

@@ -4,6 +4,7 @@ import io.liquirium.connect.deribit.DeribitDirection.{Buy, Sell}
 import io.liquirium.connect.deribit.helpers.DeribitJsonHelpers.deribitTradeJson
 import io.liquirium.core.helpers.BasicTest
 import io.liquirium.core.helpers.CoreHelpers.dec
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.libs.json.{JsArray, JsValue, Json}
 
 class DeribitJsonConverterTest_Trade extends BasicTest {

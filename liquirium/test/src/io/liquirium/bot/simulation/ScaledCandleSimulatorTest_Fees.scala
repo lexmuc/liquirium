@@ -10,6 +10,7 @@ import io.liquirium.core.helpers.MarketHelpers.m
 import io.liquirium.core.helpers.OrderHelpers.{exactBuy, exactSell}
 import io.liquirium.core.helpers.TradeHelpers.tradeId
 import io.liquirium.core._
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class ScaledCandleSimulatorTest_Fees extends BasicTest {
 

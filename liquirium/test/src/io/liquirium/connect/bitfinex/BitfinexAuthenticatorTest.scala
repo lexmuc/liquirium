@@ -2,6 +2,7 @@ package io.liquirium.connect.bitfinex
 
 import io.liquirium.core.helpers.BasicTest
 import io.liquirium.util.HmacCalculator
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 
 class BitfinexAuthenticatorTest extends BasicTest {

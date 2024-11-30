@@ -6,11 +6,13 @@ import io.liquirium.core.CandleHistorySegment
 import io.liquirium.core.helpers.CoreHelpers.sec
 import io.liquirium.core.helpers.{MarketHelpers, TestWithMocks}
 import io.liquirium.eval.Eval
+import org.mockito.Mockito.mock
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class ChartDataSeriesConfigUtilsTest extends TestWithMocks {
 
   test("there is a convenience factory for simple line series configs with reasonable defaults") {
-    val metric = mock[ChartMetric]
+    val metric = mock(classOf[ChartMetric])
     val seriesConfig = ChartDataSeriesConfigUtils.simpleLineSeriesConfig(caption = "Simple series", metric = metric)
     seriesConfig shouldEqual ChartDataSeriesConfig(
       precision = 8,
@@ -26,7 +28,7 @@ class ChartDataSeriesConfigUtilsTest extends TestWithMocks {
   }
 
   test("some properties of the simple line series configs can be overridden") {
-    val metric = mock[ChartMetric]
+    val metric = mock(classOf[ChartMetric])
     val seriesConfig = ChartDataSeriesConfigUtils.simpleLineSeriesConfig(
       caption = "Simple series",
       metric = metric,
@@ -64,7 +66,7 @@ class ChartDataSeriesConfigUtilsTest extends TestWithMocks {
   }
 
   test("a highest buy config can be created for a given fallback eval") {
-    val fallbackEval = mock[Eval[BigDecimal]]
+    val fallbackEval = mock(classOf[Eval[BigDecimal]])
 
     val highestBuyConfig = ChartDataSeriesConfigUtils.highestBuyConfig(fallbackEval)
     highestBuyConfig.precision shouldEqual 8
@@ -77,12 +79,12 @@ class ChartDataSeriesConfigUtilsTest extends TestWithMocks {
     highestBuyConfig.snapshotTime shouldEqual SnapshotTime.CandleStart
 
     val market = MarketHelpers.market(1)
-    highestBuyConfig.metric.getEval(market, sec(0), mock[Eval[CandleHistorySegment]]) shouldEqual
+    highestBuyConfig.metric.getEval(market, sec(0), mock(classOf[Eval[CandleHistorySegment]])) shouldEqual
       HighestBuyEval(market, fallbackEval)
   }
 
   test("a lowest sell config can be created for a given fallback eval") {
-    val fallbackEval = mock[Eval[BigDecimal]]
+    val fallbackEval = mock(classOf[Eval[BigDecimal]])
 
     val lowestSellConfig = ChartDataSeriesConfigUtils.lowestSellConfig(fallbackEval)
     lowestSellConfig.precision shouldEqual 8
@@ -95,7 +97,7 @@ class ChartDataSeriesConfigUtilsTest extends TestWithMocks {
     lowestSellConfig.snapshotTime shouldEqual SnapshotTime.CandleStart
 
     val market = MarketHelpers.market(1)
-    lowestSellConfig.metric.getEval(market, sec(0), mock[Eval[CandleHistorySegment]]) shouldEqual
+    lowestSellConfig.metric.getEval(market, sec(0), mock(classOf[Eval[CandleHistorySegment]])) shouldEqual
       LowestSellEval(market, fallbackEval)
   }
 

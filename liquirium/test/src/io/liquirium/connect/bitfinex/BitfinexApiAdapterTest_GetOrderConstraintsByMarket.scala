@@ -2,6 +2,7 @@ package io.liquirium.connect.bitfinex
 
 import io.liquirium.connect.bitfinex.helpers.BitfinexTestHelpers.pairInfo
 import io.liquirium.core.helpers.MarketHelpers.{market, orderConstraints}
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class BitfinexApiAdapterTest_GetOrderConstraintsByMarket extends BitfinexApiAdapterTest {
 

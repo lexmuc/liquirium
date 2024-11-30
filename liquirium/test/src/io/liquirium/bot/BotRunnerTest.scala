@@ -8,14 +8,15 @@ import io.liquirium.core.helpers.TestWithMocks
 import io.liquirium.core.helpers.async.{AsyncTestWithControlledTime, UnsafeTestSource}
 import io.liquirium.eval.{BaseContext, Context, EvalResult, Input, InputEval, InputUpdate, UpdatableContext, Value}
 import io.liquirium.eval.helpers.EvalHelpers.inputRequest
+import org.mockito.Mockito._
 
 class BotRunnerTest extends AsyncTestWithControlledTime with TestWithMocks {
 
   protected val runner: BotRunner = BotRunner(spawner)
 
-  protected val inputProvider: BotInputProvider = mock[BotInputProvider]
+  protected val inputProvider: BotInputProvider = mock(classOf[BotInputProvider])
 
-  protected val outputProcessor: BotOutputProcessor = mock[BotOutputProcessor]
+  protected val outputProcessor: BotOutputProcessor = mock(classOf[BotOutputProcessor])
   outputProcessor.processOutput(*) returns true
 
   protected def fakeInputSource[T](input: BotInput[T]): UnsafeTestSource[T] = {

@@ -2,6 +2,7 @@ package io.liquirium.connect.poloniex
 
 import io.liquirium.connect.poloniex.helpers.PoloniexTestHelpers.{poloniexCandle => poloCandle}
 import io.liquirium.core.helpers.CoreHelpers.{dec, milli}
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 import java.time.Duration
 

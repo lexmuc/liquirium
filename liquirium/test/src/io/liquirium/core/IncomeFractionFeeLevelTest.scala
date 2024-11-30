@@ -2,6 +2,7 @@ package io.liquirium.core
 
 import io.liquirium.core.helpers.CoreHelpers.dec
 import io.liquirium.core.helpers.{BasicTest, MarketHelpers}
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class IncomeFractionFeeLevelTest extends BasicTest {
 
