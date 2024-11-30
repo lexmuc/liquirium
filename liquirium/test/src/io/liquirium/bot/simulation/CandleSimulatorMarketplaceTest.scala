@@ -79,7 +79,7 @@ class CandleSimulatorMarketplaceTest extends TestWithMocks {
   }
 
   def fakeEmptyOrderHistory(): Unit = {
-    fakeOrderHistory(openOrdersSnapshot(OrderSet.empty, sec(0)))
+    fakeOrderHistory(openOrdersSnapshot(Set[Order](), sec(0)))
   }
 
   def fakeCompletedOperationRequests(ctr: CompletedOperationRequest*): Unit = {

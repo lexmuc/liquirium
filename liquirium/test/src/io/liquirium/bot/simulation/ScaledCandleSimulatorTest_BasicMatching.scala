@@ -13,10 +13,10 @@ import org.scalatest.matchers.should.Matchers.{convertToAnyShouldWrapper, equal}
 
 class ScaledCandleSimulatorTest_BasicMatching extends BasicTest {
 
-  implicit class TupleConversion(tuple: (Seq[Trade], OrderSet, ScaledCandleSimulator)) {
+  implicit class TupleConversion(tuple: (Seq[Trade], Set[Order], ScaledCandleSimulator)) {
     def trades: Seq[Trade] = tuple._1
 
-    def orders: OrderSet = tuple._2
+    def orders: Set[Order] = tuple._2
 
     def simulator: ScaledCandleSimulator = tuple._3
   }
@@ -29,13 +29,13 @@ class ScaledCandleSimulatorTest_BasicMatching extends BasicTest {
   ) (
     c: Candle,
     orders: Order*,
-  ): (Seq[Trade], OrderSet, ScaledCandleSimulator) =
+  ): (Seq[Trade], Set[Order], ScaledCandleSimulator) =
     simulation.ScaledCandleSimulator(
       feeLevel = ZeroFeeLevel,
       volumeReduction = volumeReduction,
       tradeIds = if (tradeIds == null) Stream.from(1).map(x => tradeId(x.toString)) else tradeIds.toStream
     )
-      .fillOrders(OrderSet(orders.toSet), c)
+      .fillOrders(orders.toSet, c)
 
   test("buy orders below the lowest rate are not matched") {
     fillOrders()(candle(low = 2, high = 3), exactBuy(1, at = 1)).trades should equal(Seq())
@@ -166,7 +166,7 @@ class ScaledCandleSimulatorTest_BasicMatching extends BasicTest {
       exactSell(dec(10), at = dec(2)),
       exactSell(dec(10), at = dec(4)),
     ).orders
-    newOrders shouldEqual orders(
+    newOrders shouldEqual Set(
       exactBuy(dec(10), at = dec(0.1)),
       exactSell(dec(10), at = dec(4)),
     )

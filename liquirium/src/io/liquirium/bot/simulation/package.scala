@@ -113,7 +113,7 @@ package object simulation {
       resolve = {
         case CompletedOperationRequestsInSession => Some(IncrementalSeq.empty)
         case OrderSnapshotHistoryInput(_) => Some(
-          OpenOrdersHistory.start(OpenOrdersSnapshot(OrderSet.empty, Instant.ofEpochSecond(0)))
+          OpenOrdersHistory.start(OpenOrdersSnapshot(Set(), Instant.ofEpochSecond(0)))
         )
         case TradeHistoryInput(_, start) if start == simulationStart && withTradeHistoryInput =>
           Some(TradeHistorySegment.empty(simulationStart))

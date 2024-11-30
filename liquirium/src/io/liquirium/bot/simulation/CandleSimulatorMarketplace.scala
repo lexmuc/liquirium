@@ -133,7 +133,7 @@ object CandleSimulatorMarketplace {
       val newState = copy(lastCandleEndTime = time)
       oldOrderHistory.lastSnapshot.orders.find(_.id == cr.orderId) match {
         case Some(order) =>
-          val newOrderSet = oldOrderHistory.lastSnapshot.orders.removeId(cr.orderId)
+          val newOrderSet = oldOrderHistory.lastSnapshot.orders.filter(_.id != cr.orderId)
           val newOrderHistory = oldOrderHistory.appendIfChanged(
             OpenOrdersSnapshot(newOrderSet, time),
           )
