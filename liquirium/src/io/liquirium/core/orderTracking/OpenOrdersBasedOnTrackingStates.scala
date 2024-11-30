@@ -11,7 +11,7 @@ object OpenOrdersBasedOnTrackingStates {
       .filterValuesIncremental(_.reportingState.isDefined)
       .map { filteredValues =>
         val orders = filteredValues.mapValue.values.map(_.reportingState.get)
-        OrderSet(orders.toSet)
+        OrderSet(orders.toIterator.toSet)
       }
 
 }

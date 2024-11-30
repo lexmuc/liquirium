@@ -33,7 +33,7 @@ object OpenOrdersStream {
         logger.warn("Failed to get new orders via open orders provider", e)
         singleUpdateSource.initialDelay(retryDelay)
     })
-    Source.repeat(Unit).flatMapConcat { _ =>
+    Source.repeat(()).flatMapConcat { _ =>
       updateWithRetriesSource.concatLazily(Source.single(()).initialDelay(interval).flatMapConcat(_ => Source.empty))
     }
 

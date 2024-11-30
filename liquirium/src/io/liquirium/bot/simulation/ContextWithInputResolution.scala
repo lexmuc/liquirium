@@ -19,7 +19,7 @@ case class ContextWithInputResolution(
           (InputRequest(unresolvedInputs), copy(newContext))
         }
         else {
-          val update = inputsWithOptionalValues.toMap.mapValues(_.get)
+          val update = inputsWithOptionalValues.toMap.mapValues(_.get).toMap
           copy(newContext.update(InputUpdate(update))).evaluate(eval)
         }
     }

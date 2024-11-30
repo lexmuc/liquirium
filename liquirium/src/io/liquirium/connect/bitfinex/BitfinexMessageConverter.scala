@@ -21,14 +21,14 @@ class BitfinexMessageConverter(jsonConverter: BitfinexJsonConverter) {
         }
       case arr: JsArray =>
         arr.value match {
-          case Seq(`zero`, JsString("os"), json) => OrderStateMessage(jsonConverter.convertOrders(json))
-          case Seq(`zero`, JsString("on"), json) => NewOrderMessage(jsonConverter.convertSingleOrder(json))
-          case Seq(`zero`, JsString("ou"), json) => OrderUpdateMessage(jsonConverter.convertSingleOrder(json))
-          case Seq(`zero`, JsString("oc"), json) => OrderCancelMessage(jsonConverter.convertSingleOrder(json))
-          case Seq(`zero`, JsString("tu"), json) => NewTradeMessage(jsonConverter.convertSingleTrade(json))
-          case Seq(channelId, JsString("hb")) => HeartbeatMessage(channelId.as[Long])
-          case Seq(`zero`, JsString("n"), notificationJson) => convertNotificationJson(notificationJson, j)
-          case Seq(channelId, payload) if (channelId != zero) => GeneralChannelMessage(channelId.as[Long], payload)
+          case Seq(`zero`, JsString("os"), json: JsValue) => OrderStateMessage(jsonConverter.convertOrders(json))
+          case Seq(`zero`, JsString("on"), json: JsValue) => NewOrderMessage(jsonConverter.convertSingleOrder(json))
+          case Seq(`zero`, JsString("ou"), json: JsValue) => OrderUpdateMessage(jsonConverter.convertSingleOrder(json))
+          case Seq(`zero`, JsString("oc"), json: JsValue) => OrderCancelMessage(jsonConverter.convertSingleOrder(json))
+          case Seq(`zero`, JsString("tu"), json: JsValue) => NewTradeMessage(jsonConverter.convertSingleTrade(json))
+          case Seq(channelId: JsValue, JsString("hb")) => HeartbeatMessage(channelId.as[Long])
+          case Seq(`zero`, JsString("n"), notificationJson: JsValue) => convertNotificationJson(notificationJson, j)
+          case Seq(channelId: JsValue, payload: JsValue) if channelId != zero => GeneralChannelMessage(channelId.as[Long], payload)
           case _ => IrrelevantMessage(j)
         }
       case _ => IrrelevantMessage(j)
