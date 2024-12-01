@@ -3,6 +3,7 @@ package io.liquirium.connect.deribit
 import io.liquirium.core.LedgerRef
 import io.liquirium.core.helpers.CoreHelpers.dec
 import io.liquirium.core.helpers.{BasicTest, MarketHelpers}
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class DeribitBtcOptionsFeeLevelTest extends BasicTest {
 

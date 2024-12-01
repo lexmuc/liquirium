@@ -5,13 +5,14 @@ import io.liquirium.core.helpers.async.FutureServiceMock
 import io.liquirium.helpers.CallingThreadExecutionContext
 import io.liquirium.util.DummyLogger
 import org.mockito.Mockito
+import org.mockito.Mockito.mock
 
 class CoinbaseRestApiTest extends TestWithMocks {
 
   implicit val ec: CallingThreadExecutionContext.type = CallingThreadExecutionContext
 
   val httpService = new FutureServiceMock[CoinbaseHttpService, Any](_.sendRequest(*))
-  val jsonConverter: CoinbaseJsonConverter = mock[CoinbaseJsonConverter]
+  val jsonConverter: CoinbaseJsonConverter = mock(classOf[CoinbaseJsonConverter])
 
   def api = new CoinbaseRestApi(httpService.instance, jsonConverter, DummyLogger)
 

@@ -5,6 +5,7 @@ import io.liquirium.core.helpers.CoreHelpers.{dec, sec, secs}
 import io.liquirium.core.helpers.TradeHelpers.{trade, tradeHistorySegment}
 import io.liquirium.core.{CandleHistorySegment, TradeHistorySegment}
 import io.liquirium.eval.helpers.EvalTest
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class LatestCandleTradeVolumeEvalTest extends EvalTest {
 

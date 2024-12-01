@@ -7,6 +7,7 @@ import io.liquirium.core.helpers.CandleHelpers.{c5, candleHistorySegment}
 import io.liquirium.core.helpers.CoreHelpers.{dec, sec, secs}
 import io.liquirium.eval.Eval
 import io.liquirium.eval.helpers.EvalHelpers.testEval
+import org.scalatest.matchers.should.Matchers.{a, convertToAnyShouldWrapper, thrownBy}
 
 class ChartDataLoggerTest extends EvalBasedSimulationLoggerTest[ChartDataLogger] {
 

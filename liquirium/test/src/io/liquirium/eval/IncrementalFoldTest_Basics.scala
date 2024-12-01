@@ -2,6 +2,7 @@ package io.liquirium.eval
 
 import io.liquirium.core.helpers.BasicTest
 import io.liquirium.eval.helpers.IncrementalIntListWithRootValue
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class IncrementalFoldTest_Basics extends BasicTest {
 

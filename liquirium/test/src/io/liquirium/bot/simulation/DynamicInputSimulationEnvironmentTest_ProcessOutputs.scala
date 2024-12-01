@@ -4,6 +4,8 @@ import io.liquirium.bot.helpers.BotOutputHelpers.logOutput
 import io.liquirium.bot.helpers.OperationRequestHelpers.operationRequestMessage
 import io.liquirium.eval.helpers.ContextHelpers.{context, fakeContextWithInputs, inputUpdate}
 import io.liquirium.eval.helpers.EvalHelpers.{input, inputRequest}
+import org.mockito.Mockito.mock
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class DynamicInputSimulationEnvironmentTest_ProcessOutputs extends DynamicInputSimulationEnvironmentTest {
 
@@ -15,8 +17,8 @@ class DynamicInputSimulationEnvironmentTest_ProcessOutputs extends DynamicInputS
 
   test("trade requests messages are forwarded to the marketplaces one by one and the final context is returned") {
     val mp1 = firstMarketplaces
-    val mp2 = mock[SimulationMarketplaces]
-    val mp3 = mock[SimulationMarketplaces]
+    val mp2 = mock(classOf[SimulationMarketplaces])
+    val mp3 = mock(classOf[SimulationMarketplaces])
     mp1.processOperationRequest(operationRequestMessage(1), context(1)) returns Right((context(2), mp2))
     mp2.processOperationRequest(operationRequestMessage(2), context(2)) returns Right((context(3), mp3))
     val outputs = Seq(operationRequestMessage(1), operationRequestMessage(2))
@@ -27,7 +29,7 @@ class DynamicInputSimulationEnvironmentTest_ProcessOutputs extends DynamicInputS
 
   test("the marketplaces are properly updated") {
     val mp1 = firstMarketplaces
-    val mp2 = mock[SimulationMarketplaces]
+    val mp2 = mock(classOf[SimulationMarketplaces])
     mp1.processOperationRequest(operationRequestMessage(1), context(1)) returns Right((context(2), mp2))
     val outputs = Seq(operationRequestMessage(1))
     val (_, newEnvironment) = environment.processOutputs(outputs, context(1))
@@ -37,7 +39,7 @@ class DynamicInputSimulationEnvironmentTest_ProcessOutputs extends DynamicInputS
   test("upon an input request processing is repeated with an updated context until the request can be processed") {
     val initContext = fakeContextWithInputs(input(0) -> 0)
     val mp1 = firstMarketplaces
-    val mp2 = mock[SimulationMarketplaces]
+    val mp2 = mock(classOf[SimulationMarketplaces])
     mp1.processOperationRequest(operationRequestMessage(1), initContext) returns Left(inputRequest(input(1)))
 
     fakeInputStreamTransition(input(1))(input(1) -> 11)
@@ -58,7 +60,7 @@ class DynamicInputSimulationEnvironmentTest_ProcessOutputs extends DynamicInputS
 
   test("outputs other than operation request messages are ignored") {
     val mp1 = firstMarketplaces
-    val mp2 = mock[SimulationMarketplaces]
+    val mp2 = mock(classOf[SimulationMarketplaces])
     mp1.processOperationRequest(operationRequestMessage(1), context(1)) returns Right((context(2), mp2))
     val outputs = Seq(logOutput(1), operationRequestMessage(1), logOutput(2))
     val (newContext, newEnvironment) = environment.processOutputs(outputs, context(1))

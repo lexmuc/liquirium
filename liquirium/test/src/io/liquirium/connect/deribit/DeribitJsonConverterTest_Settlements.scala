@@ -2,6 +2,7 @@ package io.liquirium.connect.deribit
 
 import io.liquirium.connect.deribit.helpers.DeribitTestHelpers.continuationToken
 import io.liquirium.core.helpers.BasicTest
+import org.scalatest.matchers.should.Matchers.{an, convertToAnyShouldWrapper, thrownBy}
 import play.api.libs.json.{JsArray, JsValue, Json}
 
 class DeribitJsonConverterTest_Settlements extends BasicTest {

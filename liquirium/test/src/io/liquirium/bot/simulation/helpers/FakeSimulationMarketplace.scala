@@ -4,7 +4,7 @@ import io.liquirium.bot.simulation.SimulationMarketplace
 import io.liquirium.bot.{BotInput, OperationRequestMessage}
 import io.liquirium.core.Market
 import io.liquirium.eval.{InputRequest, InputUpdate, UpdatableContext}
-import org.scalatest.Matchers
+import org.scalatest.Assertions.fail
 
 
 case class FakeSimulationMarketplace(
@@ -13,7 +13,7 @@ case class FakeSimulationMarketplace(
   priceUpdateTransitions: Seq[(UpdatableContext, Either[InputRequest, UpdatableContext])] = Seq(),
   operationRequestTransitions: Seq[((OperationRequestMessage, UpdatableContext), Either[InputRequest, InputUpdate])] = Seq(),
   calls: Seq[Any] = Seq(),
-) extends SimulationMarketplace with Matchers {
+) extends SimulationMarketplace {
 
   override def processOperationRequest(
     tr: OperationRequestMessage,

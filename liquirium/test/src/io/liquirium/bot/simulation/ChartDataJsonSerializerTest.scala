@@ -6,6 +6,7 @@ import io.liquirium.core.helpers.CoreHelpers.{dec, sec}
 import io.liquirium.core.helpers.{CandleHelpers, MarketHelpers, TestWithMocks}
 import io.liquirium.util.JsonSerializer
 import io.liquirium.util.helpers.{FakeJsonSerializer, JsonSerializerTest}
+import org.mockito.Mockito.mock
 import play.api.libs.json.{JsString, JsValue}
 
 class ChartDataJsonSerializerTest extends JsonSerializerTest[Seq[(Market, ChartDataLogger)]] with TestWithMocks {
@@ -23,7 +24,7 @@ class ChartDataJsonSerializerTest extends JsonSerializerTest[Seq[(Market, ChartD
     val dataSeriesConfig2 = makeChartDataSeriesConfig(caption = "config2")
     configMappings = configMappings :+ (dataSeriesConfig1, JsString("config1"))
     configMappings = configMappings :+ (dataSeriesConfig2, JsString("config2"))
-    val fakeLogger = mock[ChartDataLogger]
+    val fakeLogger = mock(classOf[ChartDataLogger])
     fakeLogger.dataSeriesConfigs returns Seq(dataSeriesConfig1, dataSeriesConfig2)
     fakeLogger.chartDataUpdates returns Seq(
       ChartDataUpdate(
@@ -101,7 +102,7 @@ class ChartDataJsonSerializerTest extends JsonSerializerTest[Seq[(Market, ChartD
     val market1 = MarketHelpers.market(MarketHelpers.exchangeId("EX123"), "BASE1", "QUOTE1")
     val market2 = MarketHelpers.market(MarketHelpers.exchangeId("EX123"), "BASE2", "QUOTE2")
 
-    val fakeLogger1 = mock[ChartDataLogger]
+    val fakeLogger1 = mock(classOf[ChartDataLogger])
     fakeLogger1.dataSeriesConfigs returns Seq()
     fakeLogger1.chartDataUpdates returns Seq(
       ChartDataUpdate(
@@ -116,7 +117,7 @@ class ChartDataJsonSerializerTest extends JsonSerializerTest[Seq[(Market, ChartD
       ),
     )
 
-    val fakeLogger2 = mock[ChartDataLogger]
+    val fakeLogger2 = mock(classOf[ChartDataLogger])
     fakeLogger2.dataSeriesConfigs returns Seq()
     fakeLogger2.chartDataUpdates returns Seq(
       ChartDataUpdate(

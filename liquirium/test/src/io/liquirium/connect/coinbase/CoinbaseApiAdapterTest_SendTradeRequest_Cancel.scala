@@ -5,6 +5,7 @@ import io.liquirium.connect.coinbase.helpers.CoinbaseTestHelpers.{coinbaseCancel
 import io.liquirium.core.helpers.CoreHelpers.ex
 import io.liquirium.core.helpers.MarketHelpers.m
 import io.liquirium.core.{CancelRequest, Market}
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 import scala.util.Failure
 

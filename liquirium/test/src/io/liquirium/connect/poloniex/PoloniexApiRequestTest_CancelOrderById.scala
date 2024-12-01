@@ -5,12 +5,14 @@ import io.liquirium.connect.poloniex.PoloniexHttpRequest.PrivateDelete
 import io.liquirium.connect.poloniex.helpers.PoloniexTestHelpers.poloniexCancelOrderByIdResponse
 import io.liquirium.core.helpers.TestWithMocks
 import io.liquirium.helpers.JsonTestHelper.json
+import org.mockito.Mockito.mock
+import org.scalatest.matchers.should.Matchers.{a, convertToAnyShouldWrapper}
 import play.api.libs.json.JsValue
 
 
 class PoloniexApiRequestTest_CancelOrderById extends TestWithMocks {
 
-  val jsonConverter: PoloniexJsonConverter = mock[PoloniexJsonConverter]
+  val jsonConverter: PoloniexJsonConverter = mock(classOf[PoloniexJsonConverter])
 
   private def cancelOrderById(
     orderId: String = "abc"

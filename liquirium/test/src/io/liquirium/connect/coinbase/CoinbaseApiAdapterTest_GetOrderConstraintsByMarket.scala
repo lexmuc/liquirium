@@ -2,6 +2,7 @@ package io.liquirium.connect.coinbase
 
 import io.liquirium.connect.coinbase.helpers.CoinbaseTestHelpers.productInfo
 import io.liquirium.core.helpers.MarketHelpers.{market, orderConstraints}
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class CoinbaseApiAdapterTest_GetOrderConstraintsByMarket extends CoinbaseApiAdapterTest {
 

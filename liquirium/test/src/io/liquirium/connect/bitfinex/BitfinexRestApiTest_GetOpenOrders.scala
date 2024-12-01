@@ -4,6 +4,8 @@ import io.liquirium.connect.bitfinex.BitfinexRestApi.GetOpenOrders
 import io.liquirium.connect.bitfinex.helpers.BitfinexTestHelpers.order
 import io.liquirium.core.helpers.TestWithMocks
 import io.liquirium.helpers.JsonTestHelper.json
+import org.mockito.Mockito.mock
+import org.scalatest.matchers.should.Matchers.{a, convertToAnyShouldWrapper}
 import play.api.libs.json.JsValue
 
 class BitfinexRestApiTest_GetOpenOrders extends TestWithMocks {
@@ -14,7 +16,7 @@ class BitfinexRestApiTest_GetOpenOrders extends TestWithMocks {
     symbol = symbol
   )
 
-  val jsonConverter: BitfinexJsonConverter = mock[BitfinexJsonConverter]
+  val jsonConverter: BitfinexJsonConverter = mock(classOf[BitfinexJsonConverter])
 
   private def fakeSeqConversion(json: JsValue, orders: Seq[BitfinexOrder]) =
     jsonConverter.convertOrders(json) returns orders

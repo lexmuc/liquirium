@@ -1,6 +1,7 @@
 package io.liquirium.connect.bitfinex
 
 import io.liquirium.core.{ExchangeId, TradingPair}
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class BitfinexModelConverterTest_Pair extends BitfinexModelConverterTest {
 

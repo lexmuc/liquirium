@@ -4,6 +4,7 @@ import io.liquirium.core.CandleHistoryCache.IncoherentCandleHistoryException
 import io.liquirium.core.helpers.CandleHelpers
 import io.liquirium.core.helpers.CandleHelpers.c10
 import io.liquirium.core.helpers.CoreHelpers.{sec, secs}
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 import scala.util.Failure
 

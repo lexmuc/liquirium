@@ -4,7 +4,7 @@ import io.liquirium.core
 import io.liquirium.core.OrderModifier.{FillOrKill, Margin, PostOnly}
 import io.liquirium.core.helpers.CoreHelpers.dec
 import io.liquirium.core.helpers.MarketHelpers.m
-import io.liquirium.core.{Market, Order, OrderModifier, OrderSet}
+import io.liquirium.core.{Market, Order, OrderModifier}
 
 
 object OrderHelpers {
@@ -66,8 +66,6 @@ object OrderHelpers {
   }
 
   def order(id: Int): Order = order(id.toString)
-
-  def orders(oo: Order*): OrderSet = OrderSet(oo.toSet)
 
   def exactOrderWithAmountTuple(id: Int, amountAndFullAmount: (Int, Int) = (1, 1)): Order =
     order(

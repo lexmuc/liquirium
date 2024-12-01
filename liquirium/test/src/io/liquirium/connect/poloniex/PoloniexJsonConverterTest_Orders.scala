@@ -2,6 +2,7 @@ package io.liquirium.connect.poloniex
 
 import io.liquirium.core.Side
 import io.liquirium.core.helpers.BasicTest
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.libs.json.Json
 
 import java.time.Instant

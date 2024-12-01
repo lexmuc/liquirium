@@ -3,6 +3,7 @@ package io.liquirium.connect
 import io.liquirium.core.helpers.CandleHelpers.candleHistorySegment
 import io.liquirium.core.helpers.CoreHelpers.{sec, secs}
 import io.liquirium.core.helpers.BasicTest
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class CandleUpdateOverlapStrategyTest extends BasicTest {
 

@@ -5,13 +5,14 @@ import io.liquirium.core.helpers.async.FutureServiceMock
 import io.liquirium.helpers.CallingThreadExecutionContext
 import io.liquirium.util.DummyLogger
 import org.mockito.Mockito
+import org.mockito.Mockito.mock
 
 class PoloniexRestApi_Test extends TestWithMocks {
 
   implicit val ec: CallingThreadExecutionContext.type = CallingThreadExecutionContext
 
   val httpService = new FutureServiceMock[PoloniexHttpService, Any](_.sendRequest(*))
-  val jsonConverter: PoloniexJsonConverter = mock[PoloniexJsonConverter]
+  val jsonConverter: PoloniexJsonConverter = mock(classOf[PoloniexJsonConverter])
 
   def api = new PoloniexRestApi(httpService.instance, jsonConverter, DummyLogger)
 

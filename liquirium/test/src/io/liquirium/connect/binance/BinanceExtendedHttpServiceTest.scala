@@ -4,6 +4,8 @@ import io.liquirium.core.helpers.CoreHelpers.ex
 import io.liquirium.core.helpers.TestWithMocks
 import io.liquirium.core.helpers.async.FutureServiceMock
 import io.liquirium.util.HttpResponse
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.matchPattern
 import play.api.libs.json.{JsNumber, JsObject, JsValue}
 
 import scala.concurrent.{ExecutionContext, Future}

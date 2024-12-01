@@ -4,6 +4,7 @@ import io.liquirium.connect.coinbase.helpers.CoinbaseTestHelpers.productInfo
 import io.liquirium.core.helpers.CoreHelpers.dec
 import io.liquirium.core.OrderConstraints
 import io.liquirium.util.NumberPrecision
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class CoinbaseModelConverterTest_ProductInfo extends CoinbaseModelConverterTest {
 

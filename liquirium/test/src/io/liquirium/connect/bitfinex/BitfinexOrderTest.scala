@@ -3,6 +3,7 @@ package io.liquirium.connect.bitfinex
 import io.liquirium.core.helpers.BasicTest
 import io.liquirium.connect.bitfinex.helpers.BitfinexTestHelpers.order
 import io.liquirium.core.helpers.CoreHelpers.sec
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class BitfinexOrderTest extends BasicTest {
 

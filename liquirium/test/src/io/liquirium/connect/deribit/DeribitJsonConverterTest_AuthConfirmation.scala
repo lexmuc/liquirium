@@ -2,6 +2,7 @@ package io.liquirium.connect.deribit
 
 import io.liquirium.core.helpers.BasicTest
 import io.liquirium.core.helpers.CoreHelpers.millis
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.libs.json.Json
 
 class DeribitJsonConverterTest_AuthConfirmation extends BasicTest {

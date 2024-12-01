@@ -7,6 +7,8 @@ import io.liquirium.core.helpers.CoreHelpers.{dec, exchangeId, ledgerRef, sec}
 import io.liquirium.core.helpers.TradeHelpers.{trade, tradeHistorySegment}
 import io.liquirium.core.helpers.MarketHelpers
 import io.liquirium.eval.helpers.EvalTest
+import org.scalatest.matchers.must.Matchers.not
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class BalanceEvalTest extends EvalTest {
   private val startTime = sec(100)

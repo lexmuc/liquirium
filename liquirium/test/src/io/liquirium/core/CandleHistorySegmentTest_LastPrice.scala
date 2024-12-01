@@ -2,6 +2,7 @@ package io.liquirium.core
 
 import io.liquirium.core.helpers.CandleHelpers.{c10, candle, candleHistorySegment, e10}
 import io.liquirium.core.helpers.CoreHelpers.{asset, dec, sec, secs}
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class CandleHistorySegmentTest_LastPrice extends CandleHistorySegmentTest {
 

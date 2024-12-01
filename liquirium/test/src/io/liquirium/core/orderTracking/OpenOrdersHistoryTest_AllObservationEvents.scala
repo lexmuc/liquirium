@@ -6,7 +6,8 @@ import io.liquirium.core.helpers.{BasicTest, OrderHelpers}
 import io.liquirium.core.orderTracking.OrderTrackingEvent.OrderObservationEvent
 import io.liquirium.core.orderTracking.helpers.OrderTrackingHelpers.{openOrdersSnapshot => snapshot}
 import io.liquirium.eval.IncrementalSeq
-import io.liquirium.core.orderTracking.helpers.OrderTrackingHelpers.{observationChange => change, disappearance}
+import io.liquirium.core.orderTracking.helpers.OrderTrackingHelpers.{disappearance, observationChange => change}
+import org.scalatest.matchers.should.Matchers.{convertToAnyShouldWrapper, theSameInstanceAs}
 
 class OpenOrdersHistoryTest_AllObservationEvents extends BasicTest {
 

@@ -5,6 +5,7 @@ import io.liquirium.bot.helpers.OperationRequestHelpers.{operationRequest, opera
 import io.liquirium.core.{BotId, CompoundOperationRequestId}
 import io.liquirium.eval.helpers.EvalTestWithIncrementalContext
 import io.liquirium.eval.{Constant, Eval, IncrementalSeq}
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class NextRequestIdsEvalTest extends EvalTestWithIncrementalContext[Stream[CompoundOperationRequestId]] {
 

@@ -1,5 +1,7 @@
 package io.liquirium.eval
 
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+
 class BasicIncrementalValueTest_IsAncestorOf extends BasicIncrementalValueTest {
 
   test("it works properly in cases where a root is involved") {

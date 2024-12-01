@@ -1,12 +1,11 @@
 package io.liquirium.core.helpers.async
 
 import org.mockito.Mockito
-import org.mockito.Mockito.{times, inOrder => ordered}
+import org.mockito.Mockito.{mock, times, inOrder => ordered}
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
 import org.mockito.verification.VerificationMode
-import org.scalatest.Matchers
-import org.scalatest.mockito.MockitoSugar
+import org.scalatest.Assertions.fail
 
 import scala.concurrent.{Future, Promise}
 import scala.reflect.ClassTag
@@ -18,10 +17,9 @@ class FutureServiceMock[T <: AnyRef, R]
   extendMock: Option[T] = None
 )(
   implicit classTag: ClassTag[T]
-)
-  extends MockitoSugar with Matchers {
+) {
 
-  private val mockee: T = extendMock getOrElse mock[T]
+  private val mockee: T = extendMock getOrElse mock(classTag.runtimeClass).asInstanceOf[T]
 
   private var promises: Seq[Promise[R]] = Seq()
   private var responseQueue: Seq[R] = Seq()

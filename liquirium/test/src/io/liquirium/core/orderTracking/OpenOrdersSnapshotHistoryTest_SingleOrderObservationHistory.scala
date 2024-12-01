@@ -5,6 +5,7 @@ import io.liquirium.core.helpers.CoreHelpers.{dec, sec}
 import io.liquirium.core.helpers.{BasicTest, OrderHelpers}
 import io.liquirium.core.orderTracking.OrderTrackingEvent.{Disappearance, ObservationChange, OrderObservationEvent}
 import io.liquirium.core.orderTracking.helpers.OrderTrackingHelpers.{openOrdersHistory => history, openOrdersSnapshot => snapshot}
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 import java.time.Instant
 

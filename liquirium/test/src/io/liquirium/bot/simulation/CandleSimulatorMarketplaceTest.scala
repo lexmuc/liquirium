@@ -10,6 +10,8 @@ import io.liquirium.core.orderTracking.OpenOrdersSnapshot
 import io.liquirium.core.orderTracking.helpers.OrderTrackingHelpers.{openOrdersHistory, openOrdersSnapshot}
 import io.liquirium.eval.helpers.SimpleFakeContext
 import io.liquirium.eval.{Eval, IncrementalSeq, Input, InputEval, InputRequest, InputUpdate, UpdatableContext, Value}
+import org.mockito.Mockito.mock
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 import java.time.Instant
 
@@ -18,7 +20,7 @@ class CandleSimulatorMarketplaceTest extends TestWithMocks {
   protected var currentContext: UpdatableContext = SimpleFakeContext(Map())
   protected var currentMarketplace: CandleSimulatorMarketplace = _
   protected val defaultMarket: Market = MarketHelpers.market(123)
-  protected val candlesEval: Eval[CandleHistorySegment] = InputEval(mock[Input[CandleHistorySegment]])
+  protected val candlesEval: Eval[CandleHistorySegment] = InputEval(mock(classOf[Input[CandleHistorySegment]]))
   protected var candleSimulator: FakeCandleSimulator = FakeCandleSimulator()
   protected var orderIds: Stream[String] = Stream.from(1).map(_.toString).take(10)
   protected var simulationStartTime: Instant = sec(0)
@@ -77,7 +79,7 @@ class CandleSimulatorMarketplaceTest extends TestWithMocks {
   }
 
   def fakeEmptyOrderHistory(): Unit = {
-    fakeOrderHistory(openOrdersSnapshot(OrderSet.empty, sec(0)))
+    fakeOrderHistory(openOrdersSnapshot(Set[Order](), sec(0)))
   }
 
   def fakeCompletedOperationRequests(ctr: CompletedOperationRequest*): Unit = {

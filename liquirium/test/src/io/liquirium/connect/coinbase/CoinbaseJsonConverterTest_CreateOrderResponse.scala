@@ -2,6 +2,8 @@ package io.liquirium.connect.coinbase
 
 import io.liquirium.connect.coinbase.CoinbaseCreateOrderResponse.{Failure, Success}
 import io.liquirium.core.helpers.BasicTest
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.matchPattern
 import play.api.libs.json.{JsValue, Json}
 
 class CoinbaseJsonConverterTest_CreateOrderResponse extends BasicTest {

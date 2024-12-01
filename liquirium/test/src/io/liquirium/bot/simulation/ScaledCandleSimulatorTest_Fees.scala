@@ -10,10 +10,11 @@ import io.liquirium.core.helpers.MarketHelpers.m
 import io.liquirium.core.helpers.OrderHelpers.{exactBuy, exactSell}
 import io.liquirium.core.helpers.TradeHelpers.tradeId
 import io.liquirium.core._
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class ScaledCandleSimulatorTest_Fees extends BasicTest {
 
-  implicit class ResultConversion(t: (Seq[Trade], OrderSet, ScaledCandleSimulator)) {
+  implicit class ResultConversion(t: (Seq[Trade], Set[Order], ScaledCandleSimulator)) {
     def firstTrade: Trade = t._1.head
   }
 
@@ -23,12 +24,12 @@ class ScaledCandleSimulatorTest_Fees extends BasicTest {
       else fail(s"unexpected input for fee structure: $market amount $amount at price $price")
   }
 
-  def fillOrders(fees: FeeLevel)(orders: Set[Order], candle: Candle) : (Seq[Trade], OrderSet, ScaledCandleSimulator) =
+  def fillOrders(fees: FeeLevel)(orders: Set[Order], candle: Candle) : (Seq[Trade], Set[Order], ScaledCandleSimulator) =
     simulation.ScaledCandleSimulator(
       feeLevel = fees,
       volumeReduction = 1.0,
       tradeIds = Stream.from(1).map(x => tradeId(x.toString))
-    ).fillOrders(OrderSet(orders), candle)
+    ).fillOrders(orders, candle)
 
   test("buy fees are based only on the filled fraction of an order") {
     val feeLevel = FakeFeeLevel(m(123), amount = dec("5"), price = dec("1"), fees(123))

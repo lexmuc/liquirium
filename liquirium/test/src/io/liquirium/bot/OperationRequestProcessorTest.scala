@@ -15,6 +15,8 @@ import io.liquirium.core.helpers.async.{AsyncTestWithControlledTime, FutureServi
 import io.liquirium.core.{ExchangeId, OperationRequest, OperationRequestSuccessResponse}
 import io.liquirium.eval.IncrementalSeq
 import io.liquirium.helpers.FakeClock
+import org.mockito.Mockito.mock
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 import scala.concurrent.Future
 
@@ -25,12 +27,12 @@ class OperationRequestProcessorTest extends AsyncTestWithControlledTime with Tes
   private val clock = FakeClock(sec(0))
 
   private val exchangeA = exchangeId("A")
-  private val connectorA = mock[ExchangeConnector]
+  private val connectorA = mock(classOf[ExchangeConnector])
   private val submitRequestMockA =
     new FutureServiceMock[ExchangeConnector, OperationRequestSuccessResponse[_]](_.submitRequest(*), Some(connectorA))
 
   private val exchangeB = exchangeId("B")
-  private val connectorB = mock[ExchangeConnector]
+  private val connectorB = mock(classOf[ExchangeConnector])
   private val submitRequestMockB =
     new FutureServiceMock[ExchangeConnector, OperationRequestSuccessResponse[_]](_.submitRequest(*), Some(connectorB))
 
@@ -41,7 +43,7 @@ class OperationRequestProcessorTest extends AsyncTestWithControlledTime with Tes
   def msg(n: Int, tradeRequest: OperationRequest): OperationRequestMessage =
     OperationRequestMessage(OperationRequestHelpers.id(n), tradeRequest)
 
-  private val connectorsByExchangeId = mock[ExchangeId => Future[ExchangeConnector]]
+  private val connectorsByExchangeId = mock(classOf[ExchangeId => Future[ExchangeConnector]])
   connectorsByExchangeId.apply(exchangeA) returns Future{ connectorA }
   connectorsByExchangeId.apply(exchangeB) returns Future { connectorB }
 

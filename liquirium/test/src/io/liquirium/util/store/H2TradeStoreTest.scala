@@ -6,6 +6,7 @@ import io.liquirium.core.helpers.MarketHelpers.m
 import io.liquirium.core.helpers.TradeHelpers.{trade => t}
 import io.liquirium.core.helpers.async.AsyncTestWithControlledTime
 import io.liquirium.core.{ExchangeId, LedgerRef, Trade}
+import org.scalatest.matchers.should.Matchers.{a, convertToAnyShouldWrapper, thrownBy}
 
 import java.sql.DriverManager
 import java.time.Instant

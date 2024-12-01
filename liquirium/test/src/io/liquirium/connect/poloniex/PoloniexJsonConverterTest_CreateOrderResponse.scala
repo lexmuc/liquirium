@@ -1,6 +1,7 @@
 package io.liquirium.connect.poloniex
 
 import io.liquirium.core.helpers.BasicTest
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.libs.json.{JsObject, JsString, JsValue}
 
 class PoloniexJsonConverterTest_CreateOrderResponse extends BasicTest {

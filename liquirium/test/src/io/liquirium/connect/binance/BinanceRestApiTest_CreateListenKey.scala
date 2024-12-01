@@ -1,6 +1,8 @@
 package io.liquirium.connect.binance
 
 import io.liquirium.connect.binance.BinanceHttpRequest.PostWithApiKey
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.matchPattern
 import play.api.libs.json.Json
 
 import scala.concurrent.Future

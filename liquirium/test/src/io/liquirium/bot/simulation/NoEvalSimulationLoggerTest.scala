@@ -3,6 +3,7 @@ package io.liquirium.bot.simulation
 import io.liquirium.core.helpers.BasicTest
 import io.liquirium.eval.helpers.EvalHelpers.inputRequest
 import io.liquirium.eval.{BaseContext, Context, DerivedEval, Eval, EvalResult, InputUpdate, UpdatableContext, Value}
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 import scala.annotation.tailrec
 

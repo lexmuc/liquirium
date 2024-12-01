@@ -1,10 +1,10 @@
 package io.liquirium.core.orderTracking
 
-import io.liquirium.core.{Order, OrderSet}
+import io.liquirium.core.Order
 
 import java.time.Instant
 
-case class OpenOrdersSnapshot(orders: OrderSet, timestamp: Instant) {
+case class OpenOrdersSnapshot(orders: Set[Order], timestamp: Instant) {
 
   private val ordersById: Map[String, Order] = orders.map(o => (o.id, o)).toMap
 

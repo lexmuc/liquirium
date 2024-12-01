@@ -7,6 +7,8 @@ import io.liquirium.core.helpers.CandleHelpers.c10
 import io.liquirium.core.helpers.CoreHelpers.{sec, secs}
 import io.liquirium.core.helpers.MarketHelpers.market
 import io.liquirium.core.{Candle, CandleHistorySegment}
+import org.scalatest.matchers.must.Matchers.be
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 
 class TimedInputUpdateStreamTest_CandleHistory extends BasicTest {

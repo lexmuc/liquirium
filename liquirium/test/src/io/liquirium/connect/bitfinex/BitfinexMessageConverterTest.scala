@@ -4,11 +4,13 @@ import io.liquirium.connect.bitfinex.BitfinexInMessage._
 import io.liquirium.connect.bitfinex.helpers.BitfinexTestHelpers.{order, trade}
 import io.liquirium.core.helpers.TestWithMocks
 import io.liquirium.helpers.JsonTestHelper.json
-import play.api.libs.json.Json
+import org.mockito.Mockito.mock
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import play.api.libs.json.{JsArray, JsNumber, Json}
 
 class BitfinexMessageConverterTest extends TestWithMocks {
 
-  val jsonConverter: BitfinexJsonConverter = mock[BitfinexJsonConverter]
+  val jsonConverter: BitfinexJsonConverter = mock(classOf[BitfinexJsonConverter])
 
   def convert(s: String): BitfinexInMessage =
     new BitfinexMessageConverter(jsonConverter).convertIncomingMessage(Json.parse(s))
@@ -56,6 +58,13 @@ class BitfinexMessageConverterTest extends TestWithMocks {
   test("it recognizes an order state message and parses it properly") {
     jsonConverter.convertOrders(json(123)) returns Seq(order(1), order(2))
     convert(s"""[0, "os", ${ json(123) }]""") shouldEqual OrderStateMessage(Seq(order(1), order(2)))
+  }
+
+  test("temporary fiddle. REMOVE!") {
+    val arr = Json.parse(s"""[0, "os", ${ json(123) }]""").asInstanceOf[JsArray]
+    arr.value.toSeq.take(1) match {
+      case Seq(x: JsNumber) => println("Is number")
+    }
   }
 
   test("it recognizes a new-trade order") {

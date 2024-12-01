@@ -3,6 +3,7 @@ package io.liquirium.bot
 import io.liquirium.bot.BotRunner.ShutdownReason
 import io.liquirium.bot.helpers.BotInputHelpers.botInput
 import io.liquirium.core.helpers.CoreHelpers.ex
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class BotRunnerTest_FailureAndShutdown extends BotRunnerTest {
 

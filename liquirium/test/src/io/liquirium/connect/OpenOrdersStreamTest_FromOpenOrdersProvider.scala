@@ -11,6 +11,7 @@ import io.liquirium.core.helpers.async.FutureServiceMock
 import io.liquirium.core.{Market, Order}
 import io.liquirium.helpers.TypedActorTest
 import io.liquirium.util.DummyLogger
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 import scala.concurrent.Future
 import scala.concurrent.duration._

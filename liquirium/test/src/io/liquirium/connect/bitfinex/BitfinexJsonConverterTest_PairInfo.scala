@@ -2,6 +2,7 @@ package io.liquirium.connect.bitfinex
 
 import io.liquirium.core.helpers.BasicTest
 import io.liquirium.core.helpers.CoreHelpers.dec
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.libs.json.{JsValue, Json}
 
 class BitfinexJsonConverterTest_PairInfo extends BasicTest {

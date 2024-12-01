@@ -3,6 +3,7 @@ package io.liquirium.connect.bitfinex
 import io.liquirium.core.helpers.BasicTest
 import io.liquirium.connect.bitfinex.helpers.BitfinexTestHelpers.candle
 import io.liquirium.core.helpers.CoreHelpers.{milli, sec}
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class BitfinexCandleTest extends BasicTest {
 

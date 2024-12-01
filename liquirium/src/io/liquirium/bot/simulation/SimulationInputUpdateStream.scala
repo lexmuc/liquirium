@@ -66,6 +66,7 @@ object SimulationInputUpdateStream {
                 timedInputStreamsByInput.mapValues { s =>
                     if (s.head._1 == nt) s.tail else s
                   }
+                  .toMap
                   .filter(_._2.nonEmpty)
             )
         }

@@ -6,18 +6,20 @@ import io.liquirium.core.helpers.TestWithMocks
 import io.liquirium.core.helpers.TradeHelpers.{trade, tradeBatch, tradeHistorySegment}
 import io.liquirium.core.helpers.async.{AsyncTestWithControlledTime, FutureServiceMock}
 import io.liquirium.util.store.{TradeSegmentStartStore, TradeStore}
+import org.mockito.Mockito.mock
+import org.scalatest.matchers.should.Matchers.{a, convertToAnyShouldWrapper}
 
 import java.time.Instant
 import scala.util.Success
 
 class TradeHistoryCacheTest extends AsyncTestWithControlledTime with TestWithMocks {
 
-  protected val tradeStore: TradeStore = mock[TradeStore]
+  protected val tradeStore: TradeStore = mock(classOf[TradeStore])
   protected val tradeStoreAdd = new FutureServiceMock[TradeStore, Unit](_.add(*), Some(tradeStore))
   protected val tradeStoreGet = new FutureServiceMock[TradeStore, TradeBatch](_.get(*, *), Some(tradeStore))
   protected val tradeStoreDelete = new FutureServiceMock[TradeStore, Unit](_.deleteFrom(*), Some(tradeStore))
 
-  protected val startStore: TradeSegmentStartStore = mock[TradeSegmentStartStore]
+  protected val startStore: TradeSegmentStartStore = mock(classOf[TradeSegmentStartStore])
   protected val startStoreSaveStart: FutureServiceMock[TradeSegmentStartStore, Unit] = {
     new FutureServiceMock[TradeSegmentStartStore, Unit](_.saveStart(*), Some(startStore))
   }

@@ -4,6 +4,7 @@ import io.liquirium.connect.bitfinex
 import io.liquirium.connect.bitfinex.helpers.BitfinexTestHelpers
 import io.liquirium.core.helpers.BasicTest
 import io.liquirium.core.helpers.CoreHelpers.milli
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class TradeHistoryTest extends BasicTest {
 

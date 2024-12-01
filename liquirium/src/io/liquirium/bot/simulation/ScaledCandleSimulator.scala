@@ -12,6 +12,8 @@ case class ScaledCandleSimulator(
   tradeIds: Stream[TradeId],
 ) extends CandleSimulator {
 
+  import io.liquirium.core.OrderSetOps.OrderSetOps
+
   private case class FillIntent(order: Order, maxVolume: Double) {
     def makeTrade(id: TradeId, time: Instant): Trade = {
       val actualVolume = Math.min(order.volume.toDouble, maxVolume)
@@ -28,7 +30,7 @@ case class ScaledCandleSimulator(
     }
   }
 
-  override def fillOrders(orders: OrderSet, candle: Candle) : (Seq[Trade], OrderSet, ScaledCandleSimulator) = {
+  override def fillOrders(orders: Set[Order], candle: Candle) : (Seq[Trade], Set[Order], ScaledCandleSimulator) = {
 
     val sortedBuyOrders = orders.filter(_.isBuy).toSeq.sortBy(_.price * -1)
     val sortedSellOrders = orders.filter(_.isSell).toSeq.sortBy(_.price)

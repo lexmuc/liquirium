@@ -2,6 +2,7 @@ package io.liquirium.core
 
 import io.liquirium.core.helpers.BasicTest
 import io.liquirium.core.helpers.CoreHelpers.asset
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class AssetMarketTest extends BasicTest {
 

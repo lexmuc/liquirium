@@ -1,9 +1,9 @@
 package io.liquirium.connect.deribit.helpers
 
 import io.liquirium.connect.deribit.DeribitInstrument
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
-object DeribitInstrumentHelpers extends Matchers {
+object DeribitInstrumentHelpers {
 
   def futureInstrument(n: Int): DeribitInstrument = {
     val i = DeribitInstrument(s"BTC-FUTURE$n")

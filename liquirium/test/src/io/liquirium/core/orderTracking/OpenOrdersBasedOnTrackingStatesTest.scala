@@ -2,9 +2,10 @@ package io.liquirium.core.orderTracking
 
 import io.liquirium.core.helpers.OrderHelpers
 import io.liquirium.core.orderTracking.helpers.OrderTrackingHelpers.{syncedStateWithReportableOrder, syncedStateWithoutReportableOrder}
-import io.liquirium.core.{Order, OrderSet}
+import io.liquirium.core.Order
 import io.liquirium.eval.IncrementalMap
 import io.liquirium.eval.helpers.EvalTest
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class OpenOrdersBasedOnTrackingStatesTest extends EvalTest {
 
@@ -21,7 +22,7 @@ class OpenOrdersBasedOnTrackingStatesTest extends EvalTest {
   private val evalUnderTest = OpenOrdersBasedOnTrackingStates(inputEval)
 
   private def assertOrderSet(oo: Order*): Unit = {
-    evaluate(evalUnderTest).get shouldEqual OrderSet(oo: _*)
+    evaluate(evalUnderTest).get shouldEqual oo.toSet
   }
 
   private def assertEmptyOrderSet(): Unit = assertOrderSet()

@@ -5,11 +5,13 @@ import io.liquirium.core.helpers.CandleHelpers.{c5, candleHistorySegment}
 import io.liquirium.core.helpers.CoreHelpers.{dec, sec, secs}
 import io.liquirium.core.helpers.{CandleHelpers, MarketHelpers, TestWithMocks}
 import io.liquirium.eval.{BaseContext, Eval, Value}
+import org.mockito.Mockito.mock
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class SingleMarketStrategyBotUtilsTest extends TestWithMocks {
 
   test("a candle base last price eval is derived from the candles eval and falls back to the initial price") {
-    val bot = mock[SingleMarketStrategyBot]
+    val bot = mock(classOf[SingleMarketStrategyBot])
     bot.candleHistoryEval returns Eval.unit(
       candleHistorySegment(
         c5(start = sec(0), 1).copy(close = dec("1.23")),
@@ -25,7 +27,7 @@ class SingleMarketStrategyBotUtilsTest extends TestWithMocks {
         CandleHelpers.emptyCandle(start = sec(5), length = secs(5)),
       )
     )
-    val runConfig = mock[SingleMarketStrategyBotRunConfiguration]
+    val runConfig = mock(classOf[SingleMarketStrategyBotRunConfiguration])
     runConfig.initialPrice returns dec("1.23")
     bot.runConfiguration returns runConfig
     val (result2, _) = BaseContext.empty.evaluate(SingleMarketStrategyBotUtils.candleBasedLastPriceEval(bot))
@@ -33,7 +35,7 @@ class SingleMarketStrategyBotUtilsTest extends TestWithMocks {
   }
 
   test("the total value eval is calculated by adding the base value at a given price to the quote balance") {
-    val bot = mock[SingleMarketStrategyBot]
+    val bot = mock(classOf[SingleMarketStrategyBot])
     bot.baseBalanceEval returns Eval.unit(dec("2.0"))
     bot.quoteBalanceEval returns Eval.unit(dec("1.5"))
     val lastPriceEval = Eval.unit(dec("10.0"))
@@ -42,9 +44,9 @@ class SingleMarketStrategyBotUtilsTest extends TestWithMocks {
   }
 
   test("a quote balance metric can be derived from the bot") {
-    val bot = mock[SingleMarketStrategyBot]
+    val bot = mock(classOf[SingleMarketStrategyBot])
     val market = MarketHelpers.market(1)
-    val runConfig = mock[SingleMarketStrategyBotRunConfiguration]
+    val runConfig = mock(classOf[SingleMarketStrategyBotRunConfiguration])
     runConfig.market returns market
     val balances = Map(market.quoteLedger -> dec(123))
     runConfig.initialBalances returns balances
@@ -57,9 +59,9 @@ class SingleMarketStrategyBotUtilsTest extends TestWithMocks {
   }
 
   test("a base balance metric can be derived from the bot") {
-    val bot = mock[SingleMarketStrategyBot]
+    val bot = mock(classOf[SingleMarketStrategyBot])
     val market = MarketHelpers.market(1)
-    val runConfig = mock[SingleMarketStrategyBotRunConfiguration]
+    val runConfig = mock(classOf[SingleMarketStrategyBotRunConfiguration])
     runConfig.market returns market
     val balances = Map(market.quoteLedger -> dec(123))
     runConfig.initialBalances returns balances

@@ -2,6 +2,7 @@ package io.liquirium.eval
 
 import io.liquirium.eval.helpers.EvalHelpers.{input, inputRequest}
 import io.liquirium.eval.helpers.EvalTest
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class EvalTest_Map extends EvalTest {
 

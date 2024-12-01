@@ -7,6 +7,8 @@ import io.liquirium.core.helpers.BasicTest
 import io.liquirium.core.helpers.CoreHelpers.sec
 import io.liquirium.core.helpers.MarketHelpers.market
 import io.liquirium.core.helpers.TradeHelpers.trade
+import org.scalatest.matchers.must.Matchers.be
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class TimedInputUpdateStreamTest_TradeHistory extends BasicTest {
 

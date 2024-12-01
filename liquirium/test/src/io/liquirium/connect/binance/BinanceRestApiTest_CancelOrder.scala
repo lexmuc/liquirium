@@ -3,6 +3,8 @@ package io.liquirium.connect.binance
 import io.liquirium.connect.binance.BinanceHttpRequest.SignedDelete
 import io.liquirium.connect.binance.helpers.BinanceTestHelpers
 import io.liquirium.helpers.JsonTestHelper.json
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.{contain, matchPattern}
 
 import scala.concurrent.Future
 

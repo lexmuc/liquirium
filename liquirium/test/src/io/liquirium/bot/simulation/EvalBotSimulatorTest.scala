@@ -5,6 +5,8 @@ import io.liquirium.bot.{BotEvaluator, BotOutput}
 import io.liquirium.core.helpers.TestWithMocks
 import io.liquirium.eval._
 import io.liquirium.eval.helpers.EvalHelpers.inputRequest
+import org.mockito.Mockito.mock
+import org.scalatest.matchers.should.Matchers.{convertToAnyShouldWrapper, theSameInstanceAs}
 
 class EvalBotSimulatorTest extends TestWithMocks {
 
@@ -17,12 +19,12 @@ class EvalBotSimulatorTest extends TestWithMocks {
 
   case object EvalCounterInput extends Input[Int]
   val firstContext: BaseContext = BaseContext(Map(EvalCounterInput -> 0))
-  val firstLogger: TestLogger = mock[TestLogger]
-  val firstEnvironment: SimulationEnvironment = mock[SimulationEnvironment]
+  val firstLogger: TestLogger = mock(classOf[TestLogger])
+  val firstEnvironment: SimulationEnvironment = mock(classOf[SimulationEnvironment])
 
   var context: UpdatableContext = firstContext
 
-  val evaluator: BotEvaluator = mock[BotEvaluator]
+  val evaluator: BotEvaluator = mock(classOf[BotEvaluator])
   var lastEnvironment: SimulationEnvironment = firstEnvironment
   var lastLogger: TestLogger = firstLogger
 
@@ -52,7 +54,7 @@ class EvalBotSimulatorTest extends TestWithMocks {
   def fakeLogging(): Unit = {
     val inputContext = context
     advanceContext()
-    val newLogger = mock[TestLogger]
+    val newLogger = mock(classOf[TestLogger])
     lastLogger.log(inputContext) returns (Value(newLogger), context)
     lastLogger = newLogger
   }
@@ -66,7 +68,7 @@ class EvalBotSimulatorTest extends TestWithMocks {
   def fakeInputRequestResolution(ir: InputRequest): Unit = {
     val inputContext = context
     advanceContext()
-    val newEnvironment = mock[SimulationEnvironment]
+    val newEnvironment = mock(classOf[SimulationEnvironment])
     lastEnvironment.getInputs(ir, inputContext) returns (context, newEnvironment)
     lastEnvironment = newEnvironment
   }
@@ -74,7 +76,7 @@ class EvalBotSimulatorTest extends TestWithMocks {
   def fakeOutputProcessing(outputs: BotOutput*): Unit = {
     val inputContext = context
     advanceContext()
-    val newEnvironment = mock[SimulationEnvironment]
+    val newEnvironment = mock(classOf[SimulationEnvironment])
     lastEnvironment.processOutputs(outputs, inputContext) returns (context, newEnvironment)
     lastEnvironment = newEnvironment
   }
@@ -82,7 +84,7 @@ class EvalBotSimulatorTest extends TestWithMocks {
   def fakeEnvironmentAdvance(isComplete: Boolean = false): Unit = {
     val inputContext = context
     advanceContext()
-    val newEnvironment = mock[SimulationEnvironment]
+    val newEnvironment = mock(classOf[SimulationEnvironment])
     newEnvironment.isSimulationComplete returns isComplete
     lastEnvironment.advance(inputContext) returns (context, newEnvironment)
     lastEnvironment = newEnvironment

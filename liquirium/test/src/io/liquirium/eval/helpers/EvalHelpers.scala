@@ -1,12 +1,11 @@
 package io.liquirium.eval.helpers
 
 import io.liquirium.eval._
-import org.scalatest.Matchers
 
 import java.util.concurrent.atomic.AtomicInteger
 import scala.reflect.ClassTag
 
-object EvalHelpers extends Matchers {
+object EvalHelpers {
 
   def constant[M](value: M)(implicit tag: ClassTag[M]): Constant[M] = Constant(value)(tag)
 

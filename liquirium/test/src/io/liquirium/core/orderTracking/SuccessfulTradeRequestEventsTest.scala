@@ -11,6 +11,7 @@ import io.liquirium.core.{Market, OperationRequest}
 import io.liquirium.eval.helpers.EvalTest
 import io.liquirium.eval.{IncrementalSeq, InputEval}
 import io.liquirium.util.AbsoluteQuantity
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class SuccessfulTradeRequestEventsTest extends EvalTest {
 

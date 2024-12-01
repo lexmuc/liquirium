@@ -6,13 +6,16 @@ import io.liquirium.connect.coinbase.helpers.CoinbaseTestHelpers.coinbaseCandle
 import io.liquirium.core.helpers.CoreHelpers.milli
 import io.liquirium.core.helpers.TestWithMocks
 import io.liquirium.helpers.JsonTestHelper.json
+import org.mockito.Mockito.mock
+import org.scalatest.matchers.must.Matchers.contain
+import org.scalatest.matchers.should.Matchers.{a, an, convertToAnyShouldWrapper, thrownBy}
 import play.api.libs.json.{JsObject, JsValue}
 
 import java.time.Instant
 
 class CoinbaseApiRequestTest_GetCandles extends TestWithMocks {
 
-  val jsonConverter: CoinbaseJsonConverter = mock[CoinbaseJsonConverter]
+  val jsonConverter: CoinbaseJsonConverter = mock(classOf[CoinbaseJsonConverter])
 
   private def getCandles(
     productId: String = "ETHW_USDT",

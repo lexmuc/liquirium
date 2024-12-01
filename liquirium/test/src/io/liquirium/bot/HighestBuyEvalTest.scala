@@ -8,6 +8,7 @@ import io.liquirium.core.orderTracking.helpers.OrderTrackingHelpers
 import io.liquirium.core.orderTracking.helpers.OrderTrackingHelpers.{openOrdersHistory, openOrdersSnapshot}
 import io.liquirium.eval.Constant
 import io.liquirium.eval.helpers.EvalTest
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class HighestBuyEvalTest extends EvalTest {
   private val market = MarketHelpers.m(123)

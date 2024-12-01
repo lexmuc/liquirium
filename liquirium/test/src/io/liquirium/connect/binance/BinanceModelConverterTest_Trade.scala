@@ -3,6 +3,7 @@ package io.liquirium.connect.binance
 import io.liquirium.core.{ExchangeId, LedgerRef, StringTradeId}
 import io.liquirium.connect.binance.helpers.BinanceTestHelpers.{trade => bt}
 import io.liquirium.core.helpers.CoreHelpers.{dec, sec}
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 
 class BinanceModelConverterTest_Trade extends BinanceModelConverterTest {

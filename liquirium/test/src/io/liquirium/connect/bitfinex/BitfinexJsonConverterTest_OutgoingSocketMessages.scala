@@ -3,6 +3,8 @@ package io.liquirium.connect.bitfinex
 import io.liquirium.connect.bitfinex.BitfinexOrder.OrderType
 import io.liquirium.connect.bitfinex.BitfinexOutMessage._
 import io.liquirium.core.helpers.TestWithMocks
+import org.mockito.Mockito.mock
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.libs.json.{JsString, JsValue, Json}
 
 class BitfinexJsonConverterTest_OutgoingSocketMessages extends TestWithMocks {
@@ -57,7 +59,7 @@ class BitfinexJsonConverterTest_OutgoingSocketMessages extends TestWithMocks {
   }
 
   test("an auth message contains the given nonce, apiKey and is signed with the authenticator") {
-    val authenticator = mock[BitfinexAuthenticator]
+    val authenticator = mock(classOf[BitfinexAuthenticator])
     authenticator.apiKey returns "key123"
     authenticator.sign("AUTH4711") returns "<SIGNED>"
     convert(AuthMessage(4711, authenticator)) shouldEqual Json.parse(

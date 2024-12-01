@@ -4,6 +4,7 @@ import io.liquirium.core.helpers.BasicTest
 import io.liquirium.core.helpers.CandleHelpers.{c5, candleHistorySegment}
 import io.liquirium.core.helpers.CoreHelpers.{sec, secs}
 import io.liquirium.core.helpers.TradeHelpers.tradeHistorySegment
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class CandleHistorySegmentTest_Truncate extends BasicTest {
 

@@ -1,9 +1,9 @@
 package io.liquirium.bot.simulation
 
-import io.liquirium.core.{Candle, OrderSet, Trade}
+import io.liquirium.core.{Candle, Order, Trade}
 
 trait CandleSimulator {
 
-  def fillOrders(orders: OrderSet, candle: Candle): (Seq[Trade], OrderSet, CandleSimulator)
+  def fillOrders(orders: Set[Order], candle: Candle): (Seq[Trade], Set[Order], CandleSimulator)
 
 }

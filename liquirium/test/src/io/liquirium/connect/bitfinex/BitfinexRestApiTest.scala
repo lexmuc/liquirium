@@ -5,6 +5,7 @@ import io.liquirium.core.helpers.async.FutureServiceMock
 import io.liquirium.helpers.CallingThreadExecutionContext
 import io.liquirium.util.DummyLogger
 import org.mockito.Mockito
+import org.mockito.Mockito.mock
 
 import scala.concurrent.ExecutionContext
 
@@ -14,7 +15,7 @@ class BitfinexRestApiTest extends TestWithMocks {
 
   val baseService = new FutureServiceMock[BitfinexHttpService, Any](_.sendRequest(*))
 
-  val jsonConverter: BitfinexJsonConverter = mock[BitfinexJsonConverter]
+  val jsonConverter: BitfinexJsonConverter = mock(classOf[BitfinexJsonConverter])
 
   def api = new BitfinexRestApi(baseService.instance, jsonConverter, DummyLogger)
 

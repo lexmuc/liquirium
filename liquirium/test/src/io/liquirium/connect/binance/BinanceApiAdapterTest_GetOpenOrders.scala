@@ -6,6 +6,8 @@ import io.liquirium.core.helpers.MarketHelpers.pair
 import io.liquirium.core.helpers.OrderHelpers.order
 import io.liquirium.connect.binance.BinanceRestApi.OpenOrdersRequest
 import io.liquirium.core.{Order, TradingPair}
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.matchPattern
 
 import scala.util.Failure
 

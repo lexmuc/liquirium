@@ -10,6 +10,8 @@ import io.liquirium.eval.UpdatableContext
 import io.liquirium.eval.helpers.ContextHelpers
 import io.liquirium.eval.helpers.ContextHelpers.{inputUpdate, simpleFakeContext}
 import io.liquirium.eval.helpers.EvalHelpers.inputRequest
+import org.mockito.Mockito.mock
+import org.scalatest.matchers.should.Matchers.{convertToAnyShouldWrapper, equal}
 
 
 class SimulationMarketplacesTest extends TestWithMocks {
@@ -38,7 +40,7 @@ class SimulationMarketplacesTest extends TestWithMocks {
   }
 
   test("it can be created with a marketplace factory that can create marketplaces on demand") {
-    val marketplaceFactory = mock[Market => SimulationMarketplace]
+    val marketplaceFactory = mock(classOf[Market => SimulationMarketplace])
     val r1 = requestMessage(1, m(1))
     val context0 = simpleFakeContext()
     val context1 = context0.update(inputUpdate(1))
@@ -51,7 +53,7 @@ class SimulationMarketplacesTest extends TestWithMocks {
   }
 
   test("created marketplaces are stored and reused for subsequent requests") {
-    val marketplaceFactory = mock[Market => SimulationMarketplace]
+    val marketplaceFactory = mock(classOf[Market => SimulationMarketplace])
     val r1 = requestMessage(1, m(1))
     val r2 = requestMessage(2, m(2))
     val r3 = requestMessage(3, m(1))
@@ -74,7 +76,7 @@ class SimulationMarketplacesTest extends TestWithMocks {
 
   test("after an operation request message it returns the context updated with the respective input update") {
     val r1 = requestMessage(1, m(1))
-    val inputContext = mock[UpdatableContext]
+    val inputContext = mock(classOf[UpdatableContext])
     inputContext.update(inputUpdate(123)) returns fakeContext(123)
     val mp1 = marketplace(m(1)).addTradeRequestCompletion(r1, inputContext, inputUpdate(123))
     val (newContext, _) = marketplaces(mp1).processOperationRequest(r1, inputContext).right.get

@@ -3,6 +3,7 @@ package io.liquirium.connect.binance
 import io.liquirium.connect.binance.helpers.BinanceTestHelpers.symbolInfo
 import io.liquirium.connect.binance.{exchangeId => binanceExchangeId}
 import io.liquirium.core.helpers.MarketHelpers.{market, orderConstraints}
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class BinanceApiAdapterTest_GetOrderConstraintsByMarket extends BinanceApiAdapterTest {
 

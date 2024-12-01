@@ -4,6 +4,7 @@ import io.liquirium.core.helpers.BasicTest
 import io.liquirium.eval.helpers.ContextHelpers.inputUpdate
 import io.liquirium.eval.helpers.EvalHelpers.{derivedEvalWithSideEffect, input, inputEval, inputRequest}
 import io.liquirium.eval._
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class ContextWithInputResolutionTest extends BasicTest {
 

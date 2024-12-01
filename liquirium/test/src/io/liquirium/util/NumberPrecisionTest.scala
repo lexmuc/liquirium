@@ -2,6 +2,7 @@ package io.liquirium.util
 
 import io.liquirium.core.helpers.BasicTest
 import io.liquirium.core.helpers.CoreHelpers.dec
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class NumberPrecisionTest extends BasicTest {
 

@@ -5,13 +5,15 @@ import io.liquirium.core.helpers.TestWithMocks
 import io.liquirium.core.helpers.TradeHelpers.{trade, tradeHistorySegment}
 import io.liquirium.core.helpers.async.{AsyncTestWithControlledTime, FutureServiceMock}
 import io.liquirium.core.{Trade, TradeHistorySegment}
+import org.mockito.Mockito.mock
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 import java.time.{Duration, Instant}
 import scala.concurrent.Future
 
 class StoreBasedTradeHistoryLoaderWithOnDemandUpdateTest extends AsyncTestWithControlledTime with TestWithMocks {
 
-  private val baseStore = mock[TradeHistoryStore]
+  private val baseStore = mock(classOf[TradeHistoryStore])
   private val storeUpdate = new FutureServiceMock[TradeHistoryStore, Unit](_.updateHistory(*), Some(baseStore))
   private var overlapDuration = Duration.ofSeconds(0)
   val liveSegmentLoader =

@@ -3,6 +3,7 @@ package io.liquirium.eval
 import io.liquirium.eval.IncrementalFoldHelpers.{IncrementalEval, IncrementalSeqEval}
 import io.liquirium.eval.helpers.EvalHelpers.inputEval
 import io.liquirium.eval.helpers.{EvalTest, IncrementalIntListWithRootValue}
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class IncrementalFoldHelpersTest_Mixed extends EvalTest {
 

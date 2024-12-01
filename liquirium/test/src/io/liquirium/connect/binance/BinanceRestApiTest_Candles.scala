@@ -5,6 +5,9 @@ import io.liquirium.connect.binance.BinanceRestApi.CandlesRequest
 import io.liquirium.connect.binance.helpers.BinanceTestHelpers.candle
 import io.liquirium.core.helpers.CoreHelpers.{ex, milli, secs}
 import io.liquirium.helpers.JsonTestHelper.json
+import org.scalatest.matchers.must.Matchers.contain
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.matchPattern
 import play.api.libs.json.JsValue
 
 import java.time.Instant

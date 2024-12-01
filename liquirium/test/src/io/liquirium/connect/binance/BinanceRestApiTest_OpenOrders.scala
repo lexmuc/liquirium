@@ -5,6 +5,8 @@ import io.liquirium.connect.binance.BinanceRestApi.OpenOrdersRequest
 import io.liquirium.connect.binance.helpers.BinanceTestHelpers.order
 import io.liquirium.core.helpers.CoreHelpers.ex
 import io.liquirium.helpers.JsonTestHelper.json
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.matchPattern
 import play.api.libs.json.JsValue
 
 import scala.util.{Failure, Success}

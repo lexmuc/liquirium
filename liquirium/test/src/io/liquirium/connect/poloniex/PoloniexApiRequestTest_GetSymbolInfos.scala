@@ -5,11 +5,14 @@ import io.liquirium.connect.poloniex.PoloniexHttpRequest.PublicGet
 import io.liquirium.connect.poloniex.helpers.PoloniexTestHelpers.symbolInfo
 import io.liquirium.core.helpers.TestWithMocks
 import io.liquirium.helpers.JsonTestHelper.json
+import org.mockito.Mockito.mock
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.matchPattern
 import play.api.libs.json.{JsValue, Json}
 
 class PoloniexApiRequestTest_GetSymbolInfos extends TestWithMocks {
 
-  val jsonConverter: PoloniexJsonConverter = mock[PoloniexJsonConverter]
+  val jsonConverter: PoloniexJsonConverter = mock(classOf[PoloniexJsonConverter])
 
   private def getSymbolInfos = GetSymbolInfos()
 

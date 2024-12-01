@@ -4,6 +4,7 @@ import io.liquirium.core.orderTracking.BasicOrderTrackingState.ErrorState.Incons
 import io.liquirium.core.orderTracking.OrderTrackingEvent
 import io.liquirium.core.orderTracking.helpers.SingleOrderTrackingTest
 import io.liquirium.core.orderTracking.rules.ConsistencyRule
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 abstract class ConsistencyRuleTest extends SingleOrderTrackingTest {
 

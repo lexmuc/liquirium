@@ -3,6 +3,7 @@ package io.liquirium.bot.simulation
 import io.liquirium.eval.Input
 import io.liquirium.eval.helpers.ContextHelpers.{FakeContextWithInputs, fakeContextWithInputs, inputUpdate}
 import io.liquirium.eval.helpers.EvalHelpers.{input, inputRequest}
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class DynamicInputSimulationEnvironmentTest_GetInputs extends DynamicInputSimulationEnvironmentTest {
 

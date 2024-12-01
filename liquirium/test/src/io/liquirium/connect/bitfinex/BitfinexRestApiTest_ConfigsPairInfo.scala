@@ -4,11 +4,14 @@ import io.liquirium.connect.bitfinex.BitfinexRestApi.GetPairInfos
 import io.liquirium.connect.bitfinex.helpers.BitfinexTestHelpers.pairInfo
 import io.liquirium.core.helpers.TestWithMocks
 import io.liquirium.helpers.JsonTestHelper.json
+import org.mockito.Mockito.mock
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.matchPattern
 import play.api.libs.json.{JsValue, Json}
 
 class BitfinexRestApiTest_ConfigsPairInfo extends TestWithMocks {
 
-  val jsonConverter: BitfinexJsonConverter = mock[BitfinexJsonConverter]
+  val jsonConverter: BitfinexJsonConverter = mock(classOf[BitfinexJsonConverter])
 
   private def getInfos = GetPairInfos()
 

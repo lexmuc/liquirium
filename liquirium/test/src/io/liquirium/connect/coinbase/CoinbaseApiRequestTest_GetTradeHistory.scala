@@ -6,6 +6,9 @@ import io.liquirium.connect.coinbase.helpers.CoinbaseTestHelpers.{coinbaseTrade 
 import io.liquirium.core.helpers.CoreHelpers.sec
 import io.liquirium.core.helpers.TestWithMocks
 import io.liquirium.helpers.JsonTestHelper.json
+import org.mockito.Mockito.mock
+import org.scalatest.matchers.must.Matchers.contain
+import org.scalatest.matchers.should.Matchers.{a, an, convertToAnyShouldWrapper, thrownBy}
 import play.api.libs.json.{JsObject, JsString, JsValue}
 
 import java.time.Instant
@@ -26,7 +29,7 @@ class CoinbaseApiRequestTest_GetTradeHistory extends TestWithMocks {
     limit = limit
   )
 
-  val jsonConverter: CoinbaseJsonConverter = mock[CoinbaseJsonConverter]
+  val jsonConverter: CoinbaseJsonConverter = mock(classOf[CoinbaseJsonConverter])
 
   private def fakeSeqConversion(json: JsValue, trades: Seq[CoinbaseTrade]) =
     jsonConverter.convertTrades(json) returns trades

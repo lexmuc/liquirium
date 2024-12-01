@@ -1,6 +1,7 @@
 package io.liquirium.connect.binance
 
 import io.liquirium.core.{ExchangeId, Market, TradingPair}
+import org.scalatest.matchers.should.Matchers.{an, convertToAnyShouldWrapper, thrownBy}
 
 class BinanceModelConverterTest_Market extends BinanceModelConverterTest {
 

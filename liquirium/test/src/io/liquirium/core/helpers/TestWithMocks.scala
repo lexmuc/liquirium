@@ -4,11 +4,10 @@ import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.{Answer, OngoingStubbing}
 import org.mockito.verification.VerificationMode
 import org.mockito.{ArgumentCaptor, ArgumentMatchers, Mockito}
-import org.scalatest.mockito.MockitoSugar
 
 import scala.reflect.ClassTag
 
-trait TestWithMocks extends BasicTest with MockitoSugar {
+trait TestWithMocks extends BasicTest {
 
   def *[T]: T = any()
 

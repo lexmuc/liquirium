@@ -3,6 +3,7 @@ package io.liquirium.core.orderTracking.helpers
 import io.liquirium.core.Order
 import io.liquirium.core.orderTracking.BasicOrderTrackingState.{ErrorState, SyncReason}
 import io.liquirium.core.orderTracking.OrderTrackingEvent
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 import java.time.Instant
 

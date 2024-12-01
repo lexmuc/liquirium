@@ -3,6 +3,7 @@ package io.liquirium.connect.poloniex
 import io.liquirium.connect.poloniex.helpers.PoloniexTestHelpers.{poloniexOrder => po, typicalCurrencyPair => typicalPair}
 import io.liquirium.core.helpers.CoreHelpers.dec
 import io.liquirium.core.{Order, Side}
+import org.scalatest.matchers.should.Matchers.{convertToAnyShouldWrapper, equal}
 
 class PoloniexModelConverterTest_Orders extends PoloniexModelConverterTest {
 

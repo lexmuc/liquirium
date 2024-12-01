@@ -6,18 +6,18 @@ import io.liquirium.core.orderTracking.BasicOrderTrackingState.ErrorState.Reappe
 import io.liquirium.core.orderTracking.BasicOrderTrackingState.SyncReason
 import io.liquirium.core.orderTracking.OrderTrackingEvent.{Disappearance, NewTrade, ObservationChange, OrderObservationEvent}
 import io.liquirium.core.orderTracking._
-import io.liquirium.core.{Order, OrderSet, orderTracking}
+import io.liquirium.core.{Order, orderTracking}
 import io.liquirium.util.AbsoluteQuantity
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 import java.time.Instant
 
-object OrderTrackingHelpers extends Matchers {
+object OrderTrackingHelpers {
 
   def openOrdersSnapshot(time: Instant, orders: Order*): OpenOrdersSnapshot =
-    orderTracking.OpenOrdersSnapshot(OrderSet(orders.toSet), time)
+    orderTracking.OpenOrdersSnapshot(orders.toSet, time)
 
-  def openOrdersSnapshot(orders: OrderSet, time: Instant): OpenOrdersSnapshot =
+  def openOrdersSnapshot(orders: Set[Order], time: Instant): OpenOrdersSnapshot =
     orderTracking.OpenOrdersSnapshot(orders, time)
 
   def openOrdersHistory(snapshots: OpenOrdersSnapshot*): OpenOrdersHistory = {

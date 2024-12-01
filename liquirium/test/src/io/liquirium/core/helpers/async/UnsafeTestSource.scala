@@ -4,10 +4,10 @@ import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.testkit.TestPublisher
 import akka.stream.testkit.scaladsl.TestSource
-import org.scalatest.Matchers
+import org.scalatest.Assertions.fail
 
 // Unsafe means not thread safe
-class UnsafeTestSource[E]()(implicit system: ActorSystem) extends Matchers {
+class UnsafeTestSource[E]()(implicit system: ActorSystem) {
 
   private var probes : Seq[TestPublisher.Probe[E]] = Seq()
 
@@ -26,7 +26,7 @@ class UnsafeTestSource[E]()(implicit system: ActorSystem) extends Matchers {
 
   def expectNoRun() = probes.headOption match {
     case Some(p) => fail("Expected source not to be run but it was")
-    case None => Unit
+    case None => ()
   }
 
 }

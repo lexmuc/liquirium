@@ -66,8 +66,34 @@ sealed trait CandleHistorySegment
   def padUntil(time: Instant): CandleHistorySegment =
     if (time isAfter end) append(Candle.empty(end, candleLength)).padUntil(time) else this
 
-  override def newBuilder: mutable.Builder[Candle, Seq[Candle]] =
-    new ArrayBuffer[Candle].mapResult { b => b }
+//  override def newBuilder: mutable.Builder[Candle, Seq[Candle]] = {
+//    // Use ArrayBuffer as the underlying builder
+//    new mutable.Builder[Candle, Seq[Candle]] {
+//      private val buffer = ArrayBuffer.empty[Candle]
+//
+//      // Add a single element to the builder
+//      override def +=(elem: Candle): this.type = {
+//        buffer += elem
+//        this
+//      }
+//
+//      // Clear the builder
+//      override def clear(): Unit = {
+//        buffer.clear()
+//      }
+//
+//      // Produce the final collection (convert to Seq)
+//      override def result(): Seq[Candle] = buffer.toSeq
+//    }
+//  }
+
+//  override def newBuilder: mutable.Builder[Candle, Seq[Candle]] = {
+//
+//    val buf = new ArrayBuffer[Candle]()
+//    buf += candles
+//    buf
+//  }
+  //    new ArrayBuffer[Candle].mapResult { b => b.toSeq }
 
   def extendWith(other: CandleHistorySegment): CandleHistorySegment = {
     assertExtensionCompatibility(other)

@@ -4,6 +4,7 @@ import io.liquirium.core.helpers.BasicTest
 import io.liquirium.core.helpers.CoreHelpers.{dec, sec}
 import io.liquirium.core.helpers.MarketHelpers.market
 import io.liquirium.util.TimePeriod
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class MultiMarketStrategyBotRunConfigurationTest extends BasicTest {
 

@@ -6,6 +6,7 @@ import io.liquirium.core.helpers.CoreHelpers.dec
 import io.liquirium.core.helpers.MarketHelpers.m
 import io.liquirium.core.helpers.OperationIntentHelpers.orderIntent
 import io.liquirium.core.helpers.OrderHelpers.modifiers
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class OperationIntentTest extends BasicTest {
 

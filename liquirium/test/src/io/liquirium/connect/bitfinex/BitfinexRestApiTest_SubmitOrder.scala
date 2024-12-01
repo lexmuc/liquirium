@@ -3,6 +3,8 @@ package io.liquirium.connect.bitfinex
 import io.liquirium.connect.bitfinex.helpers.BitfinexTestHelpers
 import io.liquirium.core.helpers.CoreHelpers.dec
 import io.liquirium.helpers.JsonTestHelper.json
+import org.scalatest.matchers.must.Matchers.contain
+import org.scalatest.matchers.should.Matchers.{a, convertToAnyShouldWrapper}
 import play.api.libs.json.{JsString, JsValue, Json}
 
 class BitfinexRestApiTest_SubmitOrder extends BitfinexRestApiTest {

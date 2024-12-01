@@ -5,6 +5,7 @@ import io.liquirium.core.helpers.CoreHelpers.{ex, sec}
 import io.liquirium.core.helpers.TestWithMocks
 import io.liquirium.core.helpers.TradeHelpers.{trade, tradeHistorySegment}
 import io.liquirium.core.helpers.async.{AsyncTestWithControlledTime, FutureServiceMock}
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 import scala.concurrent.Future
 import scala.util.Failure

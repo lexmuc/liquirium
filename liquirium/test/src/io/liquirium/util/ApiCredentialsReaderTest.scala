@@ -2,13 +2,15 @@ package io.liquirium.util
 
 import io.liquirium.core.helpers.TestWithMocks
 import io.liquirium.util.helpers.FakeFileIO
+import org.mockito.Mockito.mock
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 import java.nio.file.Path
 
 class ApiCredentialsReaderTest extends TestWithMocks {
 
   test("it reads the api credentials from the given files with api key and secret") {
-    val path = mock[Path]
+    val path = mock(classOf[Path])
     val fileContents =
       """
         |{

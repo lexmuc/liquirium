@@ -6,13 +6,16 @@ import io.liquirium.connect.poloniex.helpers.PoloniexTestHelpers.poloniexCandle
 import io.liquirium.core.helpers.CoreHelpers.milli
 import io.liquirium.core.helpers.TestWithMocks
 import io.liquirium.helpers.JsonTestHelper.json
+import org.mockito.Mockito.mock
+import org.scalatest.matchers.must.Matchers.contain
+import org.scalatest.matchers.should.Matchers.{a, convertToAnyShouldWrapper}
 import play.api.libs.json.JsValue
 
 import java.time.Instant
 
 class PoloniexApiRequestTest_GetCandles extends TestWithMocks {
 
-  val jsonConverter: PoloniexJsonConverter = mock[PoloniexJsonConverter]
+  val jsonConverter: PoloniexJsonConverter = mock(classOf[PoloniexJsonConverter])
 
   private def getCandles(
     symbol: String = "ETHW_USDT",

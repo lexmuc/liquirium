@@ -1,6 +1,7 @@
 package io.liquirium.connect.coinbase
 
 import io.liquirium.core.{ExchangeId, Market, TradingPair}
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class CoinbaseModelConverterTest_Market extends CoinbaseModelConverterTest {
 

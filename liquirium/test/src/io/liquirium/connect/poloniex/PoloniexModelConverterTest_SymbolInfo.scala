@@ -2,6 +2,7 @@ package io.liquirium.connect.poloniex
 
 import io.liquirium.connect.poloniex.helpers.PoloniexTestHelpers.symbolInfo
 import io.liquirium.util.NumberPrecision
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class PoloniexModelConverterTest_SymbolInfo extends PoloniexModelConverterTest {
 

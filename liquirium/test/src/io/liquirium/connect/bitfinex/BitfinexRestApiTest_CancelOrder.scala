@@ -2,6 +2,8 @@ package io.liquirium.connect.bitfinex
 
 import io.liquirium.connect.bitfinex.helpers.BitfinexTestHelpers
 import io.liquirium.helpers.JsonTestHelper.json
+import org.scalatest.matchers.must.Matchers.contain
+import org.scalatest.matchers.should.Matchers.{a, convertToAnyShouldWrapper}
 import play.api.libs.json.{JsValue, Json}
 
 class BitfinexRestApiTest_CancelOrder extends BitfinexRestApiTest {

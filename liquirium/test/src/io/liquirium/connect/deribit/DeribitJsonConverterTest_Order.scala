@@ -3,6 +3,7 @@ package io.liquirium.connect.deribit
 import io.liquirium.connect.deribit.DeribitOrder.State
 import io.liquirium.connect.deribit.helpers.DeribitJsonHelpers.deribitJsonOrder
 import io.liquirium.core.helpers.BasicTest
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.libs.json.{JsArray, JsValue}
 
 class DeribitJsonConverterTest_Order extends BasicTest {

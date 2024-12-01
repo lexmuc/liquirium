@@ -3,6 +3,7 @@ package io.liquirium.connect.deribit
 import io.liquirium.connect.deribit.DeribitDirection.{Buy, Sell}
 import io.liquirium.connect.deribit.helpers.DeribitTestHelpers.deribitTrade
 import io.liquirium.core.helpers.BasicTest
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 import java.time.Instant
 

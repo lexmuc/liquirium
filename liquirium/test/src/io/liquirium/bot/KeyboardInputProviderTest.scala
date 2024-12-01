@@ -10,6 +10,7 @@ import io.liquirium.core.helpers.async.AsyncTestWithControlledTime
 import io.liquirium.eval.IncrementalSeq
 import io.liquirium.helpers.FakeClock
 import io.liquirium.util.helpers.FakeKeyboardInputReader
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class KeyboardInputProviderTest extends AsyncTestWithControlledTime {
 

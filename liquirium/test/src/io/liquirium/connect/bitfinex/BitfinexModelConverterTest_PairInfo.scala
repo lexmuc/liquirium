@@ -2,6 +2,7 @@ package io.liquirium.connect.bitfinex
 
 import io.liquirium.connect.bitfinex.helpers.BitfinexTestHelpers.pairInfo
 import io.liquirium.util.NumberPrecision
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class BitfinexModelConverterTest_PairInfo extends BitfinexModelConverterTest {
 

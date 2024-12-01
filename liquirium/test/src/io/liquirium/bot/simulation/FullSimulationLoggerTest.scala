@@ -3,6 +3,7 @@ package io.liquirium.bot.simulation
 import io.liquirium.core.helpers.BasicTest
 import io.liquirium.eval.Value
 import io.liquirium.eval.helpers.ContextHelpers.context
+import org.scalatest.matchers.should.Matchers.{a, convertToAnyShouldWrapper}
 
 class FullSimulationLoggerTest extends BasicTest {
 

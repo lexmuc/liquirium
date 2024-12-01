@@ -2,6 +2,7 @@ package io.liquirium.connect.bitfinex
 
 import io.liquirium.connect.bitfinex.BitfinexOrder.OrderType
 import io.liquirium.core.helpers.BasicTest
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.libs.json.{JsString, JsValue}
 
 class BitfinexJsonConverterTest_OrderTypes extends BasicTest {

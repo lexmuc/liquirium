@@ -5,6 +5,7 @@ import io.liquirium.core.helpers.BasicTest
 import io.liquirium.core.helpers.CoreHelpers.dec
 import io.liquirium.core.helpers.OperationIntentHelpers.orderIntent
 import io.liquirium.util.NumberPrecision
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class OrderConstraintsTest_AdjustDefensively extends BasicTest {
 

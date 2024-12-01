@@ -4,17 +4,19 @@ import akka.NotUsed
 import akka.stream.scaladsl.Source
 import io.liquirium.bot.helpers.BotInputHelpers.intInput
 import io.liquirium.core.helpers.TestWithMocks
+import org.mockito.Mockito.mock
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class CompoundInputProviderTest extends TestWithMocks {
 
   private def fakeProvider[T](input: BotInput[T], output: Option[Source[T, NotUsed]]) = {
-    val p = mock[BotInputProvider]
+    val p = mock(classOf[BotInputProvider])
     p.getInputUpdateStream(input) returns output
     p
   }
 
   private def fakeProviderWithFailure[T](input: BotInput[T]) = {
-    val p = mock[BotInputProvider]
+    val p = mock(classOf[BotInputProvider])
     p.getInputUpdateStream(input) throws new RuntimeException("provider failed!")
     p
   }

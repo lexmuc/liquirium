@@ -7,6 +7,7 @@ import io.liquirium.core.helpers.OrderHelpers.order
 import io.liquirium.core.orderTracking.helpers.OrderTrackingHelpers.{openOrdersHistory, openOrdersSnapshot}
 import io.liquirium.eval.Constant
 import io.liquirium.eval.helpers.EvalTest
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class LowestSellEvalTest extends EvalTest {
 

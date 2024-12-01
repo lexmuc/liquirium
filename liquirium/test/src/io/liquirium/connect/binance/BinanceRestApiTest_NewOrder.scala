@@ -5,6 +5,9 @@ import io.liquirium.connect.binance.helpers.BinanceTestHelpers
 import io.liquirium.core.Side
 import io.liquirium.core.helpers.CoreHelpers.dec
 import io.liquirium.helpers.JsonTestHelper.json
+import org.scalatest.matchers.must.Matchers.{contain, not}
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.matchPattern
 
 import scala.concurrent.Future
 
