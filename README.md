@@ -59,7 +59,7 @@ Please note that intentionally only a small part of the operations provided by t
 
 ## Getting started
 
-You need Scala 2.12.18 to build and run Liquirium. The project is built with Mill (https://www.lihaoyi.com/mill/).
+You need Scala 2.13 to build and run Liquirium. The project is built with Mill (https://www.lihaoyi.com/mill/).
 If you don't have Mill installed, you can just download [the in-repo bootstrap
 script](https://mill-build.com/mill/Installation_IDE_Support.html#_mills_bootstrap_script_linuxos_x_only) for a 
 quick start. 
