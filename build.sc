@@ -23,7 +23,7 @@ object liquirium extends LiquiriumModule with PublishModule {
     ivy"com.typesafe.akka::akka-http:10.2.2",
   )
 
-  override def publishVersion = "0.1.1"
+  override def publishVersion = "0.2.1"
 
   override def pomSettings = PomSettings(
     description = "Functional framework for automated trading.",
@@ -53,7 +53,7 @@ object liquirium extends LiquiriumModule with PublishModule {
       developers = Seq(Developer(id = "lexmuc", name = "Alexander Steinhoff", url = "https://github.com/lexmuc")),
     )
 
-    override def publishVersion = "0.1.1"
+    override def publishVersion = "0.2.1"
 
     override def artifactName: T[String] = "liquirium-test"
 
