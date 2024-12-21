@@ -2,6 +2,7 @@ package io.liquirium.util.akka
 
 
 import akka.actor.typed.ActorSystem
+import io.liquirium.util.HttpService
 
 import scala.concurrent.ExecutionContext
 
@@ -14,7 +15,7 @@ trait ConcurrencyContext {
 
   def sourceQueueFactory: SourceQueueFactory
 
-  def asyncHttpService: AkkaHttpService
+  def asyncHttpService: HttpService
 
   val actorSystem: ActorSystem[_]
 

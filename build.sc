@@ -7,6 +7,7 @@ trait LiquiriumModule extends ScalaModule {
 object liquirium extends LiquiriumModule with PublishModule {
 
   val akkaVersion = "2.6.10"
+  val http4sVersion = "0.23.29"
 
   override def ivyDeps = Agg(
     ivy"org.joda:joda-convert:1.8.3",
@@ -21,6 +22,9 @@ object liquirium extends LiquiriumModule with PublishModule {
     ivy"com.typesafe.akka::akka-stream-typed:$akkaVersion",
     ivy"com.typesafe.akka::akka-slf4j:$akkaVersion",
     ivy"com.typesafe.akka::akka-http:10.2.2",
+    ivy"org.typelevel::cats-effect:3.5.5",
+    ivy"org.http4s::http4s-ember-client::$http4sVersion",
+    ivy"org.http4s::http4s-dsl::$http4sVersion",
   )
 
   override def publishVersion = "0.2.1"

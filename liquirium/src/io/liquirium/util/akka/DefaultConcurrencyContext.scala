@@ -10,6 +10,10 @@ import scala.concurrent.duration.{FiniteDuration, _}
 import scala.concurrent.{ExecutionContext, Future}
 import akka.actor.typed.scaladsl.adapter._
 import akka.stream.OverflowStrategy
+import cats.effect.IO
+import cats.effect.unsafe.IORuntime
+import io.liquirium.util.EmberHttpService
+import org.http4s.ember.client.EmberClientBuilder
 
 case object DefaultConcurrencyContext extends ConcurrencyContext {
 
@@ -41,7 +45,14 @@ case object DefaultConcurrencyContext extends ConcurrencyContext {
 
   implicit val executionContext: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
-  lazy val asyncHttpService = new AkkaHttpService()(actorSystem.toClassic)
+  private val emberHttpService: EmberHttpService = {
+    implicit val runtime: IORuntime = IORuntime.global
+    val client = EmberClientBuilder.default[IO].build.allocated.unsafeRunSync()._1
+    new EmberHttpService(client)
+  }
+
+//  lazy val asyncHttpService = new AkkaHttpService()(actorSystem.toClassic)
+  def asyncHttpService: io.liquirium.util.HttpService = emberHttpService
 
   val spawner: ActorSpawner = new ActorSpawner {
     private val timeoutTime: FiniteDuration = 20.seconds
