@@ -2,7 +2,7 @@ package io.liquirium.connect
 
 import io.liquirium.core.CandleHistorySegment
 import io.liquirium.util.CancelHandle
-import io.liquirium.util.async.Scheduler
+import io.liquirium.util.async.{Scheduler, Subscription}
 
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
@@ -17,9 +17,9 @@ case class PollingCandleHistorySubscription(
   pollingInterval: FiniteDuration,
   updateOverlapStrategy: CandleUpdateOverlapStrategy,
   scheduler: Scheduler,
-)(implicit ec: ExecutionContext) {
+) extends Subscription[CandleHistorySegment] {
 
-  def run(onUpdate: CandleHistorySegment => Unit): CancelHandle = {
+  def run(onUpdate: CandleHistorySegment => Unit)(implicit ec: ExecutionContext): CancelHandle = {
     val cancelled = new AtomicBoolean(false)
 
     def handleResponse(

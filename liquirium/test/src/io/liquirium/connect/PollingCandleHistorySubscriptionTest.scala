@@ -5,7 +5,7 @@ import io.liquirium.core.helpers.TestWithMocks
 import io.liquirium.core.helpers.CandleHelpers.{candleHistorySegment => segment}
 import io.liquirium.core.helpers.CoreHelpers.{ex, sec, secs}
 import io.liquirium.core.helpers.async.FutureServiceMock
-import io.liquirium.util.async.helpers.FakeScheduler
+import io.liquirium.util.async.helpers.{FakeScheduler, SubscriberProbe}
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 import java.time.Instant
@@ -33,6 +33,9 @@ class PollingCandleHistorySubscriptionTest extends TestWithMocks {
       scheduler = scheduler,
     )
 
+  private def subscribe(): SubscriberProbe[CandleHistorySegment] =
+    SubscriberProbe.subscribeTo(makeSubscription())
+
   test("just creating a subscription does not trigger any request") {
     makeSubscription()
     candleLoader.expectNoCall()
@@ -41,7 +44,7 @@ class PollingCandleHistorySubscriptionTest extends TestWithMocks {
   test("when running a subscription it immediately requests the candles from the update start") {
     overlapStrategy = _.start
     initialSegment = segment(sec(10), secs(5))()
-    makeSubscription().run(_ => ())
+    subscribe()
     candleLoader.verify.apply(sec(10))
   }
 
@@ -49,18 +52,17 @@ class PollingCandleHistorySubscriptionTest extends TestWithMocks {
     initialSegment = segment(sec(10), secs(5))(1, 2)
     val updateSegment = segment(sec(15), secs(5))(22, 33)
 
-    var receivedSegments: List[CandleHistorySegment] = List()
-    makeSubscription().run(chs => receivedSegments = receivedSegments :+ chs)
+    val probe = subscribe()
 
     candleLoader.completeNext(updateSegment)
-    receivedSegments shouldEqual List(initialSegment.extendWith(updateSegment))
+    probe.expectElements(initialSegment.extendWith(updateSegment))
   }
 
   test("it requests new segments with the given interval which starts only when the last request completed") {
     interval = 10.seconds
     initialSegment = segment(sec(10), secs(5))(1)
 
-    makeSubscription().run(_ => ())
+    subscribe()
 
     candleLoader.completeNext(initialSegment)
     scheduler.advanceTime(9.seconds)
@@ -81,7 +83,7 @@ class PollingCandleHistorySubscriptionTest extends TestWithMocks {
     interval = 10.seconds
     initialSegment = segment(sec(10), secs(5))(1, 2)
 
-    makeSubscription().run(_ => ())
+    subscribe()
 
     candleLoader.verify.apply(sec(15))
     candleLoader.completeNext(segment(sec(15), secs(5))(2, 3, 4))
@@ -93,20 +95,18 @@ class PollingCandleHistorySubscriptionTest extends TestWithMocks {
     interval = 10.seconds
     initialSegment = segment(sec(10), secs(5))(1)
 
-    var receivedSegments: List[CandleHistorySegment] = List()
-    makeSubscription().run(chs => receivedSegments = receivedSegments :+ chs)
+    val probe = subscribe()
 
     val update1 = segment(sec(10), secs(5))(1, 2)
     candleLoader.completeNext(update1)
-    receivedSegments shouldEqual List(
-      initialSegment.extendWith(update1)
-    )
+
+    probe.expectElements(initialSegment.extendWith(update1))
 
     scheduler.advanceTime(10.seconds)
 
     val update2 = segment(sec(15), secs(5))(1, 4, 5)
     candleLoader.completeNext(update2)
-    receivedSegments shouldEqual List(
+    probe.expectElements(
       initialSegment.extendWith(update1),
       initialSegment.extendWith(update1).extendWith(update2),
     )
@@ -116,22 +116,21 @@ class PollingCandleHistorySubscriptionTest extends TestWithMocks {
     interval = 10.seconds
     initialSegment = segment(sec(10), secs(5))(1)
 
-    var receivedSegments: List[CandleHistorySegment] = List()
-    makeSubscription().run(chs => receivedSegments = receivedSegments :+ chs)
+    val probe = subscribe()
 
     candleLoader.completeNext(initialSegment)
-    receivedSegments shouldEqual List(initialSegment)
+    probe.expectElements(initialSegment)
 
     scheduler.advanceTime(10.seconds)
 
     candleLoader.completeNext(initialSegment)
-    receivedSegments shouldEqual List(initialSegment)
+    probe.expectElements(initialSegment)
   }
 
   test("simply requests the candles again after the interval when an error happens") {
     interval = 10.seconds
 
-    makeSubscription().run(_ => ())
+    subscribe()
 
     candleLoader.failNext(ex(123))
 
@@ -154,34 +153,32 @@ class PollingCandleHistorySubscriptionTest extends TestWithMocks {
     interval = 10.seconds
     initialSegment = segment(sec(0), secs(5))(1, 2)
 
-    var receivedSegments: List[CandleHistorySegment] = List()
-    makeSubscription().run(chs => receivedSegments = receivedSegments :+ chs)
+    val probe = subscribe()
 
     candleLoader.failNext(ex(123))
-    receivedSegments shouldEqual List()
+    probe.expectNoElements()
 
     scheduler.advanceTime(10.seconds)
 
     candleLoader.completeNext(initialSegment)
-    receivedSegments shouldEqual List(initialSegment)
+    probe.expectElements(initialSegment)
   }
 
   test("for subsequent retries there must be a change for the callback to be called") {
     interval = 10.seconds
     initialSegment = segment(sec(0), secs(5))(1, 2)
 
-    var receivedSegments: List[CandleHistorySegment] = List()
-    makeSubscription().run(chs => receivedSegments = receivedSegments :+ chs)
+    val probe = subscribe()
 
     candleLoader.completeNext(initialSegment)
-    receivedSegments shouldEqual List(initialSegment)
+    probe.expectElements(initialSegment)
 
     scheduler.advanceTime(10.seconds)
     candleLoader.failNext(ex(123))
     scheduler.advanceTime(10.seconds)
     candleLoader.completeNext(initialSegment)
 
-    receivedSegments shouldEqual List(initialSegment)
+    probe.expectElements(initialSegment)
 
     val updateSegment = segment(sec(5), secs(5))(2, 3)
     scheduler.advanceTime(10.seconds)
@@ -189,11 +186,11 @@ class PollingCandleHistorySubscriptionTest extends TestWithMocks {
     scheduler.advanceTime(10.seconds)
     candleLoader.completeNext(updateSegment)
 
-    receivedSegments shouldEqual List(
-      initialSegment,
-      initialSegment.extendWith(updateSegment)
-    )
+    probe.expectElements(initialSegment, initialSegment.extendWith(updateSegment))
   }
+
+  // continue here!!
+
 
   test("the current segment is maintained also during retries") {
     interval = 10.seconds
@@ -201,8 +198,7 @@ class PollingCandleHistorySubscriptionTest extends TestWithMocks {
     val update1 = segment(sec(5), secs(5))(2)
     val update2 = segment(sec(10), secs(5))(3)
 
-    var receivedSegments: List[CandleHistorySegment] = List()
-    makeSubscription().run(chs => receivedSegments = receivedSegments :+ chs)
+    val probe = subscribe()
 
     candleLoader.completeNext(update1)
 
@@ -211,7 +207,7 @@ class PollingCandleHistorySubscriptionTest extends TestWithMocks {
     scheduler.advanceTime(10.seconds)
     candleLoader.completeNext(update2)
 
-    receivedSegments shouldEqual List(
+    probe.expectElements(
       initialSegment.extendWith(update1),
       initialSegment.extendWith(update1).extendWith(update2),
     )
@@ -221,11 +217,11 @@ class PollingCandleHistorySubscriptionTest extends TestWithMocks {
     interval = 10.seconds
     initialSegment = segment(sec(0), secs(5))(1)
 
-    val cancelHandler = makeSubscription().run(_ => ())
+    val probe = subscribe()
     candleLoader.completeNext(initialSegment)
 
     scheduler.advanceTime(5.seconds)
-    cancelHandler.cancel()
+    probe.cancel()
     scheduler.advanceTime(15.seconds)
     candleLoader.expectNoFurtherOpenRequests()
   }
@@ -234,17 +230,16 @@ class PollingCandleHistorySubscriptionTest extends TestWithMocks {
     interval = 10.seconds
     initialSegment = segment(sec(0), secs(5))(1)
 
-    var receivedSegments: List[CandleHistorySegment] = List()
-    val cancelHandler = makeSubscription().run(chs => receivedSegments = receivedSegments :+ chs)
+    val probe = subscribe()
 
     candleLoader.completeNext(initialSegment)
 
     val update = segment(sec(0), secs(5))(1, 2)
     scheduler.advanceTime(12.seconds)
-    cancelHandler.cancel()
+    probe.cancel()
     candleLoader.completeNext(update)
 
-    receivedSegments shouldEqual List(initialSegment)
+    probe.expectElements(initialSegment)
   }
 
 }
