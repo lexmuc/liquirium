@@ -1,12 +1,15 @@
 package io.liquirium.core.helpers.async
 
+import akka.actor
 import akka.actor.testkit.typed.scaladsl.{ActorTestKit, ActorTestKitBase, ManualTime, TestProbe}
+import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.adapter._
 import akka.actor.{DeadLetter, SuppressedDeadLetter}
 import akka.testkit.EventFilter
 import com.typesafe.config.ConfigFactory
 import io.liquirium.core.helpers.BasicTest
 
+import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration._
 
 class AsyncTestWithControlledTime extends BasicTest {
@@ -21,15 +24,15 @@ class AsyncTestWithControlledTime extends BasicTest {
     """.stripMargin
   ).withFallback(ManualTime.config)
 
-  val testKit = ActorTestKit(ActorTestKitBase.testNameFromCallStack(), config)
+  val testKit: ActorTestKit = ActorTestKit(ActorTestKitBase.testNameFromCallStack(), config)
 
   def actorProbe[T](): TestProbe[T] = testKit.createTestProbe[T]("typed-probe")
 
-  implicit val actorSystem = testKit.system
+  implicit val actorSystem: ActorSystem[Nothing] = testKit.system
 
-  implicit val untypedActorSystem = testKit.system.toClassic
+  implicit val untypedActorSystem: actor.ActorSystem = testKit.system.toClassic
 
-  implicit val executionContext = actorSystem.executionContext
+  implicit val executionContext: ExecutionContextExecutor = actorSystem.executionContext
 
   private val manualTime: ManualTime = ManualTime()(testKit.system)
 
@@ -42,13 +45,13 @@ class AsyncTestWithControlledTime extends BasicTest {
   private def expectNoMessageFor(duration: FiniteDuration, on: TestProbe[_]*): Unit =
     manualTime.expectNoMessageFor(duration, on: _*)
 
-  def expectNoError[T](code: => T) = EventFilter.error(occurrences = 0).intercept(code)
+  def expectNoError[T](code: => T): T = EventFilter.error(occurrences = 0).intercept(code)
 
-  def expectNoWarning[T](code: => T) = EventFilter.warning(occurrences = 0).intercept(code)
+  def expectNoWarning[T](code: => T): T = EventFilter.warning(occurrences = 0).intercept(code)
 
-  def expectNoErrorOrWarning[T](code: => T) = expectNoError(expectNoWarning(code))
+  def expectNoErrorOrWarning[T](code: => T): T = expectNoError(expectNoWarning(code))
 
-  def expectNoDeadLetters[T](code: => T) = {
+  def expectNoDeadLetters[T](code: => T): T = {
     // #TODO AKKA UPGRADE this should work with the typed actor system
     val deadLettersProbe = akka.testkit.TestProbe()
     val suppressedDeadLettersProbe = akka.testkit.TestProbe()
