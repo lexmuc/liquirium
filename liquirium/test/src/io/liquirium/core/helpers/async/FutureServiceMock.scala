@@ -49,6 +49,8 @@ class FutureServiceMock[T <: AnyRef, R]
     p
   }
 
+  def openRequestCount(): Int = promises.size
+
   def enqueueResponse(response: R): Unit = {
     responseQueue = responseQueue :+ response
   }

@@ -106,7 +106,7 @@ package object coinbase {
         makeCandleHistorySegmentLoader(tradingPair, duration).load(start, end)
 
       private def makeCandleHistoryStream(tradingPair: TradingPair, candleLength: Duration) = {
-        new PollingCandleHistoryStream(
+        new AkkaPollingCandleHistoryStream(
           segmentLoader =
             start => makeCandleHistorySegmentLoader(tradingPair, candleLength).load(start, SystemClock.getTime),
           interval = FiniteDuration(candleLength.getSeconds / 2, "seconds"),

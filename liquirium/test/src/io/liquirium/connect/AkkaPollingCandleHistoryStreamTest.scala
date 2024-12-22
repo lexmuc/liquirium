@@ -18,7 +18,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 
 
-class PollingCandleHistoryStreamTest extends AsyncTestWithControlledTime with TestWithMocks {
+class AkkaPollingCandleHistoryStreamTest extends AsyncTestWithControlledTime with TestWithMocks {
 
   val candleLoader = new FutureServiceMock[Instant => Future[CandleHistorySegment], CandleHistorySegment](_.apply(*))
 
@@ -27,7 +27,7 @@ class PollingCandleHistoryStreamTest extends AsyncTestWithControlledTime with Te
   var retryInterval: FiniteDuration = 1.second
 
   private def stream() =
-    new PollingCandleHistoryStream(
+    new AkkaPollingCandleHistoryStream(
       segmentLoader = candleLoader.instance,
       interval = interval,
       retryInterval = retryInterval,

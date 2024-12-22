@@ -12,7 +12,7 @@ import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.util.{Failure, Success}
 
-class PollingCandleHistoryStream(
+class AkkaPollingCandleHistoryStream(
   segmentLoader: Instant => Future[CandleHistorySegment],
   interval: FiniteDuration,
   retryInterval: FiniteDuration,
