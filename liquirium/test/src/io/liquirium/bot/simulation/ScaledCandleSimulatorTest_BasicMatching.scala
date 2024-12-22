@@ -33,7 +33,7 @@ class ScaledCandleSimulatorTest_BasicMatching extends BasicTest {
     simulation.ScaledCandleSimulator(
       feeLevel = ZeroFeeLevel,
       volumeReduction = volumeReduction,
-      tradeIds = if (tradeIds == null) Stream.from(1).map(x => tradeId(x.toString)) else tradeIds.toStream
+      tradeIds = if (tradeIds == null) LazyList.from(1).map(x => tradeId(x.toString)) else tradeIds
     )
       .fillOrders(orders.toSet, c)
 

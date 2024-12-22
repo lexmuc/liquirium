@@ -31,7 +31,7 @@ object SimulationInputUpdateStream {
 
   private case class Impl(
     nextInputUpdateWithTime: Option[(Instant, InputUpdate)],
-    timedInputStreamsByInput: Map[Input[_], Stream[(Instant, Any)]],
+    timedInputStreamsByInput: Map[Input[_], LazyList[(Instant, Any)]],
     end: Instant,
     singleInputStreamProvider: SingleInputUpdateStreamProvider,
   ) extends SimulationInputUpdateStream {
@@ -91,7 +91,7 @@ object SimulationInputUpdateStream {
 
     }
 
-    private def addStream(i: Input[_], s: Stream[(Instant, Any)]) =
+    private def addStream(i: Input[_], s: LazyList[(Instant, Any)]) =
       s.headOption match {
         case Some((t, _)) if t != time.get =>
           throw new RuntimeException("Trying to add a stream that does not start at the current time")

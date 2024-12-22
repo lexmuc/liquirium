@@ -39,6 +39,7 @@ class TimedInputUpdateStreamTest_CandleHistory extends BasicTest {
     val input = CandleHistoryInput(market(1), secs(10), sec(20))
     val candles = List(c10(sec(20), 2), c10(sec(30), 3))
     val inputUpdates = stream(input, candles).map(_._2).toList
+    //noinspection ZeroIndexToHead
     inputUpdates(1).prev.get should be theSameInstanceAs inputUpdates(0)
     inputUpdates(2).prev.get should be theSameInstanceAs inputUpdates(1)
   }

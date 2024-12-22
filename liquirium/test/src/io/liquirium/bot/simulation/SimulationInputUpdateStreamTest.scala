@@ -21,7 +21,7 @@ class SimulationInputUpdateStreamTest extends TestWithMocks {
   )
 
   private def fakeProvidedStream(i: Input[_], start: Instant, end: Instant)(elements: (Instant, Any)*) = {
-    streamProvider.getInputStream(i, start = start, end = end) returns Some(elements.toStream)
+    streamProvider.getInputStream(i, start = start, end = end) returns Some(LazyList.from(elements))
   }
 
   private def fakeNoProvidedStream(i: Input[_], start: Instant, end: Instant) = {

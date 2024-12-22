@@ -31,7 +31,7 @@ object CandleSimulatorMarketplace {
     market: Market,
     candlesEval: Eval[CandleHistorySegment],
     simulator: CandleSimulator,
-    orderIds: Stream[String],
+    orderIds: Seq[String],
     simulationStartTime: Instant,
   ): CandleSimulatorMarketplace = Impl(
     market = market,
@@ -46,7 +46,7 @@ object CandleSimulatorMarketplace {
     market: Market,
     candlesEval: Eval[CandleHistorySegment],
     simulator: CandleSimulator,
-    orderIds: Stream[String],
+    orderIds: Seq[String],
     lastCandleEndTime: Instant,
     tradeHistoryInput: TradeHistoryInput,
   ) extends CandleSimulatorMarketplace {

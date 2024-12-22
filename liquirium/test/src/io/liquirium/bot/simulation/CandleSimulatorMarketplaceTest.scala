@@ -22,7 +22,7 @@ class CandleSimulatorMarketplaceTest extends TestWithMocks {
   protected val defaultMarket: Market = MarketHelpers.market(123)
   protected val candlesEval: Eval[CandleHistorySegment] = InputEval(mock(classOf[Input[CandleHistorySegment]]))
   protected var candleSimulator: FakeCandleSimulator = FakeCandleSimulator()
-  protected var orderIds: Stream[String] = Stream.from(1).map(_.toString).take(10)
+  protected var orderIds: Seq[String] = LazyList.from(1).map(_.toString).take(10)
   protected var simulationStartTime: Instant = sec(0)
   protected var lastInputUpdate: InputUpdate = _
 

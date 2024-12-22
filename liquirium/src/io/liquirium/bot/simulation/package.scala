@@ -26,7 +26,7 @@ package object simulation {
     implicit ec: ExecutionContext,
   ): SingleInputUpdateStreamProvider = new SingleInputUpdateStreamProvider {
 
-    override def getInputStream(input: Input[_], start: Instant, end: Instant): Option[Stream[(Instant, Any)]] =
+    override def getInputStream(input: Input[_], start: Instant, end: Instant): Option[LazyList[(Instant, Any)]] =
       input match {
 
         case ti: TimeInput => Some(TimedInputUpdateStream.forTimeInput(ti, start, end = end))
@@ -85,13 +85,13 @@ package object simulation {
         case eid => throw new RuntimeException(s"unknown exchange id: $eid")
       }
 
-    private def orderIds(m: Market): Stream[String] =
-      Stream.from(1).map(
+    private def orderIds(m: Market): LazyList[String] =
+      LazyList.from(1).map(
         n => m.exchangeId.value + "-" + m.tradingPair.base + "-" + m.tradingPair.quote + "-" + n.toString
       )
 
-    private def tradeIds(m: Market): Stream[StringTradeId] =
-      Stream.from(1).map(
+    private def tradeIds(m: Market): LazyList[StringTradeId] =
+      LazyList.from(1).map(
         n => StringTradeId(m.exchangeId.value + "-" + m.tradingPair.base + "-" + m.tradingPair.quote + "-" + n.toString)
       )
 

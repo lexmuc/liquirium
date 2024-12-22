@@ -1,4 +1,4 @@
-package io.liquirium.eval
+package io.liquirium.bot
 
 import akka.NotUsed
 import akka.actor.typed.Behavior
@@ -6,7 +6,6 @@ import akka.actor.typed.scaladsl.Behaviors
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.{Source, SourceQueueWithComplete}
 import io.liquirium.bot.BotInput.TimeInput
-import io.liquirium.bot.{BotInput, BotInputProvider}
 import io.liquirium.util.Clock
 import io.liquirium.util.akka.ActorSpawner
 

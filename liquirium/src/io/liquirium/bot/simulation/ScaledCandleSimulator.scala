@@ -9,7 +9,7 @@ import scala.annotation.tailrec
 case class ScaledCandleSimulator(
   feeLevel: FeeLevel,
   volumeReduction: Double,
-  tradeIds: Stream[TradeId],
+  tradeIds: Seq[TradeId],
 ) extends CandleSimulator {
 
   import io.liquirium.core.OrderSetOps.OrderSetOps

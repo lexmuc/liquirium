@@ -6,6 +6,6 @@ import java.time.Instant
 
 trait SingleInputUpdateStreamProvider {
 
-  def getInputStream(input: Input[_], start: Instant, end: Instant): Option[Stream[(Instant, Any)]]
+  def getInputStream(input: Input[_], start: Instant, end: Instant): Option[LazyList[(Instant, Any)]]
 
 }

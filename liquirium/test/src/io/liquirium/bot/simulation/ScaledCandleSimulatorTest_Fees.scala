@@ -28,7 +28,7 @@ class ScaledCandleSimulatorTest_Fees extends BasicTest {
     simulation.ScaledCandleSimulator(
       feeLevel = fees,
       volumeReduction = 1.0,
-      tradeIds = Stream.from(1).map(x => tradeId(x.toString))
+      tradeIds = LazyList.from(1).map(x => tradeId(x.toString))
     ).fillOrders(orders, candle)
 
   test("buy fees are based only on the filled fraction of an order") {

@@ -1,4 +1,4 @@
-package io.liquirium.eval
+package io.liquirium.bot
 
 import akka.actor.typed.ActorSystem
 import akka.stream.testkit.TestSubscriber
