@@ -1,9 +1,9 @@
 package io.liquirium.connect
 
-import io.liquirium.core.CandleHistorySegment
+import io.liquirium.core.TradeHistorySegment
 import io.liquirium.core.helpers.TestWithMocks
-import io.liquirium.core.helpers.CandleHelpers.{candleHistorySegment => segment}
 import io.liquirium.core.helpers.CoreHelpers.{ex, sec, secs}
+import io.liquirium.core.helpers.TradeHelpers.{trade, tradeHistorySegment => segment}
 import io.liquirium.core.helpers.async.FutureServiceMock
 import io.liquirium.util.async.helpers.{FakeScheduler, SubscriberProbe}
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
@@ -12,100 +12,100 @@ import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 
-class PollingCandleHistorySubscriptionTest extends TestWithMocks {
+class PollingTradeHistorySubscriptionTest extends TestWithMocks {
 
-  private val candleLoader =
-    new FutureServiceMock[Instant => Future[CandleHistorySegment], CandleHistorySegment](_.apply(*))
+  private val tradeLoader =
+    new FutureServiceMock[Instant => Future[TradeHistorySegment], TradeHistorySegment](_.apply(*))
 
-  private var overlapStrategy: CandleUpdateOverlapStrategy = CandleUpdateOverlapStrategy.complete
+  private var overlapStrategy: TradeUpdateOverlapStrategy = TradeUpdateOverlapStrategy.complete
   private var interval: FiniteDuration = 1.second
-  private var initialSegment = CandleHistorySegment.empty(sec(0), secs(5))
+  private var initialSegment = segment(sec(0))()
   val scheduler = new FakeScheduler()
 
   implicit val ec: ExecutionContext = ExecutionContext.fromExecutor((runnable: Runnable) => runnable.run())
 
-  def makeSubscription(): PollingCandleHistorySubscription =
-    PollingCandleHistorySubscription(
+  def makeSubscription(): PollingTradeHistorySubscription =
+    PollingTradeHistorySubscription(
       initialSegment = initialSegment,
-      loadSegment = candleLoader.instance,
+      loadSegment = tradeLoader.instance,
       pollingInterval = interval,
       updateOverlapStrategy = overlapStrategy,
       scheduler = scheduler,
     )
 
-  private def subscribe(): SubscriberProbe[CandleHistorySegment] =
+  private def subscribe(): SubscriberProbe[TradeHistorySegment] =
     SubscriberProbe.subscribeTo(makeSubscription())
 
   test("just creating a subscription does not trigger any request") {
     makeSubscription()
-    candleLoader.expectNoCall()
+    tradeLoader.expectNoCall()
   }
 
-  test("when running a subscription it immediately requests the candles from the update start") {
+  test("when running a subscription it immediately requests the trades from the update start") {
     overlapStrategy = _.start
-    initialSegment = segment(sec(10), secs(5))()
+    initialSegment = segment(sec(10))()
     subscribe()
-    candleLoader.verify.apply(sec(10))
+    tradeLoader.verify.apply(sec(10))
   }
 
   test("it emits an extended segment once the update is received") {
-    initialSegment = segment(sec(10), secs(5))(1, 2)
-    val updateSegment = segment(sec(15), secs(5))(22, 33)
+    initialSegment = segment(sec(10))(trade(sec(11), "A"))
+    val updateSegment = segment(sec(10))(trade(sec(11), "A"), trade(sec(16), "B"))
 
     val probe = subscribe()
 
-    candleLoader.completeNext(updateSegment)
+    tradeLoader.completeNext(updateSegment)
     probe.expectElements(initialSegment.extendWith(updateSegment))
   }
 
   test("it requests new segments with the given interval which starts only when the last request completed") {
     interval = 10.seconds
-    initialSegment = segment(sec(10), secs(5))(1)
+    initialSegment = segment(sec(10))(trade(sec(11), "A"))
 
     subscribe()
 
-    candleLoader.completeNext(initialSegment)
+    tradeLoader.completeNext(initialSegment)
     scheduler.advanceTime(9.seconds)
-    candleLoader.verifyTimes(1).apply(*)
+    tradeLoader.verifyTimes(1).apply(*)
     scheduler.advanceTime(1.second)
-    candleLoader.verifyTimes(2).apply(*)
+    tradeLoader.verifyTimes(2).apply(*)
 
     scheduler.advanceTime(2.seconds) // wait before answering request
-    candleLoader.completeNext(initialSegment)
+    tradeLoader.completeNext(initialSegment)
     scheduler.advanceTime(9.seconds)
-    candleLoader.verifyTimes(2).apply(*)
+    tradeLoader.verifyTimes(2).apply(*)
     scheduler.advanceTime(1.second)
-    candleLoader.verifyTimes(3).apply(*)
+    tradeLoader.verifyTimes(3).apply(*)
   }
 
   test("the given overlap strategy is used at the beginning and for the following requests") {
-    overlapStrategy = _.end.minus(secs(5))
+    overlapStrategy = _.end.minus(secs(2))
     interval = 10.seconds
-    initialSegment = segment(sec(10), secs(5))(1, 2)
+    initialSegment = segment(sec(10))(trade(sec(14), "A"))
 
     subscribe()
 
-    candleLoader.verify.apply(sec(15))
-    candleLoader.completeNext(segment(sec(15), secs(5))(2, 3, 4))
+    tradeLoader.verify.apply(sec(12))
+    tradeLoader.completeNext(segment(sec(12))(trade(sec(26), "B")))
     scheduler.advanceTime(10.seconds)
-    candleLoader.verify.apply(sec(25))
+    tradeLoader.verify.apply(sec(24))
   }
 
   test("when updated segments are received the callback is invoked every time") {
     interval = 10.seconds
-    initialSegment = segment(sec(10), secs(5))(1)
+    initialSegment = segment(sec(10))()
 
     val probe = subscribe()
 
-    val update1 = segment(sec(10), secs(5))(1, 2)
-    candleLoader.completeNext(update1)
+    val update1 = segment(sec(10))(trade(sec(11), "A"))
+    tradeLoader.completeNext(update1)
 
     probe.expectElements(initialSegment.extendWith(update1))
 
     scheduler.advanceTime(10.seconds)
 
-    val update2 = segment(sec(15), secs(5))(1, 4, 5)
-    candleLoader.completeNext(update2)
+    val update2 = segment(sec(11))(trade(sec(11), "A"), trade(sec(12), "B"))
+    tradeLoader.completeNext(update2)
     probe.expectElements(
       initialSegment.extendWith(update1),
       initialSegment.extendWith(update1).extendWith(update2),
@@ -114,95 +114,95 @@ class PollingCandleHistorySubscriptionTest extends TestWithMocks {
 
   test("it does not emit an update if the segment is not changed by the update, except for the first time") {
     interval = 10.seconds
-    initialSegment = segment(sec(10), secs(5))(1)
+    initialSegment = segment(sec(10))(trade(sec(11), "A"))
 
     val probe = subscribe()
 
-    candleLoader.completeNext(initialSegment)
+    tradeLoader.completeNext(initialSegment)
     probe.expectElements(initialSegment)
 
     scheduler.advanceTime(10.seconds)
 
-    candleLoader.completeNext(initialSegment)
+    tradeLoader.completeNext(initialSegment)
     probe.expectElements(initialSegment)
   }
 
-  test("simply requests the candles again after the interval when an error happens") {
+  test("simply requests the trades again after the interval when an error happens") {
     interval = 10.seconds
 
     subscribe()
 
-    candleLoader.failNext(ex(123))
+    tradeLoader.failNext(ex(123))
 
     scheduler.advanceTime(9.seconds)
-    candleLoader.expectNoFurtherOpenRequests()
+    tradeLoader.expectNoFurtherOpenRequests()
     scheduler.advanceTime(1.seconds)
 
-    candleLoader.completeNext(initialSegment)
+    tradeLoader.completeNext(initialSegment)
 
     scheduler.advanceTime(10.seconds)
-    candleLoader.failNext(ex(123))
+    tradeLoader.failNext(ex(123))
 
     scheduler.advanceTime(9.seconds)
-    candleLoader.expectNoFurtherOpenRequests()
+    tradeLoader.expectNoFurtherOpenRequests()
     scheduler.advanceTime(1.seconds)
-    candleLoader.openRequestCount shouldBe 1
+    tradeLoader.openRequestCount shouldBe 1
   }
 
   test("when retrying the first request it still counts as the first so the callback is invoked even if unchanged") {
     interval = 10.seconds
-    initialSegment = segment(sec(0), secs(5))(1, 2)
+    initialSegment = segment(sec(0))(trade(sec(11), "A"))
 
     val probe = subscribe()
 
-    candleLoader.failNext(ex(123))
+    tradeLoader.failNext(ex(123))
     probe.expectNoElements()
 
     scheduler.advanceTime(10.seconds)
 
-    candleLoader.completeNext(initialSegment)
+    tradeLoader.completeNext(initialSegment)
     probe.expectElements(initialSegment)
   }
 
   test("for subsequent retries there must be a change for the callback to be called") {
     interval = 10.seconds
-    initialSegment = segment(sec(0), secs(5))(1, 2)
+    initialSegment = segment(sec(0))(trade(sec(11), "A"))
 
     val probe = subscribe()
 
-    candleLoader.completeNext(initialSegment)
+    tradeLoader.completeNext(initialSegment)
     probe.expectElements(initialSegment)
 
     scheduler.advanceTime(10.seconds)
-    candleLoader.failNext(ex(123))
+    tradeLoader.failNext(ex(123))
     scheduler.advanceTime(10.seconds)
-    candleLoader.completeNext(initialSegment)
+    tradeLoader.completeNext(initialSegment)
 
     probe.expectElements(initialSegment)
 
-    val updateSegment = segment(sec(5), secs(5))(2, 3)
+    val updateSegment = segment(sec(5))(trade(sec(11), "A"), trade(sec(12), "B"))
     scheduler.advanceTime(10.seconds)
-    candleLoader.failNext(ex(123))
+    tradeLoader.failNext(ex(123))
     scheduler.advanceTime(10.seconds)
-    candleLoader.completeNext(updateSegment)
+    tradeLoader.completeNext(updateSegment)
 
     probe.expectElements(initialSegment, initialSegment.extendWith(updateSegment))
   }
 
   test("the current segment is maintained also during retries") {
     interval = 10.seconds
-    initialSegment = segment(sec(0), secs(5))(1)
-    val update1 = segment(sec(5), secs(5))(2)
-    val update2 = segment(sec(10), secs(5))(3)
+    initialSegment = segment(sec(10))()
+    val update1 = segment(sec(10))(trade(sec(11), "A"))
+    val update2 = segment(sec(11))(trade(sec(11), "A"), trade(sec(12), "B"))
 
     val probe = subscribe()
 
-    candleLoader.completeNext(update1)
+    tradeLoader.completeNext(update1)
 
     scheduler.advanceTime(10.seconds)
-    candleLoader.failNext(ex(123))
+    tradeLoader.failNext(ex(123))
     scheduler.advanceTime(10.seconds)
-    candleLoader.completeNext(update2)
+    tradeLoader.completeNext(update2)
 
     probe.expectElements(
       initialSegment.extendWith(update1),
@@ -212,29 +212,29 @@ class PollingCandleHistorySubscriptionTest extends TestWithMocks {
 
   test("no more requests are made after the subscription has been cancelled") {
     interval = 10.seconds
-    initialSegment = segment(sec(0), secs(5))(1)
+    initialSegment = segment(sec(0))(trade(sec(11), "A"))
 
     val probe = subscribe()
-    candleLoader.completeNext(initialSegment)
+    tradeLoader.completeNext(initialSegment)
 
     scheduler.advanceTime(5.seconds)
     probe.cancel()
     scheduler.advanceTime(15.seconds)
-    candleLoader.expectNoFurtherOpenRequests()
+    tradeLoader.expectNoFurtherOpenRequests()
   }
 
   test("responses to open requests are ignored when the subscription has been cancelled") {
     interval = 10.seconds
-    initialSegment = segment(sec(0), secs(5))(1)
+    initialSegment = segment(sec(0))(trade(sec(11), "A"))
 
     val probe = subscribe()
 
-    candleLoader.completeNext(initialSegment)
+    tradeLoader.completeNext(initialSegment)
 
-    val update = segment(sec(0), secs(5))(1, 2)
+    val update = segment(sec(0))(trade(sec(11), "A"), trade(sec(12), "B"))
     scheduler.advanceTime(12.seconds)
     probe.cancel()
-    candleLoader.completeNext(update)
+    tradeLoader.completeNext(update)
 
     probe.expectElements(initialSegment)
   }

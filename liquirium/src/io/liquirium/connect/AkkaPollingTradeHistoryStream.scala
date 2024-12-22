@@ -12,7 +12,7 @@ import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.concurrent.duration.FiniteDuration
 import scala.util.{Failure, Success}
 
-class PollingTradeHistoryStream(
+class AkkaPollingTradeHistoryStream(
   segmentLoader: Instant => Future[TradeHistorySegment],
   interval: FiniteDuration,
   retryInterval: FiniteDuration,

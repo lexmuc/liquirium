@@ -17,7 +17,7 @@ import java.time.Instant
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
-class PollingTradeHistoryStreamTest extends AsyncTestWithControlledTime with TestWithMocks {
+class AkkaPollingTradeHistoryStreamTest extends AsyncTestWithControlledTime with TestWithMocks {
 
   val tradeLoader = new FutureServiceMock[Instant => Future[TradeHistorySegment], TradeHistorySegment](_.apply(*))
 
@@ -26,7 +26,7 @@ class PollingTradeHistoryStreamTest extends AsyncTestWithControlledTime with Tes
   var retryInterval: FiniteDuration = 1.second
 
   private def stream() =
-    new PollingTradeHistoryStream(
+    new AkkaPollingTradeHistoryStream(
       segmentLoader = tradeLoader.instance,
       interval = interval,
       retryInterval = retryInterval,

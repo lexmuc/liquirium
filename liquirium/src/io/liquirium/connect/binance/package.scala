@@ -121,7 +121,7 @@ package object binance {
 
       private def makeTradeHistoryStream(tradingPair: TradingPair) = {
         val tradeHistoryLoader = getTradeHistoryLoader(tradingPair)
-        new PollingTradeHistoryStream(
+        new AkkaPollingTradeHistoryStream(
           segmentLoader = start => tradeHistoryLoader.loadHistory(start, maybeEnd = None),
           interval = FiniteDuration(30, "seconds"),
           retryInterval = FiniteDuration(10, "seconds"),
