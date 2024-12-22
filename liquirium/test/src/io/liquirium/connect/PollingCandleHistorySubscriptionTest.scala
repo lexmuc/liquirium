@@ -4,15 +4,15 @@ import io.liquirium.core.CandleHistorySegment
 import io.liquirium.core.helpers.TestWithMocks
 import io.liquirium.core.helpers.CandleHelpers.{candleHistorySegment => segment}
 import io.liquirium.core.helpers.CoreHelpers.{ex, sec, secs}
-import io.liquirium.core.helpers.async.FutureServiceMock
-import io.liquirium.util.async.helpers.{FakeScheduler, SubscriberProbe}
+import io.liquirium.core.helpers.async.{AsyncTestWithScheduler, FutureServiceMock}
+import io.liquirium.util.async.helpers.SubscriberProbe
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 import java.time.Instant
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 import scala.concurrent.duration._
 
-class PollingCandleHistorySubscriptionTest extends TestWithMocks {
+class PollingCandleHistorySubscriptionTest extends AsyncTestWithScheduler with TestWithMocks {
 
   private val candleLoader =
     new FutureServiceMock[Instant => Future[CandleHistorySegment], CandleHistorySegment](_.apply(*))
@@ -20,9 +20,6 @@ class PollingCandleHistorySubscriptionTest extends TestWithMocks {
   private var overlapStrategy: CandleUpdateOverlapStrategy = CandleUpdateOverlapStrategy.complete
   private var interval: FiniteDuration = 1.second
   private var initialSegment = CandleHistorySegment.empty(sec(0), secs(5))
-  val scheduler = new FakeScheduler()
-
-  implicit val ec: ExecutionContext = ExecutionContext.fromExecutor((runnable: Runnable) => runnable.run())
 
   def makeSubscription(): PollingCandleHistorySubscription =
     PollingCandleHistorySubscription(

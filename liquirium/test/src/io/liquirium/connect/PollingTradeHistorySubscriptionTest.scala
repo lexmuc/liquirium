@@ -4,15 +4,15 @@ import io.liquirium.core.TradeHistorySegment
 import io.liquirium.core.helpers.TestWithMocks
 import io.liquirium.core.helpers.CoreHelpers.{ex, sec, secs}
 import io.liquirium.core.helpers.TradeHelpers.{trade, tradeHistorySegment => segment}
-import io.liquirium.core.helpers.async.FutureServiceMock
-import io.liquirium.util.async.helpers.{FakeScheduler, SubscriberProbe}
+import io.liquirium.core.helpers.async.{AsyncTestWithScheduler, FutureServiceMock}
+import io.liquirium.util.async.helpers.SubscriberProbe
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 import java.time.Instant
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 import scala.concurrent.duration._
 
-class PollingTradeHistorySubscriptionTest extends TestWithMocks {
+class PollingTradeHistorySubscriptionTest extends AsyncTestWithScheduler with TestWithMocks {
 
   private val tradeLoader =
     new FutureServiceMock[Instant => Future[TradeHistorySegment], TradeHistorySegment](_.apply(*))
@@ -20,9 +20,6 @@ class PollingTradeHistorySubscriptionTest extends TestWithMocks {
   private var overlapStrategy: TradeUpdateOverlapStrategy = TradeUpdateOverlapStrategy.complete
   private var interval: FiniteDuration = 1.second
   private var initialSegment = segment(sec(0))()
-  val scheduler = new FakeScheduler()
-
-  implicit val ec: ExecutionContext = ExecutionContext.fromExecutor((runnable: Runnable) => runnable.run())
 
   def makeSubscription(): PollingTradeHistorySubscription =
     PollingTradeHistorySubscription(

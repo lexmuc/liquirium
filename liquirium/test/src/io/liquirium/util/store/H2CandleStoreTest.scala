@@ -3,7 +3,7 @@ package io.liquirium.util.store
 import io.liquirium.core.Candle
 import io.liquirium.core.helpers.CandleHelpers.{candle, ohlc, ohlcCandle}
 import io.liquirium.core.helpers.CoreHelpers.{dec, sec, secs}
-import io.liquirium.core.helpers.async.AsyncTestWithControlledTime
+import io.liquirium.core.helpers.async.AsyncTestWithScheduler
 import org.scalatest.Assertion
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
@@ -12,7 +12,7 @@ import java.time.{Duration, Instant}
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-class H2CandleStoreTest extends AsyncTestWithControlledTime {
+class H2CandleStoreTest extends AsyncTestWithScheduler {
 
   val url = "jdbc:h2:mem:"
   val connection: Connection = DriverManager.getConnection(url)

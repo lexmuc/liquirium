@@ -60,19 +60,9 @@ object OperationRequestHelpers {
 
   def cancelRequestMessage(n: Int): OperationRequestMessage = cancelRequestMessage(id(n), cancelRequest(n))
 
-  @deprecated(message = "use operationRequest instead")
-  def request(n: Int): OperationRequest =
-    if (n % 2 == 0) orderRequest(n)
-    else cancelRequest(n)
-
   def operationRequest(n: Int): OperationRequest =
     if (n % 2 == 0) orderRequest(n)
     else cancelRequest(n)
-
-  @deprecated(message = "use operationRequest instead")
-  def request(m: Market, n: Int): OperationRequest =
-    if (n % 2 == 0) orderRequest(m, n)
-    else cancelRequest(m, n)
 
   def operationRequest(m: Market, n: Int): OperationRequest =
     if (n % 2 == 0) orderRequest(m, n)

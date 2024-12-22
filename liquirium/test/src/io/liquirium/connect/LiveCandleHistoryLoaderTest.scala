@@ -3,16 +3,15 @@ package io.liquirium.connect
 import io.liquirium.core.helpers.CandleHelpers.{c5, candleHistorySegment, e5}
 import io.liquirium.core.helpers.CoreHelpers.{ex, sec, secs}
 import io.liquirium.core.helpers.TestWithMocks
-import io.liquirium.core.helpers.async.{AsyncTestWithControlledTime, FutureServiceMock}
+import io.liquirium.core.helpers.async.{AsyncTestWithScheduler, FutureServiceMock}
 import io.liquirium.core.{Candle, CandleHistorySegment}
-import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
-import org.scalatest.matchers.should.Matchers.matchPattern
+import org.scalatest.matchers.should.Matchers.{convertToAnyShouldWrapper, matchPattern}
 
 import java.time.{Duration, Instant}
 import scala.concurrent.Future
 import scala.util.Failure
 
-class LiveCandleHistoryLoaderTest extends AsyncTestWithControlledTime with TestWithMocks {
+class LiveCandleHistoryLoaderTest extends AsyncTestWithScheduler with TestWithMocks {
 
   private val batchLoader =
     new FutureServiceMock[Instant => Future[CandleBatch], CandleBatch](_.apply(*))

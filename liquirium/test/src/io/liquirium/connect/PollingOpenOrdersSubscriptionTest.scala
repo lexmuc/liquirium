@@ -4,22 +4,19 @@ import io.liquirium.core.Order
 import io.liquirium.core.helpers.CoreHelpers.ex
 import io.liquirium.core.helpers.OrderHelpers.order
 import io.liquirium.core.helpers.TestWithMocks
-import io.liquirium.core.helpers.async.FutureServiceMock
-import io.liquirium.util.async.helpers.{FakeScheduler, SubscriberProbe}
+import io.liquirium.core.helpers.async.{AsyncTestWithScheduler, FutureServiceMock}
+import io.liquirium.util.async.helpers.SubscriberProbe
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 import scala.concurrent.duration.{DurationInt, FiniteDuration}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
-class PollingOpenOrdersSubscriptionTest extends TestWithMocks {
+class PollingOpenOrdersSubscriptionTest extends AsyncTestWithScheduler with TestWithMocks {
 
   private val orderLoader =
     new FutureServiceMock[() => Future[Set[Order]], Set[Order]](_.apply())
 
   private var interval: FiniteDuration = 1.second
-  val scheduler = new FakeScheduler()
-
-  implicit val ec: ExecutionContext = ExecutionContext.fromExecutor((runnable: Runnable) => runnable.run())
 
   def makeSubscription(): PollingOpenOrdersSubscription =
     PollingOpenOrdersSubscription(

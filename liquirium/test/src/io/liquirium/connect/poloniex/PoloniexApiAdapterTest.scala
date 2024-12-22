@@ -1,11 +1,11 @@
 package io.liquirium.connect.poloniex
 
 import io.liquirium.core.helpers.TestWithMocks
-import io.liquirium.core.helpers.async.{AsyncTestWithControlledTime, FutureServiceMock}
+import io.liquirium.core.helpers.async.{AsyncTestWithScheduler, FutureServiceMock}
 import io.liquirium.core.{Market, OrderConstraints, TradingPair}
 import org.mockito.Mockito.mock
 
-class PoloniexApiAdapterTest extends AsyncTestWithControlledTime with TestWithMocks {
+class PoloniexApiAdapterTest extends AsyncTestWithScheduler with TestWithMocks {
 
   protected val fakeRestApi = new FutureServiceMock[PoloniexRestApi, Any](_.sendRequest(*))
   protected val fakeModelConverter: PoloniexModelConverter = mock(classOf[PoloniexModelConverter])

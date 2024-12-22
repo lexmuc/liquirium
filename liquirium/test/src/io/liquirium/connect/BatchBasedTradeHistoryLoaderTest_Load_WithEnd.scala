@@ -3,7 +3,7 @@ package io.liquirium.connect
 import io.liquirium.core.helpers.CoreHelpers.{ex, sec}
 import io.liquirium.core.helpers.TestWithMocks
 import io.liquirium.core.helpers.TradeHelpers.{trade, tradeHistorySegment}
-import io.liquirium.core.helpers.async.{AsyncTestWithControlledTime, FutureServiceMock}
+import io.liquirium.core.helpers.async.{AsyncTestWithScheduler, FutureServiceMock}
 import io.liquirium.core.{Trade, TradeHistorySegment}
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.matchers.should.Matchers.matchPattern
@@ -12,7 +12,7 @@ import java.time.Instant
 import scala.concurrent.Future
 import scala.util.Failure
 
-class BatchBasedTradeHistoryLoaderTest_Load_WithEnd extends AsyncTestWithControlledTime with TestWithMocks {
+class BatchBasedTradeHistoryLoaderTest_Load_WithEnd extends AsyncTestWithScheduler with TestWithMocks {
 
   private val batchLoader =
     new FutureServiceMock[Instant => Future[TradeBatch], TradeBatch](_.apply(*))

@@ -1,7 +1,7 @@
 package io.liquirium.eval
 
 import io.liquirium.core.helpers.TestWithMocks
-import io.liquirium.core.helpers.async.AsyncTestWithControlledTime
+import io.liquirium.core.helpers.async.AsyncTestWithScheduler
 import io.liquirium.eval.helpers.ContextHelpers.TraceContext
 import io.liquirium.eval.helpers.EvalHelpers.{input, inputEval}
 import io.liquirium.eval.helpers.{EvalHelpers, TestContextWithMockedEval}
@@ -12,7 +12,7 @@ import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, Future}
 import scala.util.Failure
 
-class OneTimeEvaluatorTest extends AsyncTestWithControlledTime with TestWithMocks {
+class OneTimeEvaluatorTest extends AsyncTestWithScheduler with TestWithMocks {
 
   private var evalResultsByInputs: Map[Map[Input[_], Any], EvalResult[Int]] = Map()
   private val inputProvider = mock(classOf[InputProvider])

@@ -64,23 +64,23 @@ class OperationRequestProcessorTest extends AsyncTestWithControlledTime with Tes
   }
 
   test("sending an operation request yields true as response, other trader outputs yield false") {
-    processor.processOutput(operationRequestMessage(id(1), request(market(exchangeA, 1), 1))) shouldBe true
+    processor.processOutput(operationRequestMessage(id(1), operationRequest(market(exchangeA, 1), 1))) shouldBe true
     processor.processOutput(SimpleBotLogEntry("log something")) shouldBe false
   }
 
   test("an operation request is forwarded to the correct exchange") {
-    processor.processOutput(operationRequestMessage(id(333), request(market(exchangeA, 1), 1)))
-    submitRequestMockA.verify.submitRequest(request(market(exchangeA, 1), 1))
-    processor.processOutput(operationRequestMessage(id(444), request(market(exchangeA, 2), 2)))
-    submitRequestMockA.verify.submitRequest(request(market(exchangeA, 2), 2))
-    processor.processOutput(operationRequestMessage(id(555), request(market(exchangeB, 1), 3)))
-    submitRequestMockB.verify.submitRequest(request(market(exchangeB, 1), 3))
+    processor.processOutput(operationRequestMessage(id(333), operationRequest(market(exchangeA, 1), 1)))
+    submitRequestMockA.verify.submitRequest(operationRequest(market(exchangeA, 1), 1))
+    processor.processOutput(operationRequestMessage(id(444), operationRequest(market(exchangeA, 2), 2)))
+    submitRequestMockA.verify.submitRequest(operationRequest(market(exchangeA, 2), 2))
+    processor.processOutput(operationRequestMessage(id(555), operationRequest(market(exchangeB, 1), 3)))
+    submitRequestMockB.verify.submitRequest(operationRequest(market(exchangeB, 1), 3))
   }
 
   test("as soon as a request completes (success or failure) the request history is updated with the correct time") {
     val m = market(exchangeA, 1)
-    val msg1 = msg(1, request(m, 1))
-    val msg2 = msg(2, request(m, 2))
+    val msg1 = msg(1, operationRequest(m, 1))
+    val msg2 = msg(2, operationRequest(m, 2))
     val sinkProbe = subscribe()
     sinkProbe.requestNext() shouldEqual IncrementalSeq.empty[CompletedOperationRequest]
     processor.processOutput(msg1)
@@ -102,7 +102,7 @@ class OperationRequestProcessorTest extends AsyncTestWithControlledTime with Tes
 
   test("when subscribing to the request history after the first request the complete history is provided as well") {
     val m = market(exchangeA, 1)
-    val r1 = request(m, 1)
+    val r1 = operationRequest(m, 1)
     val requestMessage = msg(1, r1)
     processor.processOutput(operationRequestMessage(id(1), r1))
     clock.set(sec(123))
@@ -117,7 +117,7 @@ class OperationRequestProcessorTest extends AsyncTestWithControlledTime with Tes
   test("a request fails immediately when the exchange is unknown") {
     val m = market(unknownExchange, 1)
     connectorsByExchangeId.apply(unknownExchange) returns Future.failed(ex(123))
-    val r1 = request(m, 1)
+    val r1 = operationRequest(m, 1)
     val requestMessage = msg(1, r1)
     clock.set(sec(123))
     processor.processOutput(operationRequestMessage(id(1), r1))

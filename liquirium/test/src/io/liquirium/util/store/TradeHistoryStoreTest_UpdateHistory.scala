@@ -4,13 +4,13 @@ import io.liquirium.core.TradeHistorySegment
 import io.liquirium.core.helpers.CoreHelpers.{ex, sec}
 import io.liquirium.core.helpers.TestWithMocks
 import io.liquirium.core.helpers.TradeHelpers.{trade, tradeHistorySegment}
-import io.liquirium.core.helpers.async.{AsyncTestWithControlledTime, FutureServiceMock}
+import io.liquirium.core.helpers.async.{AsyncTestWithScheduler, FutureServiceMock}
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 import scala.concurrent.Future
 import scala.util.Failure
 
-class TradeHistoryStoreTest_UpdateHistory extends AsyncTestWithControlledTime with TestWithMocks {
+class TradeHistoryStoreTest_UpdateHistory extends AsyncTestWithScheduler with TestWithMocks {
 
   val baseStoreAddPart = new FutureServiceMock[TradeStore, Unit](
     methodCall = _.add(*),

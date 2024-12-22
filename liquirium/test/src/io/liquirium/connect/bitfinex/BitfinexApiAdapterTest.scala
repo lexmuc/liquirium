@@ -1,11 +1,11 @@
 package io.liquirium.connect.bitfinex
 
 import io.liquirium.core.helpers.TestWithMocks
-import io.liquirium.core.helpers.async.{AsyncTestWithControlledTime, FutureServiceMock}
+import io.liquirium.core.helpers.async.{AsyncTestWithScheduler, FutureServiceMock}
 import io.liquirium.core.{Market, OrderConstraints, TradingPair}
 import org.mockito.Mockito.mock
 
-class BitfinexApiAdapterTest extends AsyncTestWithControlledTime with TestWithMocks {
+class BitfinexApiAdapterTest extends AsyncTestWithScheduler with TestWithMocks {
 
   protected val fakeRestApi = new FutureServiceMock[BitfinexRestApi, Any](_.sendRequest(*))
   protected val fakeModelConverter: BitfinexModelConverter = mock(classOf[BitfinexModelConverter])

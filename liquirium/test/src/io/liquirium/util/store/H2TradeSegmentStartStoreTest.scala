@@ -1,7 +1,7 @@
 package io.liquirium.util.store
 
 import io.liquirium.core.helpers.CoreHelpers.sec
-import io.liquirium.core.helpers.async.AsyncTestWithControlledTime
+import io.liquirium.core.helpers.async.AsyncTestWithScheduler
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 import java.sql.DriverManager
@@ -9,7 +9,7 @@ import java.time.Instant
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-class H2TradeSegmentStartStoreTest extends AsyncTestWithControlledTime {
+class H2TradeSegmentStartStoreTest extends AsyncTestWithScheduler {
 
   private val url = "jdbc:h2:mem:"
   private val connection = DriverManager.getConnection(url)

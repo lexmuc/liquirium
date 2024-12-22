@@ -4,7 +4,7 @@ import io.liquirium.connect.TradeBatch
 import io.liquirium.core.helpers.CoreHelpers.{dec, milli}
 import io.liquirium.core.helpers.MarketHelpers.m
 import io.liquirium.core.helpers.TradeHelpers.{trade => t}
-import io.liquirium.core.helpers.async.AsyncTestWithControlledTime
+import io.liquirium.core.helpers.async.AsyncTestWithScheduler
 import io.liquirium.core.{ExchangeId, LedgerRef, Trade}
 import org.scalatest.matchers.should.Matchers.{a, convertToAnyShouldWrapper, thrownBy}
 
@@ -13,7 +13,7 @@ import java.time.Instant
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-class H2TradeStoreTest extends AsyncTestWithControlledTime {
+class H2TradeStoreTest extends AsyncTestWithScheduler {
 
   private val url = "jdbc:h2:mem:"
   private val connection = DriverManager.getConnection(url)
