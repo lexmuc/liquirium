@@ -19,7 +19,7 @@ case class PollingCandleHistorySubscription(
   scheduler: Scheduler,
 ) extends Subscription[CandleHistorySegment] {
 
-  def run(onUpdate: CandleHistorySegment => Unit)(implicit ec: ExecutionContext): CancelHandle = {
+  override def run(onUpdate: CandleHistorySegment => Unit)(implicit ec: ExecutionContext): CancelHandle = {
     val cancelled = new AtomicBoolean(false)
 
     def handleResponse(

@@ -9,7 +9,7 @@ import io.liquirium.util.akka.StreamExtensions.SourceLazyOps
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 
-object OpenOrdersStream {
+object AkkaPollingOpenOrdersStream {
 
   case class Update(openOrders: Set[Order])
 

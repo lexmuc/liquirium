@@ -16,7 +16,7 @@ import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
-class OpenOrdersStreamTest_FromOpenOrdersProvider extends TypedActorTest with TestWithMocks {
+class AkkaPollingOpenOrdersStream_FromOpenOrdersProvider extends TypedActorTest with TestWithMocks {
 
   implicit val system: ActorSystem[Nothing] = actorSystem
 
@@ -25,10 +25,10 @@ class OpenOrdersStreamTest_FromOpenOrdersProvider extends TypedActorTest with Te
   var interval: FiniteDuration = 1.second
   var retryDelay: FiniteDuration = 1.second
 
-  private def run(): TestSubscriber.Probe[OpenOrdersStream.Update] = {
-    val sinkProbe: TestSubscriber.Probe[OpenOrdersStream.Update] = OpenOrdersStream
+  private def run(): TestSubscriber.Probe[AkkaPollingOpenOrdersStream.Update] = {
+    val sinkProbe: TestSubscriber.Probe[AkkaPollingOpenOrdersStream.Update] = AkkaPollingOpenOrdersStream
       .fromOrdersProvider(optMarket, interval, retryDelay, orderProvider.instance, DummyLogger)
-      .runWith(TestSink.probe[OpenOrdersStream.Update])
+      .runWith(TestSink.probe[AkkaPollingOpenOrdersStream.Update])
     sinkProbe.request(100)
     sinkProbe
   }
@@ -42,7 +42,7 @@ class OpenOrdersStreamTest_FromOpenOrdersProvider extends TypedActorTest with Te
   test("it emits an update with the orders when the orders are received (no cancel quantities)") {
     val sinkProbe = run()
     orderProvider.completeNext(Set(o(1), o(2)))
-    sinkProbe.requestNext() shouldEqual OpenOrdersStream.Update(Set(o(1), o(2)))
+    sinkProbe.requestNext() shouldEqual AkkaPollingOpenOrdersStream.Update(Set(o(1), o(2)))
   }
 
   test("after receiving the orders it requests them again only after the interval") {

@@ -139,7 +139,7 @@ package object binance {
         binanceApi.sendTradeRequest(request)
 
       override def openOrdersStream(tradingPair: TradingPair): Source[Set[Order], NotUsed] = {
-        OpenOrdersStream.fromOrdersProvider(
+        AkkaPollingOpenOrdersStream.fromOrdersProvider(
           optMarket = Some(Market(exchangeId, tradingPair)),
           interval = 40.seconds,
           retryDelay = 10.seconds,
