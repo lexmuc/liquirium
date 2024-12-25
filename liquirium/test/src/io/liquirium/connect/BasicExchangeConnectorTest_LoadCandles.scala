@@ -23,7 +23,7 @@ class BasicExchangeConnectorTest_LoadCandles extends AsyncTestWithScheduler with
 
   private def loadSegment(start: Instant, maybeEnd: Option[Instant]): Unit = {
     val connector: BasicExchangeConnector = BasicExchangeConnector.fromExchangeApi(api.instance)
-    resultFuture = connector.loadCandleHistory(tradingPair, candleLength)(start, maybeEnd)
+    resultFuture = connector.loadCandleHistory(tradingPair, candleLength, start, maybeEnd)
   }
 
   private def returnBatch(

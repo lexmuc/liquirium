@@ -23,7 +23,7 @@ class BasicExchangeConnectorTest_LoadTrades_WithEnd extends AsyncTestWithSchedul
 
   private def loadSegment(start: Instant, end: Instant): Unit = {
     val connector: BasicExchangeConnector = BasicExchangeConnector.fromExchangeApi(api.instance)
-    resultFuture = connector.loadTradeHistory(tradingPair)(start, Some(end))
+    resultFuture = connector.loadTradeHistory(tradingPair, start, Some(end))
   }
 
   private def returnBatch(start: Instant, nextStart: Option[Instant])(trades: Trade*): Unit = {

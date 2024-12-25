@@ -77,11 +77,11 @@ object BasicExchangeConnector {
         start: Instant,
         maybeEnd: Option[Instant]
       ): Future[TradeHistorySegment] = completeTradeHistorySegment(
-        tradingPair,
-        start,
-        maybeEnd = maybeEnd,
-        historySegment = TradeHistorySegment.empty(start),
-      )
+          tradingPair,
+          start,
+          maybeEnd = maybeEnd,
+          historySegment = TradeHistorySegment.empty(start),
+        )
 
       private def completeTradeHistorySegment(
         tradingPair: TradingPair,
