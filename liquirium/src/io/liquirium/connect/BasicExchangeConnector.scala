@@ -11,17 +11,15 @@ trait BasicExchangeConnector {
 
   def loadCandleHistory(
     tradingPair: TradingPair,
-    candleLength: Duration
-  )(
+    candleLength: Duration,
     start: Instant,
-    maybeEnd: Option[Instant]
+    maybeEnd: Option[Instant],
   ): Future[CandleHistorySegment]
 
   def loadTradeHistory(
-    tradingPair: TradingPair
-  )(
+    tradingPair: TradingPair,
     start: Instant,
-    maybeEnd: Option[Instant]
+    maybeEnd: Option[Instant],
   ): Future[TradeHistorySegment]
 
   def submitRequest[TR <: OperationRequest](request: TR): Future[OperationRequestSuccessResponse[TR]]
@@ -33,23 +31,21 @@ object BasicExchangeConnector {
   def fromExchangeApi(api: GenericExchangeApi)(implicit ec: ExecutionContext): BasicExchangeConnector =
     new BasicExchangeConnector {
 
-      override def loadOpenOrders(tradingPair: TradingPair): Future[Set[Order]] = ???
+      override def loadOpenOrders(tradingPair: TradingPair): Future[Set[Order]] = api.getOpenOrders(tradingPair)
 
       override def loadCandleHistory(
         tradingPair: TradingPair,
         candleLength: Duration,
-      )(
         start: Instant,
         maybeEnd: Option[Instant],
       ): Future[CandleHistorySegment] = {
         val segment = CandleHistorySegment.empty(start, candleLength)
-        completeCandleHistorySegment(tradingPair, candleLength)(segment, maybeEnd)
+        completeCandleHistorySegment(tradingPair, candleLength, segment, maybeEnd)
       }
 
       private def completeCandleHistorySegment(
         tradingPair: TradingPair,
         candleLength: Duration,
-      )(
         chs: CandleHistorySegment,
         maybeEnd: Option[Instant],
       ): Future[CandleHistorySegment] = {
@@ -71,23 +67,21 @@ object BasicExchangeConnector {
             }
           }
           else {
-            completeCandleHistorySegment(tradingPair, candleLength)(extendedSegment, maybeEnd)
+            completeCandleHistorySegment(tradingPair, candleLength, extendedSegment, maybeEnd)
           }
         }
       }
 
       override def loadTradeHistory(
-        tradingPair: TradingPair
-      )(
+        tradingPair: TradingPair,
         start: Instant,
         maybeEnd: Option[Instant]
-      ): Future[TradeHistorySegment] =
-        completeTradeHistorySegment(
-          tradingPair,
-          start,
-          maybeEnd = maybeEnd,
-          historySegment = TradeHistorySegment.empty(start),
-        )
+      ): Future[TradeHistorySegment] = completeTradeHistorySegment(
+        tradingPair,
+        start,
+        maybeEnd = maybeEnd,
+        historySegment = TradeHistorySegment.empty(start),
+      )
 
       private def completeTradeHistorySegment(
         tradingPair: TradingPair,
