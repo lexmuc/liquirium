@@ -64,7 +64,7 @@ sealed trait CandleHistorySegment
   override def apply(idx: Int): Candle = candles.apply(idx)
 
   def padUntil(time: Instant): CandleHistorySegment =
-    if (time isAfter end) append(Candle.empty(end, candleLength)).padUntil(time) else this
+    if (!(time isBefore  end.plus(candleLength))) append(Candle.empty(end, candleLength)).padUntil(time) else this
 
 //  override def newBuilder: mutable.Builder[Candle, Seq[Candle]] = {
 //    // Use ArrayBuffer as the underlying builder

@@ -25,13 +25,12 @@ class CandleHistorySegmentTest_PadUntil extends CandleHistorySegmentTest {
     )
   }
 
-  test("if the time is not aligned with the segment it is padded until the time is exceeded") {
+  test("if the time is not aligned with the segment it is padded to not exceed the time") {
     segment(
       c5(sec(10), 1),
     ).padUntil(sec(22)) shouldEqual segment(
       c5(sec(10), 1),
       e5(sec(15)),
-      e5(sec(20)),
     )
   }
 

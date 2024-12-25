@@ -23,24 +23,26 @@ class FutureServiceMock[T <: AnyRef, R]
 
   private var promises: Seq[Promise[R]] = Seq()
   private var responseQueue: Seq[R] = Seq()
+  private var returnedFutures: Seq[Future[R]] = Seq()
 
   private lazy val order = ordered(mockee)
 
   init()
 
   def init(): Unit =
-    Mockito.when(methodCall(mockee)).thenAnswer(new Answer[Future[R]] {
-      override def answer(invocation: InvocationOnMock): Future[R] = {
-        val p = Promise[R]
-        if (responseQueue.isEmpty) {
-          promises = promises :+ p
-        }
-        else {
-          p.success(responseQueue.head)
-          responseQueue = responseQueue.tail
-        }
-        p.future
+    Mockito.when(methodCall(mockee)).thenAnswer(_ => {
+      val p = Promise[R]
+      if (responseQueue.isEmpty) {
+        promises = promises :+ p
       }
+      else {
+        p.success(responseQueue.head)
+        responseQueue = responseQueue.tail
+      }
+
+      val f = p.future
+      returnedFutures = returnedFutures :+ f
+      f
     })
 
   def dequePromise(): Promise[R] = {
@@ -75,6 +77,8 @@ class FutureServiceMock[T <: AnyRef, R]
     promises.head.complete(Success(result))
     promises = promises.tail
   }
+
+  def lastReturnedFuture(): Future[R] = returnedFutures.last
 
   def reset(): Unit = {
     Mockito.reset(mockee)
