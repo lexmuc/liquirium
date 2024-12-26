@@ -2,9 +2,8 @@ package io.liquirium.connect
 
 import io.liquirium.core.helpers.CoreHelpers.{ex, sec}
 import io.liquirium.core.helpers.MarketHelpers.pair
-import io.liquirium.core.helpers.TestWithMocks
 import io.liquirium.core.helpers.TradeHelpers.{trade, tradeHistorySegment}
-import io.liquirium.core.helpers.async.{AsyncTestWithScheduler, FutureServiceMock}
+import io.liquirium.core.helpers.async.FutureServiceMock
 import io.liquirium.core.{Trade, TradeHistorySegment}
 import org.scalatest.matchers.should.Matchers.{convertToAnyShouldWrapper, matchPattern}
 
@@ -12,7 +11,7 @@ import java.time.Instant
 import scala.concurrent.Future
 import scala.util.Failure
 
-class BasicExchangeConnectorTest_LoadTrades_NoEnd extends AsyncTestWithScheduler with TestWithMocks {
+class BasicExchangeConnectorTest_LoadTrades_NoEnd extends BasicExchangeConnectorTest {
 
   private val api =
     new FutureServiceMock[GenericExchangeApi, TradeBatch](_.getTradeBatch(*, *))
@@ -22,8 +21,7 @@ class BasicExchangeConnectorTest_LoadTrades_NoEnd extends AsyncTestWithScheduler
   private var resultFuture: Future[TradeHistorySegment] = _
 
   private def loadSegment(start: Instant): Unit = {
-    val connector: BasicExchangeConnector = BasicExchangeConnector.fromExchangeApi(api.instance)
-    resultFuture = connector.loadTradeHistory(tradingPair, start, None)
+    resultFuture = makeConnector(api.instance).loadTradeHistory(tradingPair, start, None)
   }
 
   private def returnBatch(start: Instant, nextStart: Option[Instant])(trades: Trade*): Unit = {

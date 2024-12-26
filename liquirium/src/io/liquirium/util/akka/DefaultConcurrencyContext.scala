@@ -13,6 +13,7 @@ import akka.stream.OverflowStrategy
 import cats.effect.IO
 import cats.effect.unsafe.IORuntime
 import io.liquirium.util.EmberHttpService
+import io.liquirium.util.async.ProductionScheduler
 import org.http4s.ember.client.EmberClientBuilder
 
 case object DefaultConcurrencyContext extends ConcurrencyContext {
@@ -70,5 +71,7 @@ case object DefaultConcurrencyContext extends ConcurrencyContext {
   private def guardianBehavior(): Behavior[SpawnProtocol.Command] = Behaviors.setup { _ => SpawnProtocol().behavior }
 
   val sourceQueueFactory: SourceQueueFactory = SourceQueueFactory.apply(spawner, 128, OverflowStrategy.fail)
+
+  val scheduler = new ProductionScheduler()
 
 }

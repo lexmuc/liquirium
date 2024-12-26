@@ -75,6 +75,24 @@ package object binance {
     }
   }
 
+  def getConnectorWithSubscriptions(
+    concurrencyContext: ConcurrencyContext = DefaultConcurrencyContext,
+    credentials: ApiCredentials = ApiCredentials("", ""),
+  ): Future[ExchangeConnectorWithSubscriptions] = {
+    implicit val ec: ExecutionContext = concurrencyContext.executionContext
+    api(concurrencyContext, credentials).map { a =>
+      new PollingExchangeConnector(
+        basicConnector = BasicExchangeConnector.fromExchangeApi(this.exchangeId, a),
+        scheduler = concurrencyContext.scheduler,
+        openOrderPollingInterval = 30.seconds,
+        candlePollingInterval = 30.seconds,
+        candleUpdateOverlapStrategy = CandleUpdateOverlapStrategy.numberOfCandles(4),
+        tradePollingInterval = 30.seconds,
+        tradeUpdateOverlapStrategy = TradeUpdateOverlapStrategy.fixedOverlap(Duration.ofMinutes(2))
+      )
+    }
+  }
+
   private def makeConnector(
     binanceApi: GenericExchangeApi,
     concurrencyContext: ConcurrencyContext,

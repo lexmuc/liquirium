@@ -6,6 +6,7 @@ import io.liquirium.core.helpers.async.{AsyncTestWithScheduler, FutureServiceMoc
 import io.liquirium.core.helpers.{MarketHelpers, TestWithMocks}
 import io.liquirium.core.{CandleHistorySegment, OperationRequestSuccessResponse, Order, TradeHistorySegment}
 import io.liquirium.util.async.helpers.FakeScheduler
+import org.mockito.Mockito.mock
 import org.scalatest.matchers.should.Matchers.{convertToAnyShouldWrapper, theSameInstanceAs}
 
 import scala.concurrent.duration.DurationInt
@@ -22,6 +23,13 @@ class PollingExchangeConnectorTest_ForwardToBasicConnector extends AsyncTestWith
       tradeUpdateOverlapStrategy = TradeUpdateOverlapStrategy.complete,
       candleUpdateOverlapStrategy = CandleUpdateOverlapStrategy.complete,
     )
+
+  test("the exchange id is forwarded") {
+    val id = MarketHelpers.exchangeId("ABC")
+    val basicConnector = mock(classOf[BasicExchangeConnector])
+    basicConnector.exchangeId returns id
+    makeConnector(basicConnector).exchangeId shouldBe id
+  }
 
   test("an open order request is simply forwarded") {
     val basicConnector = new FutureServiceMock[BasicExchangeConnector, Set[Order]](_.loadOpenOrders(*))

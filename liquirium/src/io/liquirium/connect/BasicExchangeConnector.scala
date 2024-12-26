@@ -7,6 +7,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait BasicExchangeConnector {
 
+  def exchangeId: ExchangeId
+
   def loadOpenOrders(tradingPair: TradingPair): Future[Set[Order]]
 
   def loadCandleHistory(
@@ -28,8 +30,16 @@ trait BasicExchangeConnector {
 
 object BasicExchangeConnector {
 
-  def fromExchangeApi(api: GenericExchangeApi)(implicit ec: ExecutionContext): BasicExchangeConnector =
+  def fromExchangeApi(
+    exchangeId: ExchangeId,
+    api: GenericExchangeApi,
+  )(
+    implicit ec: ExecutionContext,
+  ): BasicExchangeConnector = {
+    val eid = exchangeId // renaming because it will be shadowed below
     new BasicExchangeConnector {
+
+      override def exchangeId: ExchangeId = eid
 
       override def loadOpenOrders(tradingPair: TradingPair): Future[Set[Order]] = api.getOpenOrders(tradingPair)
 
@@ -116,5 +126,6 @@ object BasicExchangeConnector {
         api.sendTradeRequest(request)
 
     }
+  }
 
 }

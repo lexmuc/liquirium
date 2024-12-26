@@ -12,7 +12,7 @@ import java.time.Instant
 import scala.concurrent.Future
 import scala.util.Failure
 
-class BasicExchangeConnectorTest_LoadTrades_WithEnd extends AsyncTestWithScheduler with TestWithMocks {
+class BasicExchangeConnectorTest_LoadTrades_WithEnd extends BasicExchangeConnectorTest {
 
   private val api =
     new FutureServiceMock[GenericExchangeApi, TradeBatch](_.getTradeBatch(*, *))
@@ -22,8 +22,7 @@ class BasicExchangeConnectorTest_LoadTrades_WithEnd extends AsyncTestWithSchedul
   private var resultFuture: Future[TradeHistorySegment] = _
 
   private def loadSegment(start: Instant, end: Instant): Unit = {
-    val connector: BasicExchangeConnector = BasicExchangeConnector.fromExchangeApi(api.instance)
-    resultFuture = connector.loadTradeHistory(tradingPair, start, Some(end))
+    resultFuture = makeConnector(api.instance).loadTradeHistory(tradingPair, start, Some(end))
   }
 
   private def returnBatch(start: Instant, nextStart: Option[Instant])(trades: Trade*): Unit = {

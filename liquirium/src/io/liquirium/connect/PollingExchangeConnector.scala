@@ -16,6 +16,8 @@ class PollingExchangeConnector(
   tradeUpdateOverlapStrategy: TradeUpdateOverlapStrategy,
 ) extends ExchangeConnectorWithSubscriptions {
 
+  override def exchangeId: ExchangeId = basicConnector.exchangeId
+
   override def loadOpenOrders(tradingPair: TradingPair): Future[Set[Order]] =
     basicConnector.loadOpenOrders(tradingPair)
 
