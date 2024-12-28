@@ -1,13 +1,15 @@
 package io.liquirium.bot
 
-import io.liquirium.bot.BotInput.{CandleHistoryInput, TradeHistoryInput}
+import io.liquirium.bot.BotInput.{CandleHistoryInput, OrderSnapshotHistoryInput, TradeHistoryInput}
 import io.liquirium.connect.ExchangeConnectorWithSubscriptions
-import io.liquirium.core.{CandleHistorySegment, ExchangeId, Market, TradeHistorySegment}
+import io.liquirium.core.{CandleHistorySegment, ExchangeId, Market, Order, TradeHistorySegment}
 import io.liquirium.core.helpers.CoreHelpers.{sec, secs}
 import io.liquirium.core.helpers.{MarketHelpers, TestWithMocks}
 import io.liquirium.eval.helpers.EvalHelpers
+import io.liquirium.helpers.FakeClock
 import io.liquirium.util.async.Subscription
 import org.mockito.Mockito.mock
+import org.scalatest.matchers.must.Matchers.be
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 
@@ -16,8 +18,9 @@ class ExchangeConnectorInputSubscriptionProviderTest extends TestWithMocks {
 
   private val connector = mock(classOf[ExchangeConnectorWithSubscriptions])
   connector.exchangeId returns exchangeId
+  private val clock = new FakeClock(sec(1))
 
-  private val provider = new ExchangeConnectorInputSubscriptionProvider(connector)
+  private val provider = new ExchangeConnectorInputSubscriptionProvider(connector, clock)
 
   test("it returns None for unknown inputs") {
     val input = EvalHelpers.input(1)
@@ -25,7 +28,6 @@ class ExchangeConnectorInputSubscriptionProviderTest extends TestWithMocks {
   }
 
   test("it returns a proper subscription for the candle history") {
-    val provider = new ExchangeConnectorInputSubscriptionProvider(connector)
     val market = Market(exchangeId, MarketHelpers.pair(123))
     val input = CandleHistoryInput(
       market = market,
@@ -43,7 +45,6 @@ class ExchangeConnectorInputSubscriptionProviderTest extends TestWithMocks {
 
   test("it returns None for a candle history input with another exchange id") {
     val otherId = MarketHelpers.exchangeId("OTHER")
-    val provider = new ExchangeConnectorInputSubscriptionProvider(connector)
     val input = CandleHistoryInput(
       market = Market(otherId, MarketHelpers.pair(123)),
       candleLength = secs(10),
@@ -53,7 +54,6 @@ class ExchangeConnectorInputSubscriptionProviderTest extends TestWithMocks {
   }
 
   test("it returns a proper subscription for a trade history input") {
-    val provider = new ExchangeConnectorInputSubscriptionProvider(connector)
     val market = Market(exchangeId, MarketHelpers.pair(123))
     val input = TradeHistoryInput(
       market = market,
@@ -67,10 +67,28 @@ class ExchangeConnectorInputSubscriptionProviderTest extends TestWithMocks {
 
   test("it returns None for a trade history input with another exchange id") {
     val otherId = MarketHelpers.exchangeId("OTHER")
-    val provider = new ExchangeConnectorInputSubscriptionProvider(connector)
     val input = TradeHistoryInput(
       market = Market(otherId, MarketHelpers.pair(123)),
       start = sec(100),
+    )
+    provider.apply(input) shouldEqual None
+  }
+
+  test("it returns an OpenOrderHistorySubscription that is based on the open orders subscription of the exchange") {
+    val input = OrderSnapshotHistoryInput(
+      market = Market(exchangeId, MarketHelpers.pair(123)),
+    )
+    val ordersSubscription = mock(classOf[Subscription[Set[Order]]])
+    connector.openOrdersSubscription(MarketHelpers.pair(123)) returns ordersSubscription
+    provider.apply(input) shouldEqual Some(
+      OpenOrdersHistorySubscription(ordersSubscription, clock)
+    )
+  }
+
+  test("it returns None when open orders for another exchange are requested") {
+    val otherId = MarketHelpers.exchangeId("OTHER")
+    val input = OrderSnapshotHistoryInput(
+      market = Market(otherId, MarketHelpers.pair(123)),
     )
     provider.apply(input) shouldEqual None
   }
